@@ -3,13 +3,13 @@
 		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<parent>
-		<artifactId>Replicator</artifactId>
-		<groupId>com.almostrealism</groupId>
-		<version>0.7</version>
+		<artifactId>Ichos</artifactId>
+		<groupId>org.almostrealism</groupId>
+		<version>1.0</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
-	<artifactId>audio</artifactId>
+	<artifactId>ar-audio</artifactId>
 
 	<properties>
 		<maven.compiler.source>14</maven.compiler.source>
@@ -19,14 +19,8 @@
 	<dependencies>
 		<dependency>
 			<groupId>org.almostrealism</groupId>
-			<artifactId>graph</artifactId>
+			<artifactId>ar-utils</artifactId>
 			<version>0.13</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.almostrealism</groupId>
-			<artifactId>OptimalZoo</artifactId>
-			<version>0.5</version>
 		</dependency>
 	</dependencies>
 </project>

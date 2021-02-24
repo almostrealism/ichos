@@ -1,3 +1,39 @@
+## Ichos Audio Library
+
+### What does this do?
+Expands on the data structures provided by the Almost Realism Scientific
+Computing Libraries to provide support for common audio operations such as
+FFT.
+
+### What does it depend on?
+The dependency footprint is very small. The only dependency is ar-utils
+(which depends only on JOCL).
+
+### To use the libraries
+
+Add Maven Repository:
+
+        <repositories>
+                <repository>
+                        <id>internal</id>
+                        <name>Archiva Managed Internal Repository</name>
+                        <url>http://mvn.almostrealism.org:8080/repository/internal/</url>
+                        <releases><enabled>true</enabled></releases>
+                        <snapshots><enabled>true</enabled></snapshots>
+                </repository>
+        </repositories>
+
+Add audio:
+
+        <dependency>
+            <groupId>org.almostrealism</groupId>
+            <artifactId>ar-audio</artifactId>
+            <version>1.0</version>
+        </dependency>
+
+
+### What are the terms of the license?
+
 Copyright 2021  Michael Murray
 
 Licensed under the Apache License, Version 2.0 (the "License");
