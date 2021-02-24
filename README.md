@@ -2,8 +2,8 @@
 
 ### What does this do?
 Expands on the data structures provided by the Almost Realism Scientific
-Computing Libraries to provide support for common audio operations such as
-FFT.
+Computing Libraries (https://bitbucket.org/almostrealism/common) to provide
+support for common audio operations such as FFT.
 
 ### What does it depend on?
 The dependency footprint is very small. The only dependency is ar-utils
