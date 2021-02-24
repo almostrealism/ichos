@@ -1,10 +1,10 @@
 package org.almostrealism.audio.feature.computations;
 
+import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.feature.FeatureSettings;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.Tensor;
-import uk.co.labbookpages.WavFile;
 
 import java.io.File;
 import java.io.IOException;

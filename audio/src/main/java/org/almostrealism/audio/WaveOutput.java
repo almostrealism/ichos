@@ -21,16 +21,12 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.audio.OutputLine;
 import org.almostrealism.graph.Receptor;
 import io.almostrealism.relation.Producer;
-import org.almostrealism.hardware.DynamicProducerForMemWrapper;
-import org.almostrealism.hardware.HardwareException;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.time.CursorPair;
 import org.almostrealism.util.CodeFeatures;
-import uk.co.labbookpages.WavFile;
 
 public class WaveOutput implements Receptor<Scalar>, CodeFeatures {
 	private File file;
