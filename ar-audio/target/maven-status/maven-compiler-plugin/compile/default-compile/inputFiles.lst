@@ -1,0 +1,9 @@
+/Users/michael/Documents/AlmostRealism/common/audio/src/main/java/org/almostrealism/audio/DualOutputLine.java
+/Users/michael/Documents/AlmostRealism/common/audio/src/main/java/org/almostrealism/audio/AudioMeter.java
+/Users/michael/Documents/AlmostRealism/common/audio/src/main/java/org/almostrealism/audio/computations/ClipCounter.java
+/Users/michael/Documents/AlmostRealism/common/audio/src/main/java/org/almostrealism/audio/Envelope.java
+/Users/michael/Documents/AlmostRealism/common/audio/src/main/java/org/almostrealism/audio/Mixer.java
+/Users/michael/Documents/AlmostRealism/common/audio/src/main/java/org/almostrealism/audio/OutputLine.java
+/Users/michael/Documents/AlmostRealism/common/audio/src/main/java/org/almostrealism/audio/computations/SilenceDurationComputation.java
+/Users/michael/Documents/AlmostRealism/common/audio/src/main/java/org/almostrealism/audio/AudioSample.java
+/Users/michael/Documents/AlmostRealism/common/audio/src/main/java/org/almostrealism/audio/SampleTransformer.java
