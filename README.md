@@ -9,6 +9,11 @@ FFT.
 The dependency footprint is very small. The only dependency is ar-utils
 (which depends only on JOCL).
 
+### Who are the authors?
+This code was written by Michael Murray, and some of it (MFCC Feature
+Extraction) was inspired by detailed reading of code in Kaldi ASR (which
+has the same LICENSE).
+
 ### To use the libraries
 
 Add Maven Repository:

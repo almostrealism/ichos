@@ -1,6 +1,6 @@
 package org.almostrealism.audio.computations.test;
 
-import com.almostrealism.audio.computations.ComplexFFT;
+import org.almostrealism.audio.computations.ComplexFFT;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.PairBank;
 import org.almostrealism.util.TestFeatures;
