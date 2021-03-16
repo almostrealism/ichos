@@ -1,7 +1,6 @@
-package org.almostrealism.audio.feature.computations;
+package org.almostrealism.audio.feature;
 
 import org.almostrealism.audio.WavFile;
-import org.almostrealism.audio.feature.FeatureSettings;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.Tensor;

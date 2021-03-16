@@ -1,6 +1,5 @@
 package org.almostrealism.audio.feature;
 
-import org.almostrealism.audio.feature.computations.Resampler;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 

@@ -1,10 +1,6 @@
-package org.almostrealism.audio.feature.computations;
+package org.almostrealism.audio.feature;
 
 import org.almostrealism.audio.computations.ComplexFFT;
-import org.almostrealism.audio.feature.FeatureSettings;
-import org.almostrealism.audio.feature.FeatureWindowFunction;
-import org.almostrealism.audio.feature.FrameExtractionSettings;
-import org.almostrealism.audio.feature.MelBanks;
 import org.almostrealism.audio.util.TensorRow;
 import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.PairBank;

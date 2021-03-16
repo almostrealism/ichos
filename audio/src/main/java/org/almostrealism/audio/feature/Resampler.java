@@ -1,4 +1,4 @@
-package org.almostrealism.audio.feature.computations;
+package org.almostrealism.audio.feature;
 
 import org.almostrealism.algebra.PairBank;
 import org.almostrealism.algebra.Scalar;
