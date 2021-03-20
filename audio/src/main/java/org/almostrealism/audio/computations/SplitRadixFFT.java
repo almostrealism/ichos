@@ -22,11 +22,10 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.PairBank;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.computations.PairBankFromPairsBuilder;
-import org.almostrealism.algebra.computations.PairBankInterleave;
+import org.almostrealism.hardware.DynamicAcceleratedEvaluable;
+import org.almostrealism.hardware.DynamicAcceleratedOperation;
+import org.almostrealism.hardware.MemWrapper;
 import org.almostrealism.util.CodeFeatures;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class SplitRadixFFT implements Evaluable<PairBank>, CodeFeatures {
 	public static final double SQRT_2 = Math.sqrt(2.0);
@@ -40,13 +39,9 @@ public class SplitRadixFFT implements Evaluable<PairBank>, CodeFeatures {
 	private final RadixComputationFactory radix2Even;
 	private final RadixComputationFactory radix2Odd;
 
-	private Map<Integer, Evaluable<PairBank>> interleavers;
-
 	private Evaluable<PairBank> result;
 
 	public SplitRadixFFT(int bins, boolean forward) {
-		populateInterleavers(bins);
-
 		radix2A = new Radix2(Radix2.A);
 		radix2B = new Radix2(Radix2.B);
 		radix2Even = new Radix2(Radix2.EVEN);
@@ -56,19 +51,9 @@ public class SplitRadixFFT implements Evaluable<PairBank>, CodeFeatures {
 		radix4Part2Pos = new Radix4(1, true);
 		radix4Part2Neg = new Radix4(1, false);
 
-		result = transform(v(PairBank.class, 0), bins, forward).get();
-	}
-
-	private void populateInterleavers(int bins) {
-		interleavers = new HashMap<>();
-
-		while (bins > 0) {
-			Evaluable<PairBank> inter = new PairBankInterleave(bins, v(2, 0), v(2, 1)).get();
-			((OperationAdapter) inter).compile();
-
-			interleavers.put(bins, inter);
-			bins = bins / 2;
-		}
+		result = transform(v(2 * bins, 0), bins, forward).get();
+		System.out.println(((DynamicAcceleratedOperation) result).getFunctionDefinition()); // TODO  Remove
+		((OperationAdapter) result).compile();
 	}
 
 	@Override
@@ -176,7 +161,7 @@ public class SplitRadixFFT implements Evaluable<PairBank>, CodeFeatures {
 			PairBankFromPairsBuilder evenFFT = calculateRadix2Transform(even, even.getCount(), inverseTransform, false);
 			PairBankFromPairsBuilder oddFFT = calculateRadix2Transform(odd, odd.getCount(), inverseTransform, false);
 
-			PairBankFromPairsBuilder transformed = inverseTransform && isFirstSplit ? new PairBankFromPairsBuilder(length) : null;
+			PairBankFromPairsBuilder transformed = new PairBankFromPairsBuilder(length);
 
 			for (int k = 0; k < halfN; k++) {
 				int doubleK = k * 2;

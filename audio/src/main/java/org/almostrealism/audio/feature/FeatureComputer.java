@@ -22,10 +22,6 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public class FeatureComputer implements CodeFeatures {
-	public enum MatrixTransposeType {
-		kTrans, kNoTrans
-	}
-
 	private static final double epsilon = 0.00000001;
 
 	private final FeatureSettings settings;

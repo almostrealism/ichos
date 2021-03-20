@@ -32,7 +32,7 @@ public class SplitRadixFFTTest {
 		return in;
 	}
 
-	private SplitRadixFFT splitRadixFft() {
+	private SplitRadixFFT splitRadixFft(double input[]) {
 		SplitRadixFFT fft = SplitRadixFFTTest.fft.get();
 
 		if (fft == null) {
@@ -48,10 +48,10 @@ public class SplitRadixFFTTest {
 		totalComputations++;
 	}
 
-	protected Runnable compute(boolean print, boolean verify) {
+	protected Runnable compute(boolean print, double input[], double output[]) {
 		return () -> {
 			long start = System.currentTimeMillis();
-			PairBank p = splitRadixFft().evaluate(input());
+			PairBank p = splitRadixFft(input).evaluate(input());
 			updateTime(System.currentTimeMillis() - start);
 
 			if (print) {
@@ -61,19 +61,23 @@ public class SplitRadixFFTTest {
 						.forEach(System.out::println);
 			}
 
-			assert !verify || IntStream.range(0, output.length).map(i ->
+			assert output == null || IntStream.range(0, output.length).map(i ->
 				i % 2 == 0 ? Math.abs(p.get(i / 2).r() - output[i]) > 0.001 ? 1 : 0 :
 						Math.abs(p.get(i / 2).i() - output[i]) > 0.001 ? 1 : 0).sum() < 2;
 		};
 	}
 
 	private Runnable compute(int index) {
-		return compute(index < 0, index < 10);
+		return compute(index < 0, input, index < 10 ? output : null);
+	}
+
+	private Runnable compute(int index, double input[]) {
+		return compute(index < 0, input, null);
 	}
 
 	@Test
 	public void fft() {
-		splitRadixFft();
+		compute(-1, new double[4]).run();
 	}
 
 	// 1 - FFT required 223 msec on average
