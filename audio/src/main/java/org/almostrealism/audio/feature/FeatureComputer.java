@@ -131,6 +131,12 @@ public class FeatureComputer implements CodeFeatures {
 
 	public void computeFeatures(ScalarBank wave,
 								Scalar sampleFreq,
+								Tensor<Scalar> output) {
+		computeFeatures(wave, sampleFreq, 1.0, output);
+	}
+
+	public void computeFeatures(ScalarBank wave,
+								Scalar sampleFreq,
 								double vtlnWarp,
 								Tensor<Scalar> output) {
 		Scalar newSampleFreq = settings.getFrameExtractionSettings().getSampFreq();
@@ -157,7 +163,7 @@ public class FeatureComputer implements CodeFeatures {
 		}
 	}
 
-	public void compute(ScalarBank wave, double vtlnWarp, Tensor<Scalar> output) {
+	protected void compute(ScalarBank wave, double vtlnWarp, Tensor<Scalar> output) {
 		int rowsOut = numFrames(wave.getCount(), settings.getFrameExtractionSettings(), false);
 
 		if (rowsOut == 0) {
@@ -179,7 +185,7 @@ public class FeatureComputer implements CodeFeatures {
 		}
 	}
 
-	public void compute(Scalar signalRawLogEnergy,
+	protected void compute(Scalar signalRawLogEnergy,
 						double vtlnWarp,
 						ScalarBank realSignalFrame,
 						TensorRow<Scalar> feature) {
@@ -187,7 +193,6 @@ public class FeatureComputer implements CodeFeatures {
 
 		MelBanks melBanks = getMelBanks(vtlnWarp);
 
-		// TODO 14
 		if (settings.isUseEnergy() && !settings.isRawEnergy())
 			signalRawLogEnergy.setValue(Math.log(Math.max(Resampler.vecVec(realSignalFrame, realSignalFrame).getValue(), epsilon)));
 

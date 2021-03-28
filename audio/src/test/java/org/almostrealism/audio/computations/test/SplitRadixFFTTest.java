@@ -77,7 +77,7 @@ public class SplitRadixFFTTest {
 
 	@Test
 	public void fft() {
-		compute(-1, new double[4]).run();
+		compute(-1, new double[32]).run();
 	}
 
 	// 1 - FFT required 223 msec on average
