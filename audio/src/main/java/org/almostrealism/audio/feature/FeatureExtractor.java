@@ -53,7 +53,7 @@ public class FeatureExtractor {
 			assert channelCount > 0;
 			int channel = 0;
 
-			ScalarBank waveform = channel(wave, channel);
+			ScalarBank waveform = WavFile.channel(wave, channel);
 			Tensor<Scalar> features = new Tensor<>();
 
 			try {
@@ -74,13 +74,5 @@ public class FeatureExtractor {
 
 		System.out.println(" Done " + successCount + " out of " + uttCount + " utterances.");
 		return successCount != 0 ? 0 : 1;
-	}
-
-	private static ScalarBank channel(int[][] data, int chan) {
-		ScalarBank waveform = new ScalarBank(data[chan].length);
-
-		int index = 0;
-		for (double frame : data[chan]) waveform.set(index++, frame);
-		return waveform;
 	}
 }

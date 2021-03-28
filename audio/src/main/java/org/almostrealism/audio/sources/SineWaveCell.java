@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio;
+package org.almostrealism.audio.sources;
 
-import org.almostrealism.audio.computations.SineWaveComputation;
+import org.almostrealism.audio.Envelope;
+import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.filter.AudioCellAdapter;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.HardwareFeatures;

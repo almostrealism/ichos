@@ -259,16 +259,6 @@ public class Resampler {
 
 	private int numSamplesOut() { return weights.size(); }
 
-	public static void resampleWaveform(Scalar origFreq, ScalarBank wave,
-										Scalar newFreq, ScalarBank newWave) {
-		Scalar minFreq = new Scalar(Math.min(origFreq.getValue(), newFreq.getValue()));
-		Scalar lowpassCutoff = new Scalar(0.99 * 0.5 * minFreq.getValue());
-		int lowpassFilterWidth = 6;
-		Resampler resampler = new Resampler((int) origFreq.getValue(), (int) newFreq.getValue(),
-				lowpassCutoff, lowpassFilterWidth);
-		resampler.resample(wave, true, newWave);
-	}
-
 	private static int gcd(int m, int n) {
 		if (m == 0 || n == 0) {
 			if (m == 0 && n == 0) {  // gcd not defined, as all integers are divisors.
@@ -313,6 +303,16 @@ public class Resampler {
 		assert a.getCount() == b.getCount();
 		return new Scalar(IntStream.range(0, a.getCount())
 				.mapToDouble(i -> a.get(i).getValue() * b.get(i).getValue()).sum());
+	}
+
+	public static void resampleWaveform(Scalar origFreq, ScalarBank wave,
+										Scalar newFreq, ScalarBank newWave) {
+		Scalar minFreq = new Scalar(Math.min(origFreq.getValue(), newFreq.getValue()));
+		Scalar lowpassCutoff = new Scalar(0.99 * 0.5 * minFreq.getValue());
+		int lowpassFilterWidth = 6;
+		Resampler resampler = new Resampler((int) origFreq.getValue(), (int) newFreq.getValue(),
+				lowpassCutoff, lowpassFilterWidth);
+		resampler.resample(wave, true, newWave);
 	}
 
 	private ScalarBank listSegment(ScalarBank input, int index, int len) {

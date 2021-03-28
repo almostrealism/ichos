@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Murray
+ * Copyright 2021 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio;
+package org.almostrealism.audio.sources;
 
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;

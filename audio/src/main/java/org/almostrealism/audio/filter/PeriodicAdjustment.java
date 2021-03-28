@@ -16,7 +16,7 @@
 
 package org.almostrealism.audio.filter;
 
-import org.almostrealism.audio.SineWaveCell;
+import org.almostrealism.audio.sources.SineWaveCell;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;

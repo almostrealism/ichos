@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio.computations;
+package org.almostrealism.audio.sources;
 
-import org.almostrealism.audio.SineWaveCellData;
 import io.almostrealism.code.ArrayVariable;
 import io.almostrealism.code.expressions.Expression;
 import io.almostrealism.code.expressions.Sum;
@@ -29,17 +28,17 @@ import io.almostrealism.code.ScopeInputManager;
 import java.util.function.Supplier;
 
 public class SineWaveComputation extends DynamicOperationComputationAdapter {
-	private static double TWO_PI = 2 * Math.PI;
+	private static final double TWO_PI = 2 * Math.PI;
 
 	public SineWaveComputation(SineWaveCellData data, Producer<Scalar> envelope, Scalar output) {
 		super(() -> new Provider<>(output),
-				() -> data.getWavePosition(),
-				() -> data.getWaveLength(),
-				() -> data.getNotePosition(),
-				() -> data.getNoteLength(),
-				() -> data.getPhase(),
-				() -> data.getAmplitude(),
-				() -> data.getDepth(),
+				data::getWavePosition,
+				data::getWaveLength,
+				data::getNotePosition,
+				data::getNoteLength,
+				data::getPhase,
+				data::getAmplitude,
+				data::getDepth,
 				(Supplier) envelope);
 	}
 
