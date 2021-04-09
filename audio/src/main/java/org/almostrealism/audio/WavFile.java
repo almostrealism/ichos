@@ -162,6 +162,15 @@ public class WavFile {
 
 		return wavFile;
 	}
+
+	public static ScalarBank channel(double[][] data, int chan) {
+		ScalarBank waveform = new ScalarBank(data[chan].length);
+
+		int index = 0;
+		for (double frame : data[chan]) waveform.set(index++, frame);
+		return waveform;
+	}
+
 	public static ScalarBank channel(int[][] data, int chan) {
 		ScalarBank waveform = new ScalarBank(data[chan].length);
 

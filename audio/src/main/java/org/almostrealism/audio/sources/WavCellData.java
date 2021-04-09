@@ -21,22 +21,27 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 
 public class WavCellData extends ScalarBank {
-	public WavCellData() {
-		super(3);
+	public WavCellData(int count, double amplitude) {
+		super(4);
 		setWavePosition(0.0);
 		setWaveLength(1.0);
-		setAmplitude(1.0);
+		setWaveCount(count);
+		setAmplitude(amplitude);
 	}
 
 	protected Scalar wavePosition() { return get(0); }
 	protected Scalar waveLength() { return get(1); }
-	protected Scalar amplitude() { return get(2); }
+	protected Scalar waveCount() { return get(2); }
+	protected Scalar amplitude() { return get(3); }
 
 	public Provider<Scalar> getWavePosition() { return new Provider<>(wavePosition()); }
 	public void setWavePosition(double wavePosition) { wavePosition().setValue(wavePosition); }
 
 	public Provider<Scalar> getWaveLength() { return new Provider<>(waveLength()); }
 	public void setWaveLength(double waveLength) { waveLength().setValue(waveLength); }
+
+	public Provider<Scalar> getWaveCount() { return new Provider<>(waveCount()); }
+	public void setWaveCount(int count) { waveCount().setValue(count); }
 
 	public Provider<Scalar> getAmplitude() { return new Provider<>(amplitude()); }
 	public void setAmplitude(double amplitude) { amplitude().setValue(amplitude); }

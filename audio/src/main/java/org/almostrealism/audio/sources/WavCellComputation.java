@@ -17,20 +17,26 @@
 package org.almostrealism.audio.sources;
 
 import io.almostrealism.code.ArrayVariable;
+import io.almostrealism.code.HybridScope;
+import io.almostrealism.code.Scope;
 import io.almostrealism.code.ScopeInputManager;
-import io.almostrealism.code.expressions.Expression;
 import io.almostrealism.code.expressions.Sum;
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
 
+import java.util.function.Consumer;
+
 public class WavCellComputation extends DynamicOperationComputationAdapter {
+	private HybridScope scope;
+
 	public WavCellComputation(WavCellData data, ScalarBank wave, Scalar output) {
 		super(() -> new Provider<>(output),
 				() -> new Provider<>(wave),
 				data::getWavePosition,
 				data::getWaveLength,
+				data::getWaveCount,
 				data::getAmplitude);
 	}
 
@@ -38,24 +44,38 @@ public class WavCellComputation extends DynamicOperationComputationAdapter {
 	public ArrayVariable getWave() { return getArgument(1); }
 	public ArrayVariable getWavePosition() { return getArgument(2); }
 	public ArrayVariable getWaveLength() { return getArgument(3); }
-	public ArrayVariable getAmplitude() { return getArgument(4); }
+	public ArrayVariable getWaveCount() { return getArgument(4); }
+	public ArrayVariable getAmplitude() { return getArgument(5); }
 
 	@Override
 	public void prepareScope(ScopeInputManager manager) {
 		super.prepareScope(manager);
 
-		purgeVariables();
+		scope = new HybridScope(this);
 
-		StringBuffer exp = new StringBuffer();
-		exp.append(getAmplitude().get(0).getExpression());
-		exp.append(" * ");
-		exp.append(getWave().get(getWavePosition().get(0).getExpression()).getExpression());
+		Consumer<String> exp = scope.code();
+		exp.accept("if (");
+		exp.accept(getWavePosition().get(0).getExpression());
+		exp.accept(" < ");
+		exp.accept(getWaveCount().get(0).getExpression());
+		exp.accept(") {\n");
+		exp.accept(getOutput().get(0).getExpression());
+		exp.accept(" = ");
+		exp.accept(getAmplitude().get(0).getExpression());
+		exp.accept(" * ");
+		exp.accept(getWave().get(getWavePosition().get(0).getExpression()).getExpression());
+		exp.accept(";\n");
+		exp.accept("} else {\n");
+		exp.accept(getOutput().get(0).getExpression());
+		exp.accept(" = 0.0;\n");
+		exp.accept("}\n");
 
-		addVariable(getOutput().get(0).assign(
-				new Expression<>(Double.class, exp.toString(), getOutput(), getWave(),
-						getAmplitude(), getWavePosition())));
-
-		addVariable(getWavePosition().get(0).assign(
-				new Sum(getWavePosition().get(0), getWaveLength().get(0))));
+		exp.accept(getWavePosition().get(0).getExpression());
+		exp.accept(" = ");
+		exp.accept(new Sum(getWavePosition().get(0), getWaveLength().get(0)).getExpression());
+		exp.accept(";\n");
 	}
+
+	@Override
+	public Scope getScope() { return scope; }
 }

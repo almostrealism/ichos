@@ -35,8 +35,8 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	private WavCellData data;
 	private ScalarBank wave;
 
-	public WavCell(ScalarBank wav, int sampleRate) {
-		data = new WavCellData();
+	public WavCell(ScalarBank wav, int sampleRate, double amplitude) {
+		data = new WavCellData(wav.getCount(), amplitude);
 
 		if (sampleRate != OutputLine.sampleRate) {
 			double ratio = OutputLine.sampleRate;
@@ -62,10 +62,10 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		return push;
 	}
 
-	public static WavCell load(File f) throws IOException {
+	public static WavCell load(File f, double amplitude) throws IOException {
 		WavFile w = WavFile.openWavFile(f);
 
-		int[][] wave = new int[w.getNumChannels()][(int) w.getFramesRemaining()];
+		double[][] wave = new double[w.getNumChannels()][(int) w.getFramesRemaining()];
 		w.readFrames(wave, 0, (int) w.getFramesRemaining());
 
 		int channelCount = w.getNumChannels();
@@ -74,7 +74,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		int channel = 0;
 
 		ScalarBank waveform = WavFile.channel(wave, channel);
-		return new WavCell(waveform, (int) w.getSampleRate());
+		return new WavCell(waveform, (int) w.getSampleRate(), amplitude);
 	}
 }
 
