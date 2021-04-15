@@ -129,6 +129,7 @@ public class JavaAudioSample extends AudioSample implements Evaluable<byte[]> {
 	 */
 	public boolean isBpmSet() { return marker > -1; }
 	
+	@Override
 	public byte[] evaluate(Object[] args) {
 		if (mute || pos < loopStart || pos > loopEnd) {
 			return empty;
