@@ -27,33 +27,30 @@ import org.almostrealism.util.CodeFeatures;
 
 import java.util.function.Supplier;
 
-public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, HardwareFeatures {
+public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, HardwareFeatures {
 	private Envelope env;
-	private final SineWaveCellData data;
+	private final ExponentialCellData data;
 
-	public SineWaveCell() {
-		data = new SineWaveCellData();
+	public ExponentialCell() {
+		data = new ExponentialCellData();
+		data.setNoteLength(toFrames(1000));
 		data.setDepth(AudioCellAdapter.depth);
 	}
 
 	public void setEnvelope(Envelope e) { this.env = e; }
 
 	public void strike() { data.setNotePosition(0); }
-	
-	public void setFreq(double hertz) { data.setWaveLength(hertz / (double) OutputLine.sampleRate); }
 
-	public void setNoteLength(int msec) { data.setNoteLength(toFrames(msec)); }
-	
-	public void setPhase(double phase) { data.setPhase(phase); }
-	
-	public void setAmplitude(double amp) { data.setAmplitude(amp); }
+	public void setInputScale(double scale) { data.setInputScale(scale); }
+
+	public void setOutputScale(double scale) { data.setOutputScale(scale); }
 
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
 		OperationList push = new OperationList();
-		push.add(new SineWaveComputation(data, env == null ? v(1.0) :
-					env.getScale(() -> data.getNotePosition()), value));
+		push.add(new ExponentialComputation(data, env == null ? v(1.0) :
+				env.getScale(data::getNotePosition), value));
 		push.add(super.push(p(value)));
 		return push;
 	}

@@ -16,12 +16,11 @@
 
 package org.almostrealism.audio.filter;
 
-import org.almostrealism.audio.sources.SineWaveCell;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.audio.OutputLine;
 import org.almostrealism.graph.Adjustable;
 import org.almostrealism.graph.Adjustment;
+import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
 
 import io.almostrealism.relation.Producer;
@@ -30,14 +29,29 @@ import org.almostrealism.util.CodeFeatures;
 
 import java.util.function.Supplier;
 
-public class PeriodicAdjustment extends CellAdjustment<SineWaveCell> {
-	
-	public PeriodicAdjustment(double freq, Pair bounds) {
-		super(new SineWaveCell(), bounds);
-		getGenerator().setFreq(freq);
-		getGenerator().setPhase(0.5);
-		getGenerator().setNoteLength(0);
-		getGenerator().setAmplitude(1);
-		getGenerator().setReceptor(this);
+public class CellAdjustment<T extends Cell<Scalar>> implements Adjustment<Scalar>, Receptor<Scalar>, CodeFeatures {
+	private final T generator;
+	private final Pair bounds;
+	private final Scalar factor = new Scalar(1.0);
+
+	public CellAdjustment(T generator, Pair bounds) {
+		this.generator = generator;
+		this.bounds = bounds;
+	}
+
+	public T getGenerator() { return generator; }
+
+	@Override
+	public Supplier<Runnable> adjust(Adjustable<Scalar> toAdjust) {
+		OperationList adjust = new OperationList();
+		adjust.add(generator.push(null));
+		adjust.add(toAdjust.updateAdjustment(v(bounds).r().subtract(v(bounds).l())
+				.multiply(p(factor)).add(v(bounds).l())));
+		return adjust;
+	}
+
+	@Override
+	public Supplier<Runnable> push(Producer<Scalar> protein) {
+		return a(2, p(factor), v(1).add(protein).divide(2.0));
 	}
 }
