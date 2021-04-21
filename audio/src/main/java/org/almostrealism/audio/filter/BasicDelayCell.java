@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Murray
+ * Copyright 2021 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.almostrealism.audio.filter;
 
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
+import org.almostrealism.graph.Adjustable;
 import org.almostrealism.graph.SummationCell;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.time.Updatable;
@@ -25,7 +26,7 @@ import org.almostrealism.util.CodeFeatures;
 
 import java.util.function.Supplier;
 
-public class BasicDelayCell extends SummationCell implements CodeFeatures {
+public class BasicDelayCell extends SummationCell implements Adjustable<Scalar>, CodeFeatures {
 	public static int bufferDuration = 10;
 	
 	private double buffer[] = new double[bufferDuration * OutputLine.sampleRate];
@@ -55,12 +56,17 @@ public class BasicDelayCell extends SummationCell implements CodeFeatures {
 	public synchronized Position getPosition() {
 		Position p = new Position();
 		if (delay == 0) delay = 1;
-		p.pos = (cursor % delay) / ((double) delay);
+		p.pos = (cursor % delay) / (double) delay;
 		p.value = buffer[cursor];
 		return p;
 	}
 	
 	public void setUpdatable(Updatable ui) { this.updatable = ui; }
+
+	@Override
+	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
+		return () -> () -> { };
+	}
 
 	@Override
 	public synchronized Supplier<Runnable> push(Producer<Scalar> protein) {

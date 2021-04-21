@@ -30,7 +30,7 @@ import org.almostrealism.util.CodeFeatures;
 
 import java.util.function.Supplier;
 
-public class PeriodicAdjustment extends CellAdjustment<SineWaveCell> {
+public class PeriodicAdjustment extends CellAdjustment<SineWaveCell> implements Adjustable<Scalar> {
 	
 	public PeriodicAdjustment(double freq, Pair bounds) {
 		super(new SineWaveCell(), bounds);
@@ -39,5 +39,10 @@ public class PeriodicAdjustment extends CellAdjustment<SineWaveCell> {
 		getGenerator().setNoteLength(0);
 		getGenerator().setAmplitude(1);
 		getGenerator().setReceptor(this);
+	}
+
+	@Override
+	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
+		return getGenerator().setAmplitude(value);
 	}
 }

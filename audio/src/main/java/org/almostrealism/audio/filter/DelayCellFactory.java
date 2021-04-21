@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Murray
+ * Copyright 2021 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ import org.almostrealism.heredity.Gene;
 import org.almostrealism.util.CodeFeatures;
 
 public class DelayCellFactory implements CellFactory<Scalar, Scalar>, CodeFeatures {
-	private int min;
-	private Scalar delta;
-	private int factorIndex;
+	private final int min;
+	private final Scalar delta;
+	private final int factorIndex;
 	
 	public DelayCellFactory(int minDelay, int maxDelay, int factorIndex) {
 		this.min = minDelay;
@@ -36,6 +36,6 @@ public class DelayCellFactory implements CellFactory<Scalar, Scalar>, CodeFeatur
 	@Override
 	public Cell<Scalar> generateCell(Gene<Scalar> gene) {
 		return new AdjustableDelayCell((int) (min + gene.getFactor(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
-		// return new BasicDelayCell((int) (min + gene.getFactor(factorIndex).getResultant(new StaticProducer<>(Double.valueOf(delta))).evaluate()));
+		// return new BasicDelayCell((int) (min + gene.getFactor(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
 	}
 }

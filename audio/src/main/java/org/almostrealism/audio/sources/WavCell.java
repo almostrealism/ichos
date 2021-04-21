@@ -32,8 +32,8 @@ import java.io.IOException;
 import java.util.function.Supplier;
 
 public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareFeatures {
-	private WavCellData data;
-	private ScalarBank wave;
+	private final WavCellData data;
+	private final ScalarBank wave;
 
 	public WavCell(ScalarBank wav, int sampleRate, double amplitude) {
 		data = new WavCellData(wav.getCount(), amplitude);

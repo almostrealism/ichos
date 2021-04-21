@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Murray
+ * Copyright 2021 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,10 +30,10 @@ import java.util.function.Supplier;
 
 public class AdjustableDelayCell extends SummationCell implements Adjustable<Scalar>, CodeFeatures {
 
-	private AcceleratedTimeSeries buffer;
+	private final AcceleratedTimeSeries buffer;
 	private CursorPair cursors;
 
-	private Scalar scale;
+	private final Scalar scale;
 
 	public AdjustableDelayCell(int delay) {
 		initCursors();
@@ -51,7 +51,7 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 	public AcceleratedTimeSeries getBuffer() { return buffer; }
 
 	public synchronized void setDelay(double msec) {
-		cursors.setDelayCursor(cursors.getCursor() + (msec / 1000d) * OutputLine.sampleRate);
+		cursors.setDelayCursor(cursors.getCursor() + OutputLine.sampleRate * (msec / 1000d));
 	}
 
 	public synchronized double getDelay() {
