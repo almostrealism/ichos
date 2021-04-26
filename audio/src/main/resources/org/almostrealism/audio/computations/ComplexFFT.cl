@@ -167,7 +167,7 @@ void calculateRadix2Transform(float *output, float *input, int len, int inverseT
 	}
 }
 
- __kernel void transform(__global float *output, __global float *input, __global float *config,
+__kernel void transform(__global float *output, __global float *input, __global float *config,
                         int outputOffset, int inputOffset, int configOffset,
                         int outputSize, int inputSize, int configSize) {
     int N = (int) config[configOffset];

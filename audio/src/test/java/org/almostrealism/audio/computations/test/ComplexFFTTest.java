@@ -4,8 +4,10 @@ import org.almostrealism.algebra.PairTable;
 import org.almostrealism.audio.computations.ComplexFFT;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.PairBank;
+import org.almostrealism.hardware.HardwareException;
 import org.almostrealism.hardware.MemoryBank;
 import org.almostrealism.util.TestFeatures;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutorService;
@@ -73,23 +75,29 @@ public class ComplexFFTTest implements TestFeatures {
 
 	protected Runnable compute(boolean print, boolean verify) {
 		return () -> {
-			PairBank input = input();
+			try {
+				PairBank input = input();
 
-			long start = System.currentTimeMillis();
-			PairBank p = complexFft().evaluate(input);
-			updateTime(System.currentTimeMillis() - start);
+				long start = System.currentTimeMillis();
+				PairBank p = complexFft().evaluate(input);
+				updateTime(System.currentTimeMillis() - start);
 
-			if (print) {
-				IntStream.range(0, p.getCount())
-						.mapToObj(p::get)
-						.map(Pair::toString)
-						.forEach(System.out::println);
-			}
+				if (print) {
+					IntStream.range(0, p.getCount())
+							.mapToObj(p::get)
+							.map(Pair::toString)
+							.forEach(System.out::println);
+				}
 
-			if (verify) {
-				assert IntStream.range(0, output.length).map(i ->
-						i % 2 == 0 ? Math.abs(p.get(i / 2).r() - output[i]) > 0.001 ? 1 : 0 :
-								Math.abs(p.get(i / 2).i() - output[i]) > 0.001 ? 1 : 0).sum() < 3;
+				if (verify) {
+					assert IntStream.range(0, output.length).map(i ->
+							i % 2 == 0 ? Math.abs(p.get(i / 2).r() - output[i]) > 0.001 ? 1 : 0 :
+									Math.abs(p.get(i / 2).i() - output[i]) > 0.001 ? 1 : 0).sum() < 3;
+				}
+			} catch (HardwareException e) {
+				e.printStackTrace();
+				System.out.println(e.getProgram());
+				Assert.fail();
 			}
 		};
 	}
@@ -100,7 +108,7 @@ public class ComplexFFTTest implements TestFeatures {
 
 	@Test
 	public void fft() {
-		complexFft();
+		compute(0).run();
 	}
 
 	@Test

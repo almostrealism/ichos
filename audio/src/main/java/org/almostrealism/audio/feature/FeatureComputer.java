@@ -97,8 +97,7 @@ public class FeatureComputer implements CodeFeatures {
 		this.processWindow = processWindow.get();
 		this.preemphasizeAndWindowFunctionAndPad = preemphasizeAndWindowFunctionAndPad.get();
 
-		this.powerSpectrum = new PowerSpectrum(settings.getFrameExtractionSettings().getPaddedWindowSize(),
-					v(2 * settings.getFrameExtractionSettings().getPaddedWindowSize(), 0)).get();
+		this.powerSpectrum = new PowerSpectrum(paddedWindowSize, v(2 * paddedWindowSize, 0)).get();
 
 		// We'll definitely need the filterbanks info for VTLN warping factor 1.0.
 		// [note: this call caches it.]

@@ -47,6 +47,9 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		} else {
 			wave = wav;
 		}
+
+		// TODO  This should not be required, there is some problem that is causing the output to be half speed
+		setFreq(2 * OutputLine.sampleRate);
 	}
 
 	public void setFreq(double hertz) { data.setWaveLength(hertz / (double) OutputLine.sampleRate); }
