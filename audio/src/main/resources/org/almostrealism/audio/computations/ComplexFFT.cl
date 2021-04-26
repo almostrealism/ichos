@@ -19,7 +19,7 @@ void calculateRadix2Transform(float *output, float *input, int len, int inverseT
 
 	if (len >= 2) {
 		int halfN = len / 2;
-		float angle = 2 * M_PI / len;
+		float angle = 2 * M_PI_F / len;
 
 		if (!inverseTransform) {
 			angle *= -1;
@@ -76,7 +76,7 @@ void calculateRadix2Transform(float *output, float *input, int len, int inverseT
 		int quarterN = halfN / 2;
 		int tripleQuarterN = 3 * quarterN;
 
-		float angle = 2 * M_PI / len;
+		float angle = 2 * M_PI_F / len;
 		float i;
 
 		if (inverseTransform <= 0) {
