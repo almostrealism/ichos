@@ -1,5 +1,6 @@
 package org.almostrealism.audio.feature;
 
+import org.almostrealism.algebra.computations.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
 import org.almostrealism.audio.util.TensorRow;
 import io.almostrealism.relation.Evaluable;
@@ -97,7 +98,12 @@ public class FeatureComputer implements CodeFeatures {
 		this.processWindow = processWindow.get();
 		this.preemphasizeAndWindowFunctionAndPad = preemphasizeAndWindowFunctionAndPad.get();
 
-		this.powerSpectrum = new PowerSpectrum(paddedWindowSize, v(2 * paddedWindowSize, 0)).get();
+		if (paddedWindowSize == 512) {
+			this.powerSpectrum = new NativePowerSpectrum512().get();
+		} else {
+			System.out.println("WARN: Unable to use NativePowerSpectrum with window " + paddedWindowSize);
+			this.powerSpectrum = new PowerSpectrum(paddedWindowSize, v(2 * paddedWindowSize, 0)).get();
+		}
 
 		// We'll definitely need the filterbanks info for VTLN warping factor 1.0.
 		// [note: this call caches it.]
