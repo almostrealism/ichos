@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class FeatureExtractor {
 	private static final ThreadLocal<FeatureComputer> computers = new ThreadLocal<>();
@@ -18,7 +19,7 @@ public class FeatureExtractor {
 		System.exit(main(
 				Collections.singletonList(WavFile.openWavFile(
 						new File("/Users/michael/CLionProjects/kaldi/test.wav"))),
-				System.out::println));
+				FeatureExtractor::print));
 	}
 
 	public static int main(List<WavFile> files, Consumer<Tensor<Scalar>> output) throws IOException {
@@ -75,4 +76,6 @@ public class FeatureExtractor {
 		System.out.println(" Done " + successCount + " out of " + uttCount + " utterances.");
 		return successCount != 0 ? 0 : 1;
 	}
+
+	public static void print(Tensor t) { System.out.println(t.toHTML()); }
 }

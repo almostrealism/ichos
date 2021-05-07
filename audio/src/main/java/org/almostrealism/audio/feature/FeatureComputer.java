@@ -15,6 +15,7 @@ import org.almostrealism.algebra.computations.ScalarBankAdd;
 import org.almostrealism.algebra.computations.ScalarBankPad;
 import org.almostrealism.algebra.computations.ScalarBankSum;
 import org.almostrealism.audio.computations.SplitRadixFFT;
+import org.almostrealism.hardware.Hardware;
 import org.almostrealism.util.CodeFeatures;
 
 import java.util.HashMap;
@@ -98,10 +99,11 @@ public class FeatureComputer implements CodeFeatures {
 		this.processWindow = processWindow.get();
 		this.preemphasizeAndWindowFunctionAndPad = preemphasizeAndWindowFunctionAndPad.get();
 
-		if (paddedWindowSize == 512) {
+		if (paddedWindowSize == 512 && Hardware.getLocalHardware().isNativeSupported()) {
 			this.powerSpectrum = new NativePowerSpectrum512().get();
 		} else {
-			System.out.println("WARN: Unable to use NativePowerSpectrum with window " + paddedWindowSize);
+			if (Hardware.getLocalHardware().isNativeSupported())
+				System.out.println("WARN: Unable to use NativePowerSpectrum with window " + paddedWindowSize);
 			this.powerSpectrum = new PowerSpectrum(paddedWindowSize, v(2 * paddedWindowSize, 0)).get();
 		}
 
