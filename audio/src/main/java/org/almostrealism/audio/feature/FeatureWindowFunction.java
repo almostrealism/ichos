@@ -4,7 +4,7 @@ import io.almostrealism.code.OperationAdapter;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.ScalarBank;
-import org.almostrealism.algebra.computations.ScalarBankMultiply;
+import org.almostrealism.algebra.computations.ScalarBankProduct;
 import org.almostrealism.util.CodeFeatures;
 
 import java.util.function.Supplier;
@@ -44,7 +44,7 @@ public class FeatureWindowFunction implements CodeFeatures {
 			}
 		}
 
-		this.window = new ScalarBankMultiply(win.getCount(), scalars(win), v(win.getCount() * 2, 0)).get();
+		this.window = new ScalarBankProduct(win.getCount(), scalars(win), v(win.getCount() * 2, 0)).get();
 		((OperationAdapter) window).compile();
 	}
 
@@ -53,6 +53,6 @@ public class FeatureWindowFunction implements CodeFeatures {
 	}
 
 	public Producer<ScalarBank> getWindow(Supplier<Evaluable<? extends ScalarBank>> input) {
-		return new ScalarBankMultiply(win.getCount(), scalars(win), input);
+		return new ScalarBankProduct(win.getCount(), scalars(win), input);
 	}
 }

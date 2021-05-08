@@ -291,14 +291,6 @@ public class Resampler {
 	}
 
 	@Deprecated
-	public static Scalar vecVec(ScalarBank a, PairBank b) {
-		int adim = a.getCount();
-		assert adim == b.getCount() / 2;
-		// return dot(a, b);
-		throw new UnsupportedOperationException();
-	}
-
-	@Deprecated
 	public static Scalar dot(ScalarBank a, ScalarBank b) {
 		assert a.getCount() == b.getCount();
 		return new Scalar(IntStream.range(0, a.getCount())

@@ -1,12 +1,20 @@
 package org.almostrealism.audio.feature;
 
+import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.algebra.computations.ScalarBankDotProduct;
+import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.util.Ops;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class MelBanks {
+public class MelBanks implements CodeFeatures {
+
+	private static final Map<Integer, Evaluable<? extends Scalar>> vecDot = new HashMap<>();
 
 	/**
 	 * center frequencies of bins, numbered from 0 ... num_bins-1.
@@ -158,7 +166,9 @@ public class MelBanks {
 
 	public List<Bin> getBins() { return bins; }
 
-	// "powerSpectrum" contains fft energies.
+	/**
+	 * @param powerSpectrum  contains fft energies.
+	 */
 	public void compute(ScalarBank powerSpectrum, ScalarBank melEnergiesOut) {
 		int numBins = bins.size();
 		assert melEnergiesOut.getCount() == numBins;
@@ -166,7 +176,7 @@ public class MelBanks {
 		for (int i = 0; i < numBins; i++) {
 			int offset = bins.get(i).getKey();
    			ScalarBank v = bins.get(i).getValue();
-			double energy = Resampler.vecVec(v, powerSpectrum.range(offset, v.getCount())).getValue();
+			double energy = vecDot(v, powerSpectrum.range(offset, v.getCount())).getValue();
 			// HTK-like flooring- for testing purposes (we prefer dither)
 			if (htkMode && energy < 1.0) energy = 1.0;
 			melEnergiesOut.set(i, energy);
@@ -178,6 +188,22 @@ public class MelBanks {
 				System.err.print(" " + melEnergiesOut.get(i));
 			System.err.print("\n");
 		}
+	}
+
+	protected static Scalar vecDot(ScalarBank a, ScalarBank b) {
+		assert a.getCount() == b.getCount();
+		return getVecDot(a.getCount()).evaluate(a, b);
+	}
+
+	protected synchronized static Evaluable<? extends Scalar> getVecDot(int count) {
+		if (!vecDot.containsKey(count)) {
+			ScalarBankDotProduct dp = new ScalarBankDotProduct(count,
+														Ops.ops().v(2 * count, 0),
+														Ops.ops().v(2 * count, 1));
+			vecDot.put(count, dp.get());
+		}
+
+		return vecDot.get(count);
 	}
 
 	// Durbin's recursion - converts autocorrelation coefficients to the LPC
