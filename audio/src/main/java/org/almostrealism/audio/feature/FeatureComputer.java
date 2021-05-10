@@ -1,6 +1,6 @@
 package org.almostrealism.audio.feature;
 
-import org.almostrealism.algebra.computations.NativePowerSpectrum512;
+import org.almostrealism.algebra.computations.jni.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
 import org.almostrealism.audio.util.TensorRow;
 import io.almostrealism.relation.Evaluable;
