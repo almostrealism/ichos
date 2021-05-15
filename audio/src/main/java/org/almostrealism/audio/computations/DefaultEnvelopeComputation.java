@@ -25,12 +25,12 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarProducer;
 import org.almostrealism.hardware.DynamicProducerComputationAdapter;
-import org.almostrealism.hardware.MemWrapper;
+import org.almostrealism.hardware.MemoryData;
 
 import java.util.function.Consumer;
 import java.util.function.IntFunction;
 
-public class DefaultEnvelopeComputation extends DynamicProducerComputationAdapter<MemWrapper, Scalar> implements ScalarProducer {
+public class DefaultEnvelopeComputation extends DynamicProducerComputationAdapter<MemoryData, Scalar> implements ScalarProducer {
 	public DefaultEnvelopeComputation(Producer<Scalar> notePosition) {
 		super(2, Scalar.blank(), ScalarBank::new, new Producer[] { notePosition });
 	}

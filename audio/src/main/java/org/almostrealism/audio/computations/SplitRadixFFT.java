@@ -22,9 +22,7 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.PairBank;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.computations.PairBankFromPairsBuilder;
-import org.almostrealism.hardware.DynamicAcceleratedEvaluable;
 import org.almostrealism.hardware.DynamicAcceleratedOperation;
-import org.almostrealism.hardware.MemWrapper;
 import org.almostrealism.util.CodeFeatures;
 
 public class SplitRadixFFT implements Evaluable<PairBank>, CodeFeatures {
