@@ -18,6 +18,7 @@ package org.almostrealism.audio.computations.test;
 
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.computations.NativeFFT;
+import org.almostrealism.hardware.RAM;
 import org.junit.Test;
 
 public class NativeFFTTest {
@@ -31,7 +32,9 @@ public class NativeFFTTest {
 
 		ScalarBank input = new ScalarBank(1);
 		input.set(0, 5.0, 2.0);
-		fft.transform(input.getMem().getMem(), input.getMem().getMem(), input.getMem().getMem(),
+		fft.transform(((RAM) input.getMem()).getNativePointer(),
+				((RAM) input.getMem()).getNativePointer(),
+				((RAM) input.getMem()).getNativePointer(),
 				input.getOffset(), input.getOffset(), input.getOffset(),
 				2,2,2);
 	}
