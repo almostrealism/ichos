@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 public class MelBanks implements CodeFeatures {
 
@@ -178,7 +179,15 @@ public class MelBanks implements CodeFeatures {
 		for (int i = 0; i < numBins; i++) {
 			int offset = bins.get(i).getKey();
    			ScalarBank v = bins.get(i).getValue();
-			double energy = vecDot(v, powerSpectrum.range(offset, v.getCount())).getValue();
+   			ScalarBank spec = powerSpectrum.range(offset, v.getCount());
+			System.out.println("Bin:");
+			IntStream.range(0, v.getCount()).mapToObj(v::get).forEach(System.out::println);
+   			System.out.println("Spectrum:");
+   			IntStream.range(0, spec.getCount()).mapToObj(spec::get).forEach(System.out::println);
+   			Scalar r = vecDot(v, spec);
+   			System.out.println(r);
+			// double energy = vecDot(v, powerSpectrum.range(offset, v.getCount())).getValue();
+			double energy = r.getValue();
 			// HTK-like flooring- for testing purposes (we prefer dither)
 			if (htkMode && energy < 1.0) energy = 1.0;
 			melEnergiesOut.set(i, energy);

@@ -2,6 +2,10 @@ package org.almostrealism.audio.feature;
 
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
+import org.almostrealism.audio.computations.NativeWindowPreprocess160;
+import org.almostrealism.audio.computations.NativeWindowPreprocess320;
+import org.almostrealism.audio.computations.NativeWindowPreprocess400;
+import org.almostrealism.audio.computations.WindowPreprocess;
 import org.almostrealism.audio.util.TensorRow;
 import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.PairBank;
@@ -32,7 +36,7 @@ public class FeatureComputer implements CodeFeatures {
 	private final ComplexFFT fft;
 
 	private final Evaluable<? extends ScalarBank> processWindow;
-	private final Evaluable<? extends ScalarBank> preemphasizeAndWindowFunctionAndPad;
+	private Evaluable<? extends ScalarBank> preemphasizeAndWindowFunctionAndPad;
 
 	private final Evaluable<ScalarBank> powerSpectrum;
 
@@ -83,21 +87,24 @@ public class FeatureComputer implements CodeFeatures {
 			processWindow = new ScalarBankAdd(count, processWindow, new ScalarBankSum(count, processWindow).divide(count).multiply(-1));
 		}
 
-		Supplier<Evaluable<? extends ScalarBank>> preemphasizeAndWindowFunctionAndPad = v(2 * count, 0);
+		this.processWindow = processWindow.get();
 
-		if (settings.getFrameExtractionSettings().getPreemphCoeff().getValue() != 0.0) {
-			preemphasizeAndWindowFunctionAndPad = new Preemphasize(settings.getFrameExtractionSettings().getWindowSize(),
-					preemphasizeAndWindowFunctionAndPad,
-					v(settings.getFrameExtractionSettings().getPreemphCoeff()));
+		if (Hardware.getLocalHardware().isNativeSupported()) {
+			if (settings.getFrameExtractionSettings().getWindowSize() == 160) {
+				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess160(v(2 * count, 0)).get();
+			} else if (settings.getFrameExtractionSettings().getWindowSize() == 320) {
+				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess320(v(2 * count, 0)).get();
+			} else if (settings.getFrameExtractionSettings().getWindowSize() == 400) {
+				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess400(v(2 * count, 0)).get();
+			}
+
+			System.out.println("Loaded native support for WindowPreprocess");
 		}
 
-		preemphasizeAndWindowFunctionAndPad = featureWindowFunction.getWindow(preemphasizeAndWindowFunctionAndPad);
-		preemphasizeAndWindowFunctionAndPad = new ScalarBankPad(settings.getFrameExtractionSettings().getWindowSize(),
-								settings.getFrameExtractionSettings().getPaddedWindowSize(),
-								preemphasizeAndWindowFunctionAndPad);
-
-		this.processWindow = processWindow.get();
-		this.preemphasizeAndWindowFunctionAndPad = preemphasizeAndWindowFunctionAndPad.get();
+		if (preemphasizeAndWindowFunctionAndPad == null) {
+			this.preemphasizeAndWindowFunctionAndPad = new WindowPreprocess(settings.getFrameExtractionSettings(),
+																		v(2 * count, 0)).get();
+		}
 
 		if (paddedWindowSize == 512 && Hardware.getLocalHardware().isNativeSupported()) {
 			this.powerSpectrum = new NativePowerSpectrum512().get();

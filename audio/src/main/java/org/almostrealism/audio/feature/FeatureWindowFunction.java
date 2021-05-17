@@ -3,6 +3,7 @@ package org.almostrealism.audio.feature;
 import io.almostrealism.code.OperationAdapter;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
+import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.ScalarBankProduct;
 import org.almostrealism.util.CodeFeatures;
@@ -15,7 +16,10 @@ public class FeatureWindowFunction implements CodeFeatures {
 	Evaluable<ScalarBank> window;
 
 	public FeatureWindowFunction(FrameExtractionSettings opts) {
-		int frameLength = opts.getWindowSize();
+		this(opts.getWindowSize(), opts.getWindowType(), opts.getBlackmanCoeff());
+	}
+
+	public FeatureWindowFunction(int frameLength, String windowType, Scalar blackmanCoeff) {
 		assert frameLength > 0;
 
 		win = new ScalarBank(frameLength);
@@ -24,23 +28,23 @@ public class FeatureWindowFunction implements CodeFeatures {
 
 		for (int i = 0; i < frameLength; i++) {
 			double v = 0.5 - 0.5 * Math.cos(a * (double) i);
-			if ("hanning".equals(opts.getWindowType())) {
+			if ("hanning".equals(windowType)) {
 				win.set(i, v);
-			} else if ("sine".equals(opts.getWindowType())) {
+			} else if ("sine".equals(windowType)) {
 				// when you are checking ws wikipedia, please
 				// note that 0.5 * a = PI/(frameLength-1)
 				win.set(i, Math.sin(0.5 * a * (double) i));
-			} else if ("hamming".equals(opts.getWindowType())) {
+			} else if ("hamming".equals(windowType)) {
 				win.set(i, 0.54 - 0.46 * Math.cos(a * (double) i));
-			} else if ("povey".equals(opts.getWindowType())) {  // like hamming but goes to zero at edges.
+			} else if ("povey".equals(windowType)) {  // like hamming but goes to zero at edges.
 				win.set(i, Math.pow(v, 0.85));
-			} else if ("rectangular".equals(opts.getWindowType())) {
+			} else if ("rectangular".equals(windowType)) {
 				win.set(i, 1.0);
-			} else if ("blackman".equals(opts.getWindowType())) {
-				win.set(i, opts.getBlackmanCoeff().getValue() - 0.5 * Math.cos(a * (double) i) +
-						(0.5 - opts.getBlackmanCoeff().getValue()) * Math.cos(2 * a * (double) i));
+			} else if ("blackman".equals(windowType)) {
+				win.set(i, blackmanCoeff.getValue() - 0.5 * Math.cos(a * (double) i) +
+						(0.5 - blackmanCoeff.getValue()) * Math.cos(2 * a * (double) i));
 			} else {
-				throw new IllegalArgumentException("Invalid window type " + opts.getWindowType());
+				throw new IllegalArgumentException("Invalid window type " + windowType);
 			}
 		}
 
