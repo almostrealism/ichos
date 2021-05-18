@@ -1,12 +1,11 @@
 package org.almostrealism.audio.feature;
 
-import org.almostrealism.algebra.PairBank;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.algebra.computations.jni.NativeScalarBankDotProduct;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 
 public class Resampler {
 	private final int sampRateIn;
@@ -129,18 +128,17 @@ public class Resampler {
 	}
 
 	// TODO  inline?
-	void getIndexes(long sampOut,
-					Scalar firstSampIn,
-					Scalar sampOutWrapped) {
+	double[] getIndexes(long sampOut) {
 		// A unit is the smallest nonzero amount of time that is an exact
 		// multiple of the input and output sample periods.  The unit index
 		// is the answer to "which numbered unit we are in".
 		long unitIndex = sampOut / outputSamplesInUnit;
 		// sampOutWrapped is equal to sampOut % outputSamplesInUnit
-		sampOutWrapped.setValue(sampOut -
-				unitIndex * outputSamplesInUnit);
-		firstSampIn.setValue((int) firstIndex.get((int) sampOutWrapped.getValue()).getValue() +
-				unitIndex * inputSamplesInUnit);
+
+		double v[] = new double[2];
+		v[1] = sampOut - unitIndex * outputSamplesInUnit;
+		v[0] = (int) firstIndex.get((int) v[1]).getValue() + unitIndex * inputSamplesInUnit;
+		return v;
 	}
 
 
@@ -156,13 +154,11 @@ public class Resampler {
 		for (long sampOut = outputSampleOffset;
 			 sampOut < totOutputSamp;
 			 sampOut++) {
-			Scalar firstSampIn = new Scalar();
-			Scalar sampOutWrapped = new Scalar();
-			getIndexes(sampOut, firstSampIn, sampOutWrapped);
-			ScalarBank weights = this.weights.get((int) sampOutWrapped.getValue());
+			double indexes[] = getIndexes(sampOut);
+			ScalarBank weights = this.weights.get((int) indexes[1]);
 			// firstInputIndex is the first index into "input" that we have a weight
 			// for.
-			int firstInputIndex = (int) (firstSampIn.getValue() - inputSampleOffset);
+			int firstInputIndex = (int) (indexes[0] - inputSampleOffset);
 			Scalar thisOutput;
 
 			if (firstInputIndex >= 0 &&
@@ -285,16 +281,14 @@ public class Resampler {
 
 	@Deprecated
 	public static Scalar vecVec(ScalarBank a, ScalarBank b) {
-		int adim = a.getCount();
-		assert adim == b.getCount();
+		assert a.getCount() == b.getCount();
 		return dot(a, b);
 	}
 
 	@Deprecated
 	public static Scalar dot(ScalarBank a, ScalarBank b) {
 		assert a.getCount() == b.getCount();
-		return new Scalar(IntStream.range(0, a.getCount())
-				.mapToDouble(i -> a.get(i).getValue() * b.get(i).getValue()).sum());
+		return NativeScalarBankDotProduct.get(a.getCount()).evaluate(a, b);
 	}
 
 	public static void resampleWaveform(Scalar origFreq, ScalarBank wave,

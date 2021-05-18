@@ -17,15 +17,20 @@
 package org.almostrealism.audio.computations;
 
 import io.almostrealism.relation.Evaluable;
+import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.algebra.computations.Dither;
+import org.almostrealism.algebra.computations.ScalarBankAdd;
+import org.almostrealism.algebra.computations.ScalarBankSum;
 
 import java.util.function.Supplier;
 
-public class NativeWindowPreprocess400 extends NativeWindowPreprocess {
-	public NativeWindowPreprocess400() {
-		super(400, 512);
+public class DitherAndRemoveDcOffset extends ScalarBankAdd {
+	public DitherAndRemoveDcOffset(int count, Supplier<Evaluable<? extends ScalarBank>> input, Supplier<Evaluable<? extends Scalar>> ditherValue) {
+		this(count, new Dither(count, input, ditherValue));
 	}
 
-	@Override
-	public native void apply(long commandQueue, long[] arg, int[] offset, int[] size, int count);
+	private DitherAndRemoveDcOffset(int count, Dither dither) {
+		super(count, dither, new ScalarBankSum(count, dither).divide(count).multiply(-1));
+	}
 }

@@ -16,14 +16,9 @@
 
 package org.almostrealism.audio.computations;
 
-import io.almostrealism.relation.Evaluable;
-import org.almostrealism.algebra.ScalarBank;
-
-import java.util.function.Supplier;
-
 public class NativeWindowPreprocess320 extends NativeWindowPreprocess {
-	public NativeWindowPreprocess320(Supplier<Evaluable<? extends ScalarBank>> input) {
-		super(320, 512, input);
+	public NativeWindowPreprocess320() {
+		super(320, 512);
 	}
 
 	@Override

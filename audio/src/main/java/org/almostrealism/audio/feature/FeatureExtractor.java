@@ -18,7 +18,7 @@ public class FeatureExtractor {
 	public static void main(String args[]) throws IOException {
 		System.exit(main(
 				Collections.singletonList(WavFile.openWavFile(
-						new File("/Users/michael/CLionProjects/kaldi/test.wav"))),
+						new File("/Users/michael/CLionProjects/kaldi/test-16khz.wav"))),
 				FeatureExtractor::print));
 	}
 

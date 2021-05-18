@@ -16,11 +16,19 @@
 
 package org.almostrealism.audio.computations;
 
-public class NativeWindowPreprocess160 extends NativeWindowPreprocess {
-	public NativeWindowPreprocess160() {
-		super(160, 256);
+import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.hardware.jni.NativeComputationEvaluable;
+import org.almostrealism.hardware.jni.NativeSupport;
+import org.almostrealism.util.Ops;
+
+public abstract class NativeDitherAndRemoveDcOffset extends DitherAndRemoveDcOffset implements NativeSupport<NativeComputationEvaluable> {
+	public NativeDitherAndRemoveDcOffset(int count) {
+		super(count, Ops.ops().v(2 * count, 0), Ops.ops().v(2 * count, 1));
+		initNative();
 	}
 
 	@Override
-	public native void apply(long commandQueue, long[] arg, int[] offset, int[] size, int count);
+	public NativeComputationEvaluable<ScalarBank> get() {
+		return new NativeComputationEvaluable<>(this);
+	}
 }

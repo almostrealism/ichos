@@ -16,9 +16,9 @@
 
 package org.almostrealism.audio.computations;
 
-public class NativeWindowPreprocess160 extends NativeWindowPreprocess {
-	public NativeWindowPreprocess160() {
-		super(160, 256);
+public class NativeDitherAndRemoveDcOffset160 extends NativeDitherAndRemoveDcOffset {
+	public NativeDitherAndRemoveDcOffset160() {
+		super(160);
 	}
 
 	@Override

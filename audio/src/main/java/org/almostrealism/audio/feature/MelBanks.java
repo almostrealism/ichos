@@ -152,6 +152,9 @@ public class MelBanks implements CodeFeatures {
 			if (opts.isHtkMode() && bin == 0 && melLowFreq != 0.0)
 				bins.get(bin).getValue().set(0, new Scalar(0.0));
 
+			System.out.println("Bin(" + bin + "):");
+			IntStream.range(0, bins.get(bin).getValue().getCount()).mapToObj(bins.get(bin).getValue()::get).forEach(System.out::println);
+
 		}
 
 		if (debug) {

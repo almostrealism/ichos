@@ -2,6 +2,10 @@ package org.almostrealism.audio.feature;
 
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
+import org.almostrealism.audio.computations.DitherAndRemoveDcOffset;
+import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset160;
+import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset320;
+import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset400;
 import org.almostrealism.audio.computations.NativeWindowPreprocess160;
 import org.almostrealism.audio.computations.NativeWindowPreprocess320;
 import org.almostrealism.audio.computations.NativeWindowPreprocess400;
@@ -79,23 +83,38 @@ public class FeatureComputer implements CodeFeatures {
 		fft = new ComplexFFT(paddedWindowSize, true, v(2 * paddedWindowSize, 0));
 
 		int count = settings.getFrameExtractionSettings().getWindowSize();
-		Supplier<Evaluable<? extends ScalarBank>> processWindow = v(2 * count, 0);
+		Supplier<Evaluable<? extends ScalarBank>> processWindow = null;
 
-		processWindow = new Dither(count, processWindow, p(settings.getFrameExtractionSettings().getDither()));
+		if (settings.getFrameExtractionSettings().isRemoveDcOffset() && Hardware.getLocalHardware().isNativeSupported()) {
+			if (settings.getFrameExtractionSettings().getWindowSize() == 160) {
+				processWindow = new NativeDitherAndRemoveDcOffset160();
+			} else if (settings.getFrameExtractionSettings().getWindowSize() == 320) {
+				processWindow = new NativeDitherAndRemoveDcOffset320();
+			} else if (settings.getFrameExtractionSettings().getWindowSize() == 400) {
+				processWindow = new NativeDitherAndRemoveDcOffset400();
+			}
 
-		if (settings.getFrameExtractionSettings().isRemoveDcOffset()) {
-			processWindow = new ScalarBankAdd(count, processWindow, new ScalarBankSum(count, processWindow).divide(count).multiply(-1));
+			System.out.println("Loaded native support for DitherAndRemoveDcOffset");
+		}
+
+		if (processWindow == null) {
+			processWindow = v(2 * count, 0);
+			processWindow = new Dither(count, processWindow, v(Scalar.class, 1));
+
+			if (settings.getFrameExtractionSettings().isRemoveDcOffset()) {
+				processWindow = new ScalarBankAdd(count, processWindow, new ScalarBankSum(count, processWindow).divide(count).multiply(-1));
+			}
 		}
 
 		this.processWindow = processWindow.get();
 
 		if (Hardware.getLocalHardware().isNativeSupported()) {
 			if (settings.getFrameExtractionSettings().getWindowSize() == 160) {
-				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess160(v(2 * count, 0)).get();
+				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess160().get();
 			} else if (settings.getFrameExtractionSettings().getWindowSize() == 320) {
-				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess320(v(2 * count, 0)).get();
+				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess320().get();
 			} else if (settings.getFrameExtractionSettings().getWindowSize() == 400) {
-				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess400(v(2 * count, 0)).get();
+				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess400().get();
 			}
 
 			System.out.println("Loaded native support for WindowPreprocess");
@@ -396,7 +415,7 @@ public class FeatureComputer implements CodeFeatures {
 		int frameLength = opts.getWindowSize();
 		assert window.getCount() == frameLength;
 
-		window = processWindow.evaluate(window);
+		window = processWindow.evaluate(window, settings.getFrameExtractionSettings().getDither());
 
 		if (logEnergyPreWindow != null) {
 			double energy = Math.max(Resampler.vecVec(window, window).getValue(), epsilon);
