@@ -213,10 +213,7 @@ public class MelBanks implements CodeFeatures {
 
 	protected synchronized static Evaluable<? extends Scalar> getVecDot(int count) {
 		if (!vecDot.containsKey(count)) {
-			ScalarBankDotProduct dp = new ScalarBankDotProduct(count,
-														Ops.ops().v(2 * count, 0),
-														Ops.ops().v(2 * count, 1));
-			vecDot.put(count, dp.get());
+			vecDot.put(count, NativeScalarBankDotProduct.get(count));
 		}
 
 		return vecDot.get(count);
