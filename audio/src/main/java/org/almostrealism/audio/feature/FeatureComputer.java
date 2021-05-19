@@ -2,10 +2,10 @@ package org.almostrealism.audio.feature;
 
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
-import org.almostrealism.audio.computations.DitherAndRemoveDcOffset;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset160;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset320;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset400;
+import org.almostrealism.audio.computations.NativeFFT512;
 import org.almostrealism.audio.computations.NativeWindowPreprocess160;
 import org.almostrealism.audio.computations.NativeWindowPreprocess320;
 import org.almostrealism.audio.computations.NativeWindowPreprocess400;
@@ -18,9 +18,7 @@ import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.Tensor;
 import org.almostrealism.algebra.computations.Dither;
 import org.almostrealism.algebra.computations.PowerSpectrum;
-import org.almostrealism.algebra.computations.Preemphasize;
 import org.almostrealism.algebra.computations.ScalarBankAdd;
-import org.almostrealism.algebra.computations.ScalarBankPad;
 import org.almostrealism.algebra.computations.ScalarBankSum;
 import org.almostrealism.audio.computations.SplitRadixFFT;
 import org.almostrealism.hardware.Hardware;
@@ -37,7 +35,7 @@ public class FeatureComputer implements CodeFeatures {
 	private final FeatureSettings settings;
 	private final FeatureWindowFunction featureWindowFunction;
 
-	private final ComplexFFT fft;
+	private final Evaluable<? extends PairBank> fft;
 
 	private final Evaluable<? extends ScalarBank> processWindow;
 	private Evaluable<? extends ScalarBank> preemphasizeAndWindowFunctionAndPad;
@@ -80,7 +78,13 @@ public class FeatureComputer implements CodeFeatures {
 			logEnergyFloor = new Scalar(Math.log(this.settings.getEnergyFloor().getValue()));
 
 		int paddedWindowSize = this.settings.getFrameExtractionSettings().getPaddedWindowSize();
-		fft = new ComplexFFT(paddedWindowSize, true, v(2 * paddedWindowSize, 0));
+
+		if (paddedWindowSize == 512) {
+			fft = new NativeFFT512().get();
+			System.out.println("Loaded native support for FFT");
+		} else {
+			fft = new ComplexFFT(paddedWindowSize, true, v(2 * paddedWindowSize, 0));
+		}
 
 		int count = settings.getFrameExtractionSettings().getWindowSize();
 		Supplier<Evaluable<? extends ScalarBank>> processWindow = null;

@@ -182,11 +182,13 @@ public class MelBanks implements CodeFeatures {
 		for (int i = 0; i < numBins; i++) {
 			int offset = bins.get(i).getKey();
    			ScalarBank v = bins.get(i).getValue();
-   			ScalarBank spec = powerSpectrum.range(offset, v.getCount());
-			System.out.println("Bin:");
+			System.out.println("Bin(" + i + "):");
 			IntStream.range(0, v.getCount()).mapToObj(v::get).forEach(System.out::println);
+
+   			ScalarBank spec = powerSpectrum.range(offset, v.getCount());
    			System.out.println("Spectrum:");
    			IntStream.range(0, spec.getCount()).mapToObj(spec::get).forEach(System.out::println);
+
    			Scalar r = vecDot(v, spec);
    			System.out.println(r);
 			// double energy = vecDot(v, powerSpectrum.range(offset, v.getCount())).getValue();
