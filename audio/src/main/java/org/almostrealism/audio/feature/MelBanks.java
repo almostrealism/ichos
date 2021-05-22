@@ -152,9 +152,6 @@ public class MelBanks implements CodeFeatures {
 			if (opts.isHtkMode() && bin == 0 && melLowFreq != 0.0)
 				bins.get(bin).getValue().set(0, new Scalar(0.0));
 
-			System.out.println("Bin(" + bin + "):");
-			IntStream.range(0, bins.get(bin).getValue().getCount()).mapToObj(bins.get(bin).getValue()::get).forEach(System.out::println);
-
 		}
 
 		if (debug) {
@@ -182,12 +179,12 @@ public class MelBanks implements CodeFeatures {
 		for (int i = 0; i < numBins; i++) {
 			int offset = bins.get(i).getKey();
    			ScalarBank v = bins.get(i).getValue();
-			System.out.println("Bin(" + i + "):");
-			IntStream.range(0, v.getCount()).mapToObj(v::get).forEach(System.out::println);
+			// System.out.println("Bin(" + i + "):");
+			// IntStream.range(0, v.getCount()).mapToObj(v::get).forEach(System.out::println);
 
    			ScalarBank spec = powerSpectrum.range(offset, v.getCount());
-   			System.out.println("Spectrum:");
-   			IntStream.range(0, spec.getCount()).mapToObj(spec::get).forEach(System.out::println);
+   			// System.out.println("Spectrum:");
+   			// IntStream.range(0, spec.getCount()).mapToObj(spec::get).forEach(System.out::println);
 
    			Scalar r = vecDot(v, spec);
    			System.out.println(r);
