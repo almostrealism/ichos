@@ -187,7 +187,7 @@ public class MelBanks implements CodeFeatures {
    			// IntStream.range(0, spec.getCount()).mapToObj(spec::get).forEach(System.out::println);
 
    			Scalar r = vecDot(v, spec);
-   			System.out.println(r);
+   			// System.out.println(r);
 			// double energy = vecDot(v, powerSpectrum.range(offset, v.getCount())).getValue();
 			double energy = r.getValue();
 			// HTK-like flooring- for testing purposes (we prefer dither)
