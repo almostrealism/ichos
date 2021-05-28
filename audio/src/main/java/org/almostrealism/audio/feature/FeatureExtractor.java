@@ -9,17 +9,28 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 public class FeatureExtractor {
 	private static final ThreadLocal<FeatureComputer> computers = new ThreadLocal<>();
 
-	public static void main(String args[]) throws IOException {
-		System.exit(main(
-				Collections.singletonList(WavFile.openWavFile(
-						new File("/Users/michael/CLionProjects/kaldi/test-16khz.wav"))),
-				FeatureExtractor::print));
+	public static void main(String args[]) {
+		ExecutorService executor = Executors.newFixedThreadPool(8);
+
+		IntStream.range(0, 10).mapToObj(i -> (Runnable) () -> {
+			try {
+				main(
+						Collections.singletonList(WavFile.openWavFile(
+								new File("/Users/michael/CLionProjects/kaldi/test-16khz.wav"))),
+						FeatureExtractor::print);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}).forEach(executor::submit);
 	}
 
 	public static int main(List<WavFile> files, Consumer<Tensor<Scalar>> output) throws IOException {
