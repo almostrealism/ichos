@@ -22,7 +22,7 @@ import org.almostrealism.graph.CellFactory;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.util.CodeFeatures;
 
-public class DelayCellFactory implements CellFactory<Scalar, Scalar>, CodeFeatures {
+public class DelayCellFactory implements CellFactory<Scalar, Scalar, Object>, CodeFeatures {
 	private final int min;
 	private final Scalar delta;
 	private final int factorIndex;
@@ -34,7 +34,7 @@ public class DelayCellFactory implements CellFactory<Scalar, Scalar>, CodeFeatur
 	}
 
 	@Override
-	public Cell<Scalar> generateCell(Gene<Scalar> gene) {
+	public Cell<Scalar> generateCell(Gene<Scalar> gene, Object v) {
 		return new AdjustableDelayCell((int) (min + gene.getFactor(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
 		// return new BasicDelayCell((int) (min + gene.getFactor(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
 	}

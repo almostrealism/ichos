@@ -31,7 +31,7 @@ import java.util.stream.IntStream;
 
 public class WavCellTest implements TestFeatures {
 	protected WavCell cell() throws IOException {
-		return WavCell.load(new File("src/main/resources/test.wav"), 1000);
+		return WavCell.load(new File("src/main/resources/test.wav"), 1000, 10);
 	}
 
 	@Test

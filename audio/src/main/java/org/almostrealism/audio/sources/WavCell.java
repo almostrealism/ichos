@@ -34,8 +34,9 @@ import java.util.function.Supplier;
 public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareFeatures {
 	private final WavCellData data;
 	private final ScalarBank wave;
+	private final boolean repeat;
 
-	public WavCell(ScalarBank wav, int sampleRate, double amplitude) {
+	public WavCell(ScalarBank wav, int sampleRate, double amplitude, double repeat) {
 		data = new WavCellData(wav.getCount(), amplitude);
 
 		if (sampleRate != OutputLine.sampleRate) {
@@ -50,6 +51,13 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 
 		// TODO  This should not be required, there is some problem that is causing the output to be half speed
 		setFreq(2 * OutputLine.sampleRate);
+
+		if (repeat > 0) {
+			this.repeat = true;
+			data.setDuration(repeat * OutputLine.sampleRate);
+		} else {
+			this.repeat = false;
+		}
 	}
 
 	public void setFreq(double hertz) { data.setWaveLength(hertz / (double) OutputLine.sampleRate); }
@@ -60,12 +68,12 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
 		OperationList push = new OperationList();
-		push.add(new WavCellComputation(data, wave, value));
+		push.add(new WavCellComputation(data, wave, value, repeat));
 		push.add(super.push(p(value)));
 		return push;
 	}
 
-	public static WavCell load(File f, double amplitude) throws IOException {
+	public static WavCell load(File f, double amplitude, double repeat) throws IOException {
 		WavFile w = WavFile.openWavFile(f);
 
 		double[][] wave = new double[w.getNumChannels()][(int) w.getFramesRemaining()];
@@ -77,7 +85,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		int channel = 0;
 
 		ScalarBank waveform = WavFile.channel(wave, channel);
-		return new WavCell(waveform, (int) w.getSampleRate(), amplitude);
+		return new WavCell(waveform, (int) w.getSampleRate(), amplitude, repeat);
 	}
 }
 

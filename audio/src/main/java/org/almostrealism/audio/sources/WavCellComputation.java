@@ -30,14 +30,17 @@ import java.util.function.Consumer;
 
 public class WavCellComputation extends DynamicOperationComputationAdapter {
 	private HybridScope scope;
+	private final boolean repeat;
 
-	public WavCellComputation(WavCellData data, ScalarBank wave, Scalar output) {
+	public WavCellComputation(WavCellData data, ScalarBank wave, Scalar output, boolean repeat) {
 		super(() -> new Provider<>(output),
 				() -> new Provider<>(wave),
 				data::getWavePosition,
 				data::getWaveLength,
 				data::getWaveCount,
-				data::getAmplitude);
+				data::getAmplitude,
+				data::getDuration);
+		this.repeat = repeat;
 	}
 
 	public ArrayVariable getOutput() { return getArgument(0); }
@@ -46,6 +49,7 @@ public class WavCellComputation extends DynamicOperationComputationAdapter {
 	public ArrayVariable getWaveLength() { return getArgument(3); }
 	public ArrayVariable getWaveCount() { return getArgument(4); }
 	public ArrayVariable getAmplitude() { return getArgument(5); }
+	public ArrayVariable getDuration() { return getArgument(6); }
 
 	@Override
 	public void prepareScope(ScopeInputManager manager) {
@@ -74,6 +78,15 @@ public class WavCellComputation extends DynamicOperationComputationAdapter {
 		exp.accept(" = ");
 		exp.accept(new Sum(getWavePosition().get(0), getWaveLength().get(0)).getExpression());
 		exp.accept(";\n");
+
+		if (repeat) {
+			exp.accept(getWavePosition().get(0).getExpression());
+			exp.accept(" = fmod(");
+			exp.accept(getWavePosition().get(0).getExpression());
+			exp.accept(", ");
+			exp.accept(getDuration().get(0).getExpression());
+			exp.accept(");\n");
+		}
 	}
 
 	@Override
