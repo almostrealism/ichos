@@ -16,13 +16,24 @@
 
 package org.almostrealism.audio.filter;
 
+import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
+import org.almostrealism.graph.Adjustable;
 import org.almostrealism.graph.CellAdapter;
+import org.almostrealism.graph.ScalarCachedStateCell;
+import org.almostrealism.hardware.OperationList;
 
-public abstract class AudioCellAdapter extends CellAdapter<Scalar> {
+import java.util.function.Supplier;
+
+public abstract class AudioCellAdapter extends ScalarCachedStateCell implements Adjustable<Scalar> {
 	public static double depth = 1.0;
 	public static double PI = Math.PI;
 
-	protected int toFrames(int msec) { return (int) ((msec / 1000d) * OutputLine.sampleRate); }
+	protected int toFrames(int msec) { return (int) (OutputLine.sampleRate * msec / 1000d); }
+
+	@Override
+	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
+		return new OperationList();
+	}
 }

@@ -26,7 +26,7 @@ import io.almostrealism.code.ScopeInputManager;
 
 import java.util.function.Supplier;
 
-public class ExponentialComputation extends DynamicOperationComputationAdapter {
+public abstract class ExponentialComputation extends DynamicOperationComputationAdapter {
 	public ExponentialComputation(ExponentialCellData data, Producer<Scalar> envelope, Scalar output) {
 		super(() -> new Provider<>(output),
 				data::getNotePosition,
@@ -44,32 +44,4 @@ public class ExponentialComputation extends DynamicOperationComputationAdapter {
 	public ArrayVariable getOutputScale() { return getArgument(4); }
 	public ArrayVariable getDepth() { return getArgument(5); }
 	public ArrayVariable getEnvelope() { return getArgument(6); }
-
-	@Override
-	public void prepareScope(ScopeInputManager manager) {
-		super.prepareScope(manager);
-
-		purgeVariables();
-
-		StringBuilder exp = new StringBuilder();
-		exp.append(getEnvelope().get(0).getExpression());
-		exp.append(" * ");
-		exp.append(getOutputScale().get(0).getExpression());
-		exp.append(" * (");
-		exp.append("exp(");
-		exp.append(getNotePosition().get(0).getExpression());
-		exp.append(" * ");
-		exp.append(getInputScale().get(0).getExpression());
-		exp.append(") - 1) * ");
-		exp.append(getDepth().get(0).getExpression());
-
-		addVariable(getOutput().get(0).assign(
-				new Expression<>(Double.class, exp.toString(), getOutput(), getNotePosition(),
-						getInputScale(), getOutputScale(), getDepth(), getEnvelope())));
-
-		addVariable(getNotePosition().get(0).assign(
-				new Expression<>(Double.class, getNotePosition().get(0).getExpression() +
-						" + " + stringForDouble(1.0) + " / " + getNoteLength().get(0).getExpression(),
-						getNotePosition(), getNoteLength())));
-	}
 }

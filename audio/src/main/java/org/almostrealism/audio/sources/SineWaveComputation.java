@@ -27,8 +27,8 @@ import io.almostrealism.code.ScopeInputManager;
 
 import java.util.function.Supplier;
 
-public class SineWaveComputation extends DynamicOperationComputationAdapter {
-	private static final double TWO_PI = 2 * Math.PI;
+public abstract class SineWaveComputation extends DynamicOperationComputationAdapter {
+	protected static final double TWO_PI = 2 * Math.PI;
 
 	public SineWaveComputation(SineWaveCellData data, Producer<Scalar> envelope, Scalar output) {
 		super(() -> new Provider<>(output),
@@ -42,45 +42,13 @@ public class SineWaveComputation extends DynamicOperationComputationAdapter {
 				(Supplier) envelope);
 	}
 
-	public ArrayVariable getOutput() { return getArgument(0); }
-	public ArrayVariable getWavePosition() { return getArgument(1); }
-	public ArrayVariable getWaveLength() { return getArgument(2); }
-	public ArrayVariable getNotePosition() { return getArgument(3); }
-	public ArrayVariable getNoteLength() { return getArgument(4); }
-	public ArrayVariable getPhase() { return getArgument(5); }
-	public ArrayVariable getAmplitude() { return getArgument(6); }
-	public ArrayVariable getDepth() { return getArgument(7); }
-	public ArrayVariable getEnvelope() { return getArgument(8); }
-
-	@Override
-	public void prepareScope(ScopeInputManager manager) {
-		super.prepareScope(manager);
-
-		purgeVariables();
-
-		StringBuffer exp = new StringBuffer();
-		exp.append(getEnvelope().get(0).getExpression());
-		exp.append(" * ");
-		exp.append(getAmplitude().get(0).getExpression());
-		exp.append(" * ");
-		exp.append("sin((");
-		exp.append(getWavePosition().get(0).getExpression());
-		exp.append(" + ");
-		exp.append(getPhase().get(0).getExpression());
-		exp.append(") * ");
-		exp.append(stringForDouble(TWO_PI));
-		exp.append(") * ");
-		exp.append(getDepth().get(0).getExpression());
-
-		addVariable(getOutput().get(0).assign(
-				new Expression<>(Double.class, exp.toString(), getOutput(), getAmplitude(),
-						getWavePosition(), getPhase(), getDepth(), getEnvelope())));
-
-		addVariable(getWavePosition().get(0).assign(
-				new Sum(getWavePosition().get(0), getWaveLength().get(0))));
-		addVariable(getNotePosition().get(0).assign(
-				new Expression<>(Double.class, getNotePosition().get(0).getExpression() +
-							" + " + stringForDouble(1.0) + " / " + getNoteLength().get(0).getExpression(),
-						getNotePosition(), getNoteLength())));
-	}
+	public ArrayVariable getOutput() { return getArgument(0, 2); }
+	public ArrayVariable getWavePosition() { return getArgument(1, 2); }
+	public ArrayVariable getWaveLength() { return getArgument(2, 2); }
+	public ArrayVariable getNotePosition() { return getArgument(3, 2); }
+	public ArrayVariable getNoteLength() { return getArgument(4, 2); }
+	public ArrayVariable getPhase() { return getArgument(5, 2); }
+	public ArrayVariable getAmplitude() { return getArgument(6, 2); }
+	public ArrayVariable getDepth() { return getArgument(7, 2); }
+	public ArrayVariable getEnvelope() { return getArgument(8, 2); }
 }

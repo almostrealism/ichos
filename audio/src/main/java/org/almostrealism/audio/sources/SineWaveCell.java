@@ -56,9 +56,18 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
 		OperationList push = new OperationList();
-		push.add(new SineWaveComputation(data, env == null ? v(1.0) :
+		push.add(new SineWavePush(data, env == null ? v(1.0) :
 					env.getScale(data::getNotePosition), value));
 		push.add(super.push(p(value)));
 		return push;
+	}
+
+	@Override
+	public Supplier<Runnable> tick() {
+		OperationList tick = new OperationList();
+		tick.add(new SineWaveTick(data, env == null ? v(1.0) :
+				env.getScale(data::getNotePosition)));
+		tick.add(super.tick());
+		return tick;
 	}
 }

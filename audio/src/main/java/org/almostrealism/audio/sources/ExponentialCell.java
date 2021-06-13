@@ -49,9 +49,19 @@ public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, H
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
 		OperationList push = new OperationList();
-		push.add(new ExponentialComputation(data, env == null ? v(1.0) :
+		push.add(new ExponentialCellPush(data, env == null ? v(1.0) :
 				env.getScale(data::getNotePosition), value));
 		push.add(super.push(p(value)));
 		return push;
+	}
+
+
+	@Override
+	public Supplier<Runnable> tick() {
+		OperationList tick = new OperationList();
+		tick.add(new ExponentialCellTick(data, env == null ? v(1.0) :
+				env.getScale(data::getNotePosition)));
+		tick.add(super.tick());
+		return tick;
 	}
 }

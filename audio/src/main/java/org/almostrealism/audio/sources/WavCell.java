@@ -68,9 +68,17 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
 		OperationList push = new OperationList();
-		push.add(new WavCellComputation(data, wave, value, repeat));
+		push.add(new WavCellPush(data, wave, value, repeat));
 		push.add(super.push(p(value)));
 		return push;
+	}
+
+	@Override
+	public Supplier<Runnable> tick() {
+		OperationList tick = new OperationList();
+		tick.add(new WavCellTick(data, repeat));
+		tick.add(super.tick());
+		return tick;
 	}
 
 	public static WavCell load(File f, double amplitude, double repeat) throws IOException {
