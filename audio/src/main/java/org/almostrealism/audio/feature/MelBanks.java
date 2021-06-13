@@ -205,17 +205,7 @@ public class MelBanks implements CodeFeatures {
 
 	protected static Scalar vecDot(ScalarBank a, ScalarBank b) {
 		assert a.getCount() == b.getCount();
-		return (Hardware.getLocalHardware().isNativeSupported() ?
-				NativeScalarBankDotProduct.get(a.getCount()) :
-				getVecDot(a.getCount())).evaluate(a, b);
-	}
-
-	protected synchronized static Evaluable<? extends Scalar> getVecDot(int count) {
-		if (!vecDot.containsKey(count)) {
-			vecDot.put(count, NativeScalarBankDotProduct.get(count));
-		}
-
-		return vecDot.get(count);
+		return NativeScalarBankDotProduct.get(a.getCount()).evaluate(a, b);
 	}
 
 	// Durbin's recursion - converts autocorrelation coefficients to the LPC

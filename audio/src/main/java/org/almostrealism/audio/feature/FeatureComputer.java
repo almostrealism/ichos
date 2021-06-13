@@ -79,7 +79,7 @@ public class FeatureComputer implements CodeFeatures {
 
 		int paddedWindowSize = this.settings.getFrameExtractionSettings().getPaddedWindowSize();
 
-		if (paddedWindowSize == 512) {
+		if (Hardware.getLocalHardware().isNativeSupported() && paddedWindowSize == 512) {
 			fft = new NativeFFT512().get();
 			System.out.println("Loaded native support for FFT");
 		} else {
