@@ -21,6 +21,7 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WavFile;
+import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.feature.Resampler;
 import org.almostrealism.audio.filter.AudioCellAdapter;
 import org.almostrealism.hardware.HardwareFeatures;
@@ -37,7 +38,13 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	private final boolean repeat;
 
 	public WavCell(ScalarBank wav, int sampleRate, double amplitude, double repeat) {
-		data = new WavCellData(wav.getCount(), amplitude);
+		data = new PolymorphicAudioData();
+
+		data.setWavePosition(0.0);
+		data.setWaveLength(1.0);
+		data.setWaveCount(wav.getCount());
+		data.setAmplitude(amplitude);
+		data.setDuration(1.0);
 
 		if (sampleRate != OutputLine.sampleRate) {
 			double ratio = OutputLine.sampleRate;

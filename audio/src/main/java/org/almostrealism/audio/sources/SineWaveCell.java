@@ -18,6 +18,7 @@ package org.almostrealism.audio.sources;
 
 import org.almostrealism.audio.Envelope;
 import org.almostrealism.audio.OutputLine;
+import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.filter.AudioCellAdapter;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.HardwareFeatures;
@@ -32,7 +33,7 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 	private final SineWaveCellData data;
 
 	public SineWaveCell() {
-		data = new SineWaveCellData();
+		data = new PolymorphicAudioData();
 		data.setDepth(AudioCellAdapter.depth);
 	}
 

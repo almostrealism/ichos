@@ -27,8 +27,9 @@ import org.almostrealism.hardware.OperationList;
 import java.util.function.Supplier;
 
 public abstract class AudioCellAdapter extends ScalarCachedStateCell implements Adjustable<Scalar> {
+	public static final double PI = Math.PI;
+
 	public static double depth = 1.0;
-	public static double PI = Math.PI;
 
 	protected int toFrames(int msec) { return (int) (OutputLine.sampleRate * msec / 1000d); }
 

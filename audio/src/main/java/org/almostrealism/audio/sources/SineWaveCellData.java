@@ -19,38 +19,23 @@ package org.almostrealism.audio.sources;
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.audio.data.BaseAudioData;
 
-public class SineWaveCellData extends ScalarBank {
-	public SineWaveCellData() {
-		super(7);
-	}
+public interface SineWaveCellData extends BaseAudioData {
+	default Scalar notePosition() { return get(3); }
+	default Scalar noteLength() { return get(4); }
+	default Scalar phase() { return get(5); }
+	default Scalar depth() { return get(6); }
 
-	protected Scalar wavePosition() { return get(0); }
-	protected Scalar waveLength() { return get(1); }
-	protected Scalar notePosition() { return get(2); }
-	protected Scalar noteLength() { return get(3); }
-	protected Scalar phase() { return get(4); }
-	protected Scalar amplitude() { return get(5); }
-	protected Scalar depth() { return get(6); }
+	default Provider<Scalar> getNotePosition() { return new Provider<>(notePosition()); }
+	default void setNotePosition(double notePosition) { notePosition().setValue(notePosition); }
 
-	public Provider<Scalar> getWavePosition() { return new Provider<>(wavePosition()); }
-	public void setWavePosition(double wavePosition) { wavePosition().setValue(wavePosition); }
+	default Provider<Scalar> getNoteLength() { return new Provider<>(noteLength()); }
+	default void setNoteLength(double noteLength) { noteLength().setValue(noteLength); }
 
-	public Provider<Scalar> getWaveLength() { return new Provider<>(waveLength()); }
-	public void setWaveLength(double waveLength) { waveLength().setValue(waveLength); }
+	default Provider<Scalar> getPhase() { return new Provider<>(phase()); }
+	default void setPhase(double phase) { phase().setValue(phase); }
 
-	public Provider<Scalar> getNotePosition() { return new Provider<>(notePosition()); }
-	public void setNotePosition(double notePosition) { notePosition().setValue(notePosition); }
-
-	public Provider<Scalar> getNoteLength() { return new Provider<>(noteLength()); }
-	public void setNoteLength(double noteLength) { noteLength().setValue(noteLength); }
-
-	public Provider<Scalar> getPhase() { return new Provider<>(phase()); }
-	public void setPhase(double phase) { phase().setValue(phase); }
-
-	public Provider<Scalar> getAmplitude() { return new Provider<>(amplitude()); }
-	public void setAmplitude(double amplitude) { amplitude().setValue(amplitude); }
-
-	public Provider<Scalar> getDepth() { return new Provider<>(depth()); }
-	public void setDepth(double depth) { depth().setValue(depth); }
+	default Provider<Scalar> getDepth() { return new Provider<>(depth()); }
+	default void setDepth(double depth) { depth().setValue(depth); }
 }
