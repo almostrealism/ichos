@@ -33,11 +33,11 @@ public class SineWaveTick extends SineWaveComputation {
 
 		purgeVariables();
 
-		addVariable(getWavePosition().get(0).assign(
-				new Sum(getWavePosition().get(0), getWaveLength().get(0))));
-		addVariable(getNotePosition().get(0).assign(
-				new Expression<>(Double.class, getNotePosition().get(0).getExpression() +
-						" + " + stringForDouble(1.0) + " / " + getNoteLength().get(0).getExpression(),
+		addVariable(getWavePosition().valueAt(0).assign(
+				new Sum(getWavePosition().valueAt(0), getWaveLength().valueAt(0))));
+		addVariable(getNotePosition().valueAt(0).assign(
+				new Expression<>(Double.class, getNotePosition().valueAt(0).getExpression() +
+						" + " + stringForDouble(1.0) + " / " + getNoteLength().valueAt(0).getExpression(),
 						getNotePosition(), getNoteLength())));
 	}
 }

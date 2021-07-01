@@ -35,10 +35,10 @@ public class ClipCounter extends DynamicOperationComputationAdapter {
 	public Scope<Void> getScope() {
 		HybridScope<Void> scope = new HybridScope<>(this);
 
-		String value = getArgument(2).get(0).getExpression();
-		String min = getArgument(1).get(0).getExpression();
-		String max = getArgument(1).get(1).getExpression();
-		String count = getArgument(0).get(0).getExpression();
+		String value = getArgument(2).valueAt(0).getExpression();
+		String min = getArgument(1).valueAt(0).getExpression();
+		String max = getArgument(1).valueAt(1).getExpression();
+		String count = getArgument(0).valueAt(0).getExpression();
 
 		Consumer<String> code = scope.code();
 		code.accept("if (" + value + " >= " + max + " || " + value

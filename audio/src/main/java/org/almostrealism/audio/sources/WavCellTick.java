@@ -37,17 +37,17 @@ public class WavCellTick extends WavCellComputation {
 
 		Consumer<String> exp = scope.code();
 
-		exp.accept(getWavePosition().get(0).getExpression());
+		exp.accept(getWavePosition().valueAt(0).getExpression());
 		exp.accept(" = ");
-		exp.accept(new Sum(getWavePosition().get(0), getWaveLength().get(0)).getExpression());
+		exp.accept(new Sum(getWavePosition().valueAt(0), getWaveLength().valueAt(0)).getExpression());
 		exp.accept(";\n");
 
 		if (repeat) {
-			exp.accept(getWavePosition().get(0).getExpression());
+			exp.accept(getWavePosition().valueAt(0).getExpression());
 			exp.accept(" = fmod(");
-			exp.accept(getWavePosition().get(0).getExpression());
+			exp.accept(getWavePosition().valueAt(0).getExpression());
 			exp.accept(", ");
-			exp.accept(getDuration().get(0).getExpression());
+			exp.accept(getDuration().valueAt(0).getExpression());
 			exp.accept(");\n");
 		}
 	}

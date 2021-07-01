@@ -32,9 +32,9 @@ public class ExponentialCellTick extends ExponentialComputation {
 
 		purgeVariables();
 
-		addVariable(getNotePosition().get(0).assign(
-				new Expression<>(Double.class, getNotePosition().get(0).getExpression() +
-						" + " + stringForDouble(1.0) + " / " + getNoteLength().get(0).getExpression(),
+		addVariable(getNotePosition().valueAt(0).assign(
+				new Expression<>(Double.class, getNotePosition().valueAt(0).getExpression() +
+						" + " + stringForDouble(1.0) + " / " + getNoteLength().valueAt(0).getExpression(),
 						getNotePosition(), getNoteLength())));
 	}
 }

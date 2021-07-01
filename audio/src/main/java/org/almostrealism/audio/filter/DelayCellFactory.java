@@ -35,7 +35,7 @@ public class DelayCellFactory implements CellFactory<Scalar, Scalar, Object>, Co
 
 	@Override
 	public Cell<Scalar> generateCell(Gene<Scalar> gene, Object v) {
-		return new AdjustableDelayCell((int) (min + gene.getFactor(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
+		return new AdjustableDelayCell((int) (min + gene.valueAt(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
 		// return new BasicDelayCell((int) (min + gene.getFactor(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
 	}
 }

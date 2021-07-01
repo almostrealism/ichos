@@ -49,7 +49,7 @@ public class SineWaveCellFactory implements CellFactory<Scalar, Scalar, Object>,
 	public Cell<Scalar> generateCell(Gene<Scalar> gene, Object v) {
 		SineWaveCell cell = new SineWaveCell();
 		cell.setFreq(frequencies.get((int) (Math.random() * frequencies.size())).asHertz());
-		cell.setNoteLength((int) (min + gene.getFactor(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
+		cell.setNoteLength((int) (min + gene.valueAt(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
 		cell.setAmplitude(0.1);
 		cell.setEnvelope(DefaultEnvelopeComputation::new);
 		return cell;

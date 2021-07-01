@@ -36,18 +36,18 @@ public class WavCellPush extends WavCellComputation {
 
 		Consumer<String> exp = scope.code();
 		exp.accept("if (");
-		exp.accept(getWavePosition().get(0).getExpression());
+		exp.accept(getWavePosition().valueAt(0).getExpression());
 		exp.accept(" < ");
-		exp.accept(getWaveCount().get(0).getExpression());
+		exp.accept(getWaveCount().valueAt(0).getExpression());
 		exp.accept(") {\n");
-		exp.accept(getOutput().get(0).getExpression());
+		exp.accept(getOutput().valueAt(0).getExpression());
 		exp.accept(" = ");
-		exp.accept(getAmplitude().get(0).getExpression());
+		exp.accept(getAmplitude().valueAt(0).getExpression());
 		exp.accept(" * ");
-		exp.accept(getWave().get(getWavePosition().get(0).getExpression()).getExpression());
+		exp.accept(getWave().get(getWavePosition().valueAt(0).getExpression()).getExpression());
 		exp.accept(";\n");
 		exp.accept("} else {\n");
-		exp.accept(getOutput().get(0).getExpression());
+		exp.accept(getOutput().valueAt(0).getExpression());
 		exp.accept(" = 0.0;\n");
 		exp.accept("}\n");
 	}

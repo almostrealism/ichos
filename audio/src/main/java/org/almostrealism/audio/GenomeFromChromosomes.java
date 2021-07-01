@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Murray
+ * Copyright 2021 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,12 @@ package org.almostrealism.audio;
 
 import java.util.function.Supplier;
 
+import org.almostrealism.heredity.ArrayListGenome;
 import org.almostrealism.heredity.ChromosomeFactory;
 import org.almostrealism.heredity.Genome;
 
 public class GenomeFromChromosomes implements Supplier<Genome> {
-	private ChromosomeFactory factories[];
+	private final ChromosomeFactory[] factories;
 	
 	public GenomeFromChromosomes(ChromosomeFactory... factories) {
 		this.factories = factories;
@@ -30,7 +31,7 @@ public class GenomeFromChromosomes implements Supplier<Genome> {
 
 	@Override
 	public Genome get() {
-		Genome g = new Genome();
+		ArrayListGenome g = new ArrayListGenome();
 		for (ChromosomeFactory f : factories) g.add(f.generateChromosome(1.0));
 		return g;
 	}

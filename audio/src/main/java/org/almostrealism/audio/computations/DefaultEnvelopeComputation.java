@@ -39,8 +39,8 @@ public class DefaultEnvelopeComputation extends DynamicProducerComputationAdapte
 	public Scope<Scalar> getScope() {
 		HybridScope<Scalar> scope = new HybridScope<>(this);
 
-		String position = getArgument(1).get(0).getExpression();
-		String result = ((ArrayVariable) getOutputVariable()).get(0).getExpression();
+		String position = getArgument(1).valueAt(0).getExpression();
+		String result = ((ArrayVariable) getOutputVariable()).valueAt(0).getExpression();
 
 		Consumer<String> code = scope.code();
 		code.accept("if (" + position + " > 1.0) {\n");
