@@ -29,7 +29,7 @@ import org.almostrealism.time.CursorPair;
 import org.almostrealism.util.CodeFeatures;
 
 public class WaveOutput implements Receptor<Scalar>, CodeFeatures {
-	private File file;
+	private Supplier<File> file;
 	private int bits;
 	private long sampleRate;
 
@@ -42,14 +42,14 @@ public class WaveOutput implements Receptor<Scalar>, CodeFeatures {
 	}
 
 	public WaveOutput(File f, int bits) {
-		this(f, 120 * OutputLine.sampleRate, bits);
+		this(() -> f, 120 * OutputLine.sampleRate, bits);
 	}
 
-	public WaveOutput(File f, int maxFrames, int bits) {
+	public WaveOutput(Supplier<File> f, int maxFrames, int bits) {
 		this(f, maxFrames, bits, OutputLine.sampleRate);
 	}
 
-	public WaveOutput(File f, int maxFrames, int bits, long sampleRate) {
+	public WaveOutput(Supplier<File> f, int maxFrames, int bits, long sampleRate) {
 		this.file = f;
 		this.bits = bits;
 		this.sampleRate = sampleRate;
@@ -71,7 +71,7 @@ public class WaveOutput implements Receptor<Scalar>, CodeFeatures {
 			int frames = (int) cursor.left();
 
 			try {
-				this.wav = WavFile.newWavFile(file, 2, frames, bits, sampleRate);
+				this.wav = WavFile.newWavFile(file.get(), 2, frames, bits, sampleRate);
 			} catch (IOException e) {
 				e.printStackTrace();
 				return;
