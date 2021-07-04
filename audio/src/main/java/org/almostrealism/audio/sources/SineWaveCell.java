@@ -32,25 +32,46 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 	private Envelope env;
 	private final SineWaveCellData data;
 
+	private double noteLength;
+	private double waveLength;
+	private double phase;
+	private double amplitude;
+
 	public SineWaveCell() {
-		data = new PolymorphicAudioData();
-		data.setDepth(AudioCellAdapter.depth);
+		this(new PolymorphicAudioData());
+	}
+
+	public SineWaveCell(SineWaveCellData data) {
+		this.data = data;
 	}
 
 	public void setEnvelope(Envelope e) { this.env = e; }
 
 	public void strike() { data.setNotePosition(0); }
 	
-	public void setFreq(double hertz) { data.setWaveLength(hertz / (double) OutputLine.sampleRate); }
+	public void setFreq(double hertz) { this.waveLength = hertz / (double) OutputLine.sampleRate; }
 
-	public void setNoteLength(int msec) { data.setNoteLength(toFrames(msec)); }
+	public void setNoteLength(int msec) { this.noteLength = toFrames(msec); }
 	
-	public void setPhase(double phase) { data.setPhase(phase); }
+	public void setPhase(double phase) { this.phase = phase; }
 	
-	public void setAmplitude(double amp) { data.setAmplitude(amp); }
+	public void setAmplitude(double amp) { amplitude = amp; }
 
 	public Supplier<Runnable> setAmplitude(Producer<Scalar> amp) {
 		return a(2, data::getAmplitude, amp);
+	}
+
+	@Override
+	public Supplier<Runnable> setup() {
+		return () -> () -> {
+			data.setDepth(AudioCellAdapter.depth);
+			data.setNotePosition(0);
+			data.setWavePosition(0);
+			data.setNoteLength(noteLength);
+			data.setWaveLength(waveLength);
+			data.setPhase(phase);
+			data.setAmplitude(amplitude);
+		};
 	}
 
 	@Override
@@ -70,13 +91,5 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 				env.getScale(data::getNotePosition)));
 		tick.add(super.tick());
 		return tick;
-	}
-
-	@Override
-	public void reset() {
-		super.reset();
-		// TODO  Move to init Runnable
-		data.setNotePosition(0);
-		data.setWavePosition(0);
 	}
 }

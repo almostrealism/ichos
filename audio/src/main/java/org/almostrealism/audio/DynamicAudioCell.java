@@ -52,6 +52,21 @@ public class DynamicAudioCell extends AudioCellAdapter {
 	}
 
 	@Override
+	public Supplier<Runnable> setup() {
+		return () -> () -> {
+			double v = decision.get().evaluate().getValue();
+			double in = 1.0 / cells.size();
+
+			for (int i = 0; i < cells.size(); i++) {
+				if (v <= (i + 1) * in) {
+					cells.get(i).setup().get().run();
+					return;
+				}
+			}
+		};
+	}
+
+	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		return new Choice(decision,
 				cells.stream().map(cell -> (Computation) cell.push(protein))

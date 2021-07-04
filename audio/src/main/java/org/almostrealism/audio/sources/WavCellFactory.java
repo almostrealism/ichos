@@ -30,22 +30,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class WavCellFactory implements CellFactory<Scalar, Scalar, Object>, CodeFeatures {
+public class WavCellFactory implements CellFactory<Scalar, Scalar, WavCellData>, CodeFeatures {
 	private final List<File> samples;
 
-	private final int factorIndex;
-
-	public WavCellFactory(Collection<File> samples, int factorIndex) {
+	public WavCellFactory(Collection<File> samples) {
 		this.samples = new ArrayList<>();
 		this.samples.addAll(samples);
-
-		this.factorIndex = factorIndex;
 	}
 
 	@Override
-	public Cell<Scalar> generateCell(Gene<Scalar> gene, Object v) {
+	public Cell<Scalar> generateCell(Gene<Scalar> gene, WavCellData data) {
 		try {
-			return WavCell.load(samples.get((int) (Math.random() * samples.size())), 1.0, 0);
+			return WavCell.load(samples.get((int) (Math.random() * samples.size())), 1.0, 0).apply(data);
 		} catch (IOException e) {
 			e.printStackTrace();
 			return null;

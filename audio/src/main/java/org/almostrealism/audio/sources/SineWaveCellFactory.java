@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class SineWaveCellFactory implements CellFactory<Scalar, Scalar, Object>, CodeFeatures {
+public class SineWaveCellFactory implements CellFactory<Scalar, Scalar, SineWaveCellData>, CodeFeatures {
 	private final int min;
 	private final Scalar delta;
 	private final List<Frequency> frequencies;
@@ -46,8 +46,8 @@ public class SineWaveCellFactory implements CellFactory<Scalar, Scalar, Object>,
 	}
 
 	@Override
-	public Cell<Scalar> generateCell(Gene<Scalar> gene, Object v) {
-		SineWaveCell cell = new SineWaveCell();
+	public Cell<Scalar> generateCell(Gene<Scalar> gene, SineWaveCellData data) {
+		SineWaveCell cell = new SineWaveCell(data);
 		cell.setFreq(frequencies.get((int) (Math.random() * frequencies.size())).asHertz());
 		cell.setNoteLength((int) (min + gene.valueAt(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
 		cell.setAmplitude(0.1);

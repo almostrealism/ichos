@@ -32,9 +32,11 @@ public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, H
 	private final ExponentialCellData data;
 
 	public ExponentialCell() {
-		data = new ExponentialCellData();
-		data.setNoteLength(toFrames(1000));
-		data.setDepth(AudioCellAdapter.depth);
+		this(new ExponentialCellData());
+	}
+
+	public ExponentialCell(ExponentialCellData data) {
+		this.data = data;
 	}
 
 	public void setEnvelope(Envelope e) { this.env = e; }
@@ -44,6 +46,14 @@ public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, H
 	public void setInputScale(double scale) { data.setInputScale(scale); }
 
 	public void setOutputScale(double scale) { data.setOutputScale(scale); }
+
+	@Override
+	public Supplier<Runnable> setup() {
+		return () -> () -> {
+			data.setNoteLength(toFrames(1000));
+			data.setDepth(AudioCellAdapter.depth);
+		};
+	}
 
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {

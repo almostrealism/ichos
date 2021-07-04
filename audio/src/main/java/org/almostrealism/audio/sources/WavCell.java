@@ -30,21 +30,26 @@ import org.almostrealism.util.CodeFeatures;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareFeatures {
 	private final WavCellData data;
 	private final ScalarBank wave;
+
+	private final double duration;
 	private final boolean repeat;
 
-	public WavCell(ScalarBank wav, int sampleRate, double amplitude, double repeat) {
-		data = new PolymorphicAudioData();
+	private double amplitude;
+	private double waveLength;
 
-		data.setWavePosition(0.0);
-		data.setWaveLength(1.0);
-		data.setWaveCount(wav.getCount());
-		data.setAmplitude(amplitude);
-		data.setDuration(1.0);
+	public WavCell(ScalarBank wav, int sampleRate, double amplitude, double repeat) {
+		this(new PolymorphicAudioData(), wav, sampleRate, amplitude, repeat);
+	}
+
+	public WavCell(WavCellData data, ScalarBank wav, int sampleRate, double amplitude, double repeat) {
+		this.data = data;
+		this.amplitude = amplitude;
 
 		if (sampleRate != OutputLine.sampleRate) {
 			double ratio = OutputLine.sampleRate;
@@ -61,15 +66,27 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 
 		if (repeat > 0) {
 			this.repeat = true;
-			data.setDuration(repeat * OutputLine.sampleRate);
+			this.duration = repeat * OutputLine.sampleRate;
 		} else {
 			this.repeat = false;
+			this.duration = 1.0;
 		}
 	}
 
-	public void setFreq(double hertz) { data.setWaveLength(hertz / (double) OutputLine.sampleRate); }
+	public void setFreq(double hertz) { waveLength = hertz / (double) OutputLine.sampleRate; }
 
-	public void setAmplitude(double amp) { data.setAmplitude(amp); }
+	public void setAmplitude(double amp) { amplitude = amp; }
+
+	@Override
+	public Supplier<Runnable> setup() {
+		return () -> () -> {
+			data.setWavePosition(0.0);
+			data.setWaveLength(waveLength);
+			data.setWaveCount(wave.getCount());
+			data.setAmplitude(amplitude);
+			data.setDuration(duration);
+		};
+	}
 
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
@@ -95,7 +112,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		data.setWavePosition(0);
 	}
 
-	public static WavCell load(File f, double amplitude, double repeat) throws IOException {
+	public static Function<WavCellData, WavCell> load(File f, double amplitude, double repeat) throws IOException {
 		WavFile w = WavFile.openWavFile(f);
 
 		double[][] wave = new double[w.getNumChannels()][(int) w.getFramesRemaining()];
@@ -107,7 +124,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		int channel = 0;
 
 		ScalarBank waveform = WavFile.channel(wave, channel);
-		return new WavCell(waveform, (int) w.getSampleRate(), amplitude, repeat);
+		return data -> new WavCell(data, waveform, (int) w.getSampleRate(), amplitude, repeat);
 	}
 }
 

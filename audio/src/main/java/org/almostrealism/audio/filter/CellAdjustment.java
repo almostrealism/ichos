@@ -42,6 +42,11 @@ public class CellAdjustment<T extends Cell<Scalar>> implements Adjustment<Scalar
 	public T getGenerator() { return generator; }
 
 	@Override
+	public Supplier<Runnable> setup() {
+		return generator.setup();
+	}
+
+	@Override
 	public Supplier<Runnable> adjust(Adjustable<Scalar> toAdjust) {
 		OperationList adjust = new OperationList();
 		adjust.add(generator.push(null));
