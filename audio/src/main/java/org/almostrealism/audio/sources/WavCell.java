@@ -88,6 +88,13 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		return tick;
 	}
 
+	@Override
+	public void reset() {
+		super.reset();
+		// TODO  Move to init Runnable
+		data.setWavePosition(0);
+	}
+
 	public static WavCell load(File f, double amplitude, double repeat) throws IOException {
 		WavFile w = WavFile.openWavFile(f);
 

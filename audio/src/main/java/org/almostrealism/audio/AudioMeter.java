@@ -17,6 +17,7 @@
 
 package org.almostrealism.audio;
 
+import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.PairFeatures;
 import org.almostrealism.algebra.Scalar;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class AudioMeter implements Receptor<Scalar>, ScalarFeatures, PairFeatures {
+public class AudioMeter implements Receptor<Scalar>, Lifecycle, ScalarFeatures, PairFeatures {
 	private Receptor<Scalar> forwarding;
 	
 	private Scalar clipCount = new Scalar();
@@ -80,5 +81,13 @@ public class AudioMeter implements Receptor<Scalar>, ScalarFeatures, PairFeature
 		}
 
 		return push;
+	}
+
+	@Override
+	public void reset() {
+		Lifecycle.super.reset();
+		silenceDuration.setValue(0.0);
+		silenceValue.setValue(0.0);
+		clipCount.setValue(0.0);
 	}
 }

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.function.Supplier;
 
+import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.graph.Receptor;
 import io.almostrealism.relation.Producer;
@@ -28,7 +29,7 @@ import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.time.CursorPair;
 import org.almostrealism.util.CodeFeatures;
 
-public class WaveOutput implements Receptor<Scalar>, CodeFeatures {
+public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	private Supplier<File> file;
 	private int bits;
 	private long sampleRate;
@@ -87,5 +88,13 @@ public class WaveOutput implements Receptor<Scalar>, CodeFeatures {
 				}
 			}
 		};
+	}
+
+	@Override
+	public void reset() {
+		Lifecycle.super.reset();
+		cursor.setCursor(0);
+		cursor.setDelayCursor(1);
+		data.reset();
 	}
 }

@@ -64,4 +64,10 @@ public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, H
 		tick.add(super.tick());
 		return tick;
 	}
+
+	@Override
+	public void reset() {
+		super.reset();
+		throw new UnsupportedOperationException();
+	}
 }

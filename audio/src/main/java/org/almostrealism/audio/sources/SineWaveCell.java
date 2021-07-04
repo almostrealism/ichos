@@ -71,4 +71,12 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 		tick.add(super.tick());
 		return tick;
 	}
+
+	@Override
+	public void reset() {
+		super.reset();
+		// TODO  Move to init Runnable
+		data.setNotePosition(0);
+		data.setWavePosition(0);
+	}
 }

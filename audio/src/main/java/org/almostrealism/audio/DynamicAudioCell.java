@@ -23,6 +23,7 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.computations.Choice;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.filter.AudioCellAdapter;
+import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
 
 import java.util.List;
@@ -62,5 +63,11 @@ public class DynamicAudioCell extends AudioCellAdapter {
 		return new Choice(decision,
 				cells.stream().map(AudioCellAdapter::tick).map(v -> (Computation) v)
 						.collect(Collectors.toList()));
+	}
+
+	@Override
+	public void reset() {
+		super.reset();
+		cells.forEach(Cell::reset);
 	}
 }

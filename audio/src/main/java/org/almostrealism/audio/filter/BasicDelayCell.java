@@ -88,7 +88,13 @@ public class BasicDelayCell extends SummationCell implements Adjustable<Scalar>,
 			push.get().run();
 		};
 	}
-	
+
+	@Override
+	public void reset() {
+		super.reset();
+		throw new UnsupportedOperationException();
+	}
+
 	public static class Position {
 		public double pos;
 		public double value;
