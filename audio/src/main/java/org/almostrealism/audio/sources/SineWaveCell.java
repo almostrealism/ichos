@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio.sources;
 
+import io.almostrealism.relation.Evaluable;
 import org.almostrealism.audio.Envelope;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.data.PolymorphicAudioData;
@@ -51,7 +52,15 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 	
 	public void setFreq(double hertz) { this.waveLength = hertz / (double) OutputLine.sampleRate; }
 
+	public Supplier<Runnable> setFreq(Supplier<Evaluable<? extends Scalar>> hertz) {
+		return a(2, data::getWaveLength, scalarsDivide(hertz, v(OutputLine.sampleRate)));
+	}
+
 	public void setNoteLength(int msec) { this.noteLength = toFrames(msec); }
+
+	public Supplier<Runnable> setNoteLength(Supplier<Evaluable<? extends Scalar>> noteLength) {
+		return a(2, data::getNoteLength, toFrames(noteLength));
+	}
 	
 	public void setPhase(double phase) { this.phase = phase; }
 	
@@ -63,7 +72,7 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 
 	@Override
 	public Supplier<Runnable> setup() {
-		return () -> () -> {
+		Supplier<Runnable> defaults = () -> () -> {
 			data.setDepth(AudioCellAdapter.depth);
 			data.setNotePosition(0);
 			data.setWavePosition(0);
@@ -72,6 +81,12 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 			data.setPhase(phase);
 			data.setAmplitude(amplitude);
 		};
+		Supplier<Runnable> customization = super.setup();
+
+		OperationList setup = new OperationList();
+		setup.add(defaults);
+		setup.add(customization);
+		return setup;
 	}
 
 	@Override

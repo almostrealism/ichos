@@ -16,14 +16,18 @@
 
 package org.almostrealism.audio.filter;
 
+import io.almostrealism.relation.Evaluable;
 import org.almostrealism.audio.sources.ExponentialCell;
 import org.almostrealism.algebra.Pair;
 
+import java.util.function.Supplier;
+
 public class ExponentialAdjustment extends CellAdjustment<ExponentialCell> {
 
-	public ExponentialAdjustment(Pair scale, Pair bounds) {
+	public ExponentialAdjustment(Pair scale, Supplier<Evaluable<? extends Pair>> bounds) {
 		super(new ExponentialCell(), bounds);
 		getGenerator().setInputScale(scale.getA());
 		getGenerator().setOutputScale(scale.getB());
+		throw new UnsupportedOperationException(); // Need setup to assign input and output scale before this is valid
 	}
 }

@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio.filter;
 
+import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.graph.Adjustable;
@@ -31,16 +32,19 @@ import java.util.function.Supplier;
 
 public class CellAdjustment<T extends Cell<Scalar>> implements Adjustment<Scalar>, Receptor<Scalar>, CodeFeatures {
 	private final T generator;
-	private final Pair bounds;
+	private final Supplier<Evaluable<? extends Pair>> bounds;
 	private final Scalar factor = new Scalar(1.0);
 
-	public CellAdjustment(T generator, Pair bounds) {
+	public CellAdjustment(T generator, Supplier<Evaluable<? extends Pair>> bounds) {
 		this.generator = generator;
 		this.bounds = bounds;
 	}
 
 	public T getGenerator() { return generator; }
 
+	/**
+	 * Delegates to the {@link Cell#setup()} method of {@link #getGenerator()}.
+	 */
 	@Override
 	public Supplier<Runnable> setup() {
 		return generator.setup();
@@ -50,8 +54,7 @@ public class CellAdjustment<T extends Cell<Scalar>> implements Adjustment<Scalar
 	public Supplier<Runnable> adjust(Adjustable<Scalar> toAdjust) {
 		OperationList adjust = new OperationList();
 		adjust.add(generator.push(null));
-		adjust.add(toAdjust.updateAdjustment(v(bounds).r().subtract(v(bounds).l())
-				.multiply(p(factor)).add(v(bounds).l())));
+		adjust.add(toAdjust.updateAdjustment(r(bounds).subtract(l(bounds)).multiply(p(factor)).add(l(bounds))));
 		return adjust;
 	}
 

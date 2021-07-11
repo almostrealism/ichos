@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio.filter;
 
+import io.almostrealism.relation.Evaluable;
 import org.almostrealism.audio.sources.SineWaveCell;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
@@ -31,14 +32,23 @@ import org.almostrealism.util.CodeFeatures;
 import java.util.function.Supplier;
 
 public class PeriodicAdjustment extends CellAdjustment<SineWaveCell> implements Adjustable<Scalar> {
-	
-	public PeriodicAdjustment(double freq, Pair bounds) {
+	private final Supplier<Evaluable<? extends Scalar>> freq;
+
+	public PeriodicAdjustment(Supplier<Evaluable<? extends Scalar>> freq, Supplier<Evaluable<? extends Pair>> bounds) {
 		super(new SineWaveCell(), bounds);
-		getGenerator().setFreq(freq);
+		this.freq = freq;
 		getGenerator().setPhase(0.5);
 		getGenerator().setNoteLength(0);
 		getGenerator().setAmplitude(1);
 		getGenerator().setReceptor(this);
+	}
+
+	@Override
+	public Supplier<Runnable> setup() {
+		OperationList setup = new OperationList();
+		setup.add(getGenerator().setFreq(freq));
+		setup.add(super.setup());
+		return setup;
 	}
 
 	@Override

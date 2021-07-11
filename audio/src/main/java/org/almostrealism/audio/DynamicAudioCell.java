@@ -32,14 +32,20 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class DynamicAudioCell extends AudioCellAdapter {
-	private final ProducerComputation<Scalar> decision;
 	private final PolymorphicAudioData data;
+	private final ProducerComputation<Scalar> decision;
 	private final List<AudioCellAdapter> cells;
+
 
 	public DynamicAudioCell(ProducerComputation<Scalar> decision,
 							List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> choices) {
+		this(new PolymorphicAudioData(), decision, choices);
+	}
+
+	public DynamicAudioCell(PolymorphicAudioData data, ProducerComputation<Scalar> decision,
+							List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> choices) {
+		this.data = data;
 		this.decision = decision;
-		this.data = new PolymorphicAudioData();
 		this.cells = choices.stream()
 				.map(choice -> choice.apply(data))
 				.collect(Collectors.toList());

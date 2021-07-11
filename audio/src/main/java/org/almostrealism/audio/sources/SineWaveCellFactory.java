@@ -33,23 +33,30 @@ public class SineWaveCellFactory implements CellFactory<Scalar, Scalar, SineWave
 	private final Scalar delta;
 	private final List<Frequency> frequencies;
 
-	private final int factorIndex;
+	private final int noteStartFactor;
+	private final int noteLengthFactor;
 
-	public SineWaveCellFactory(int minNoteLength, int maxNoteLength, Collection<Frequency> frequencies, int factorIndex) {
+	public SineWaveCellFactory(int minNoteStart, int maxNoteStart, int minNoteLength,
+							   int maxNoteLength, Collection<Frequency> frequencies,
+							   int noteStartFactor, int noteLengthFactor) {
 		this.min = minNoteLength;
 		this.delta = new Scalar(maxNoteLength - minNoteLength);
 
 		this.frequencies = new ArrayList<>();
 		this.frequencies.addAll(frequencies);
 
-		this.factorIndex = factorIndex;
+		this.noteStartFactor = noteStartFactor;
+		this.noteLengthFactor = noteLengthFactor;
 	}
 
 	@Override
 	public Cell<Scalar> generateCell(Gene<Scalar> gene, SineWaveCellData data) {
 		SineWaveCell cell = new SineWaveCell(data);
 		cell.setFreq(frequencies.get((int) (Math.random() * frequencies.size())).asHertz());
-		cell.setNoteLength((int) (min + gene.valueAt(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
+
+		// TODO  Set note offset
+
+		cell.addSetup(cell.setNoteLength(scalarAdd(v(min), gene.valueAt(noteLengthFactor).getResultant(p(delta)))));
 		cell.setAmplitude(0.1);
 		cell.setEnvelope(DefaultEnvelopeComputation::new);
 		return cell;
