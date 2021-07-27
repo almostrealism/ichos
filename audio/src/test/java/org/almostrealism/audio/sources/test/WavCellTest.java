@@ -19,6 +19,7 @@ package org.almostrealism.audio.sources.test;
 
 import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.sources.WavCell;
 import org.almostrealism.hardware.AcceleratedComputationOperation;
 import org.almostrealism.hardware.OperationList;
@@ -31,7 +32,7 @@ import java.util.stream.IntStream;
 
 public class WavCellTest implements TestFeatures {
 	protected WavCell cell() throws IOException {
-		return WavCell.load(new File("src/main/resources/test.wav"), 1000, 10);
+		return WavCell.load(new File("src/main/resources/test.wav"), 1000, 10).apply(new PolymorphicAudioData());
 	}
 
 	@Test

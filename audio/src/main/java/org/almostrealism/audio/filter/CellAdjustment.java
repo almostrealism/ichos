@@ -38,9 +38,12 @@ public class CellAdjustment<T extends Cell<Scalar>> implements Adjustment<Scalar
 	public CellAdjustment(T generator, Supplier<Evaluable<? extends Pair>> bounds) {
 		this.generator = generator;
 		this.bounds = bounds;
+		// System.out.println("CellAdjustment.bounds = " + bounds.get().evaluate());
 	}
 
 	public T getGenerator() { return generator; }
+
+	public Supplier<Evaluable<? extends Pair>> getBounds() { return bounds; }
 
 	/**
 	 * Delegates to the {@link Cell#setup()} method of {@link #getGenerator()}.
@@ -58,6 +61,7 @@ public class CellAdjustment<T extends Cell<Scalar>> implements Adjustment<Scalar
 		return adjust;
 	}
 
+	// TODO  This is never called
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		return a(2, p(factor), v(1).add(protein).divide(2.0));

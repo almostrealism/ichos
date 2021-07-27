@@ -16,7 +16,6 @@
 
 package org.almostrealism.audio.filter;
 
-import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.time.CursorPair;
 import org.almostrealism.algebra.Scalar;
@@ -50,6 +49,8 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 	public CursorPair getCursors() { return cursors; }
 
 	public AcceleratedTimeSeries getBuffer() { return buffer; }
+
+	public Scalar getScale() { return scale; }
 
 	public synchronized void setDelay(double msec) {
 		cursors.setDelayCursor(cursors.getCursor() + OutputLine.sampleRate * (msec / 1000d));

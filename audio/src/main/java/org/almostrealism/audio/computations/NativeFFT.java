@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio.computations;
 
+import io.almostrealism.code.ArrayVariable;
 import io.almostrealism.code.HybridScope;
 import io.almostrealism.code.Scope;
 import io.almostrealism.code.expressions.Expression;
@@ -65,31 +66,31 @@ public abstract class NativeFFT extends DynamicProducerComputationAdapter<PairBa
 		HybridScope s = new HybridScope(this);
 		Consumer<String> code = s.code();
 		code.accept("transform(");
-		code.accept(getArgument(0).getRootDelegate().getName());
+		code.accept(((ArrayVariable<Double>) getArgument(0).getRootDelegate()).getName());
 		code.accept(", ");
-		code.accept(getArgument(1).getRootDelegate().getName());
+		code.accept(((ArrayVariable<Double>) getArgument(1).getRootDelegate()).getName());
 		code.accept(", ");
-		code.accept(getArgument(2).getRootDelegate().getName());
+		code.accept(((ArrayVariable<Double>) getArgument(2).getRootDelegate()).getName());
 		code.accept(", ");
-		code.accept(getArgument(0).getRootDelegate().getName());
+		code.accept(((ArrayVariable<Double>) getArgument(0).getRootDelegate()).getName());
 		code.accept("Offset + ");
 		code.accept(String.valueOf(getArgument(0).getOffset()));
 		code.accept(", ");
-		code.accept(getArgument(1).getRootDelegate().getName());
+		code.accept(((ArrayVariable<Double>) getArgument(1).getRootDelegate()).getName());
 		code.accept("Offset + ");
 		code.accept(String.valueOf(getArgument(1).getOffset()));
 		code.accept(", ");
-		code.accept(getArgument(2).getRootDelegate().getName());
+		code.accept(((ArrayVariable<Double>) getArgument(2).getRootDelegate()).getName());
 		code.accept("Offset + ");
 		code.accept(String.valueOf(getArgument(2).getOffset()));
 		code.accept(", ");
-		code.accept(getArgument(0).getRootDelegate().getName());
+		code.accept(((ArrayVariable<Double>) getArgument(0).getRootDelegate()).getName());
 		code.accept("Size");
 		code.accept(", ");
-		code.accept(getArgument(1).getRootDelegate().getName());
+		code.accept(((ArrayVariable<Double>) getArgument(1).getRootDelegate()).getName());
 		code.accept("Size");
 		code.accept(", ");
-		code.accept(getArgument(2).getRootDelegate().getName());
+		code.accept(((ArrayVariable<Double>) getArgument(2).getRootDelegate()).getName());
 		code.accept("Size");
 		code.accept(");");
 		return s;

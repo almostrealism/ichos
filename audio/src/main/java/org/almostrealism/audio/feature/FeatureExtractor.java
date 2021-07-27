@@ -27,7 +27,7 @@ public class FeatureExtractor {
 						Collections.singletonList(WavFile.openWavFile(
 								new File("/Users/michael/CLionProjects/kaldi/test-16khz.wav"))),
 						FeatureExtractor::print);
-			} catch (IOException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}).forEach(executor::submit);
