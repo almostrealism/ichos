@@ -49,7 +49,6 @@ public class FeatureWindowFunction implements CodeFeatures {
 		}
 
 		this.window = new ScalarBankProduct(win.getCount(), scalars(win), v(win.getCount() * 2, 0)).get();
-		((OperationAdapter) window).compile();
 	}
 
 	public UnaryOperator<ScalarBank> getWindow() {

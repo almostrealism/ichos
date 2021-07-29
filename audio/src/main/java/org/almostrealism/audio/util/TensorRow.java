@@ -44,7 +44,7 @@ public class TensorRow<T> {
 	public void addMatVec(Tensor<Scalar> matrix, ScalarBank vector) {
 		int m = matrix.length();
 		int n = matrix.length(0);
-		assert m == length() && n == vector.getCount();
+		assert n == vector.getCount();
 
 		for (int i = 0; i < m; i++) {
 			double v = 0;
