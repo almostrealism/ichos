@@ -28,6 +28,7 @@ import org.almostrealism.audio.computations.SplitRadixFFT;
 import org.almostrealism.hardware.Hardware;
 import org.almostrealism.util.CodeFeatures;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -247,6 +248,8 @@ public class FeatureComputer implements CodeFeatures {
 
 		long start = System.currentTimeMillis();
 
+		// System.out.println(Arrays.toString(IntStream.range(0, realSignalFrame.getCount()).mapToDouble(i -> realSignalFrame.get(i).x()).toArray()));
+
 		PairBank signalFrame;
 
 		if (fft != null) {  // Compute FFT using the split-radix algorithm.
@@ -254,6 +257,8 @@ public class FeatureComputer implements CodeFeatures {
 		} else {
 			throw new UnsupportedOperationException();
 		}
+
+		// System.out.println(Arrays.toString(IntStream.range(0, signalFrame.getCount()).mapToDouble(i -> signalFrame.get(i).x()).toArray()));
 
 		if (enableVerbose) System.out.println("--> FFT: " + (System.currentTimeMillis() - start));
 
@@ -371,11 +376,14 @@ public class FeatureComputer implements CodeFeatures {
 					   FeatureWindowFunction windowFunction,
 					   ScalarBank window,
 					   Scalar logEnergyPreWindow) {
+
 		assert sampleOffset >= 0 && wave.getCount() != 0;
 		int frameLength = opts.getWindowSize();
 		int frameLengthPadded = opts.getPaddedWindowSize();
 		long numSamples = sampleOffset + wave.getCount(),
 				startSample = firstSampleOfFrame(f, opts);
+
+		// System.out.println(Arrays.toString(IntStream.range((int) startSample, (int) startSample + 5).mapToDouble(i -> wave.get(i).x()).toArray()));
 
 		if (opts.isSnipEdges()) {
 			long endSample = startSample + frameLength;
@@ -395,6 +403,7 @@ public class FeatureComputer implements CodeFeatures {
 //					wave.Range(waveStart, frameLength));
 			for (int i = 0; i < frameLength; i++) {
 				window.set(i, wave.get(waveStart + i));
+				assert window.get(i).getValue() == wave.get(waveStart + 1).getValue();
 			}
 		} else {
 			// Deal with any end effects by reflection, if needed.  This code will only
@@ -417,6 +426,8 @@ public class FeatureComputer implements CodeFeatures {
 			}
 		}
 
+		// System.out.println(Arrays.toString(IntStream.range(0, 12).mapToDouble(i -> window.get(i).x()).toArray()));
+
 		ScalarBank frame = window;
 		if (frameLengthPadded > frameLength) frame = frame.range(0, frameLength);
 
@@ -431,7 +442,14 @@ public class FeatureComputer implements CodeFeatures {
 		int frameLength = opts.getWindowSize();
 		assert window.getCount() == frameLength;
 
+		// ScalarBank w = window;
+		// System.out.println(Arrays.toString(IntStream.range(0, window.getCount()).mapToDouble(i -> w.get(i).x()).toArray()));
+
 		window = processWindow.evaluate(window, settings.getFrameExtractionSettings().getDither());
+
+		ScalarBank w1 = window;
+		if (enableVerbose)
+			System.out.println(Arrays.toString(IntStream.range(0, w1.getCount()).mapToDouble(i -> w1.get(i).x()).toArray()));
 
 		if (logEnergyPreWindow != null) {
 			double energy = Math.max(Resampler.vecVec(window, window).getValue(), epsilon);
@@ -439,6 +457,9 @@ public class FeatureComputer implements CodeFeatures {
 		}
 
 		window = preemphasizeAndWindowFunctionAndPad.evaluate(window);
+
+//		ScalarBank w2 = window;
+//		System.out.println("2: " + Arrays.toString(IntStream.range(0, w2.getCount()).mapToDouble(i -> w2.get(i).x()).toArray()));
 
 		if (enableVerbose) System.out.println("--> processWindow: " + (System.currentTimeMillis() - start));
 
