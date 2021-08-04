@@ -1,11 +1,13 @@
 package org.almostrealism.audio.feature;
 
+import org.almostrealism.algebra.computations.jni.NativePowerSpectrum256;
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset160;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset320;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset400;
+import org.almostrealism.audio.computations.NativeFFT256;
 import org.almostrealism.audio.computations.NativeFFT512;
 import org.almostrealism.audio.computations.NativeWindowPreprocess;
 import org.almostrealism.audio.computations.NativeWindowPreprocess160;
@@ -86,6 +88,9 @@ public class FeatureComputer implements CodeFeatures {
 		if (Hardware.getLocalHardware().isNativeSupported() && paddedWindowSize == 512) {
 			fft = new NativeFFT512().get();
 			if (enableVerbose) System.out.println("Loaded native support for FFT");
+		} else if (Hardware.getLocalHardware().isNativeSupported() && paddedWindowSize == 256) {
+			fft = new NativeFFT256().get();
+			if (enableVerbose) System.out.println("Loaded native support for FFT");
 		} else {
 			fft = new ComplexFFT(paddedWindowSize, true, v(2 * paddedWindowSize, 0));
 		}
@@ -139,6 +144,8 @@ public class FeatureComputer implements CodeFeatures {
 
 		if (paddedWindowSize == 512 && Hardware.getLocalHardware().isNativeSupported()) {
 			this.powerSpectrum = new NativePowerSpectrum512().get();
+		} else if (paddedWindowSize == 256 && Hardware.getLocalHardware().isNativeSupported()) {
+			this.powerSpectrum = new NativePowerSpectrum256().get();
 		} else {
 			if (Hardware.getLocalHardware().isNativeSupported())
 				System.out.println("WARN: Unable to use NativePowerSpectrum with window " + paddedWindowSize);
