@@ -23,6 +23,7 @@ import io.almostrealism.code.expressions.Expression;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.PairBank;
 import org.almostrealism.hardware.DynamicProducerComputationAdapter;
+import org.almostrealism.hardware.Hardware;
 import org.almostrealism.hardware.jni.NativeComputationEvaluable;
 import org.almostrealism.hardware.jni.NativeSupport;
 import org.almostrealism.util.Ops;
@@ -122,7 +123,11 @@ public abstract class NativeFFT extends DynamicProducerComputationAdapter<PairBa
 			return null;
 		}
 
-		return buf.toString();
+		if (Hardware.getLocalHardware().isDoublePrecision()) {
+			return buf.toString().replaceAll("float", "double");
+		} else {
+			return buf.toString();
+		}
 	}
 
 	private static Object[] config(int count, boolean forward) {

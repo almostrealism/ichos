@@ -7,6 +7,7 @@ import org.almostrealism.algebra.Tensor;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +20,7 @@ public class FeatureExtractor {
 	private static final ThreadLocal<FeatureComputer> computers = new ThreadLocal<>();
 
 	public static void main(String args[]) {
-		ExecutorService executor = Executors.newFixedThreadPool(8);
+		ExecutorService executor = Executors.newFixedThreadPool(1);
 
 		IntStream.range(0, 10).mapToObj(i -> (Runnable) () -> {
 			try {
@@ -88,5 +89,7 @@ public class FeatureExtractor {
 		return successCount != 0 ? 0 : 1;
 	}
 
-	public static void print(Tensor t) { System.out.println(t.toHTML()); }
+	public static void print(Tensor t) {
+		System.out.println(Arrays.toString(IntStream.range(0, t.length()).mapToDouble(i -> ((Scalar) t.get(i, 0)).getValue()).toArray()));
+	}
 }

@@ -2,10 +2,12 @@ package org.almostrealism.audio.feature;
 
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
+import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset160;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset320;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset400;
 import org.almostrealism.audio.computations.NativeFFT512;
+import org.almostrealism.audio.computations.NativeWindowPreprocess;
 import org.almostrealism.audio.computations.NativeWindowPreprocess160;
 import org.almostrealism.audio.computations.NativeWindowPreprocess320;
 import org.almostrealism.audio.computations.NativeWindowPreprocess400;
@@ -30,6 +32,8 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public class FeatureComputer implements CodeFeatures {
+	public static boolean enableVerbose = false;
+
 	private static final double epsilon = 0.00000001;
 
 	private final FeatureSettings settings;
@@ -81,7 +85,7 @@ public class FeatureComputer implements CodeFeatures {
 
 		if (Hardware.getLocalHardware().isNativeSupported() && paddedWindowSize == 512) {
 			fft = new NativeFFT512().get();
-			System.out.println("Loaded native support for FFT");
+			if (enableVerbose) System.out.println("Loaded native support for FFT");
 		} else {
 			fft = new ComplexFFT(paddedWindowSize, true, v(2 * paddedWindowSize, 0));
 		}
@@ -98,7 +102,9 @@ public class FeatureComputer implements CodeFeatures {
 				processWindow = new NativeDitherAndRemoveDcOffset400();
 			}
 
-			System.out.println("Loaded native support for DitherAndRemoveDcOffset");
+			if (processWindow != null) {
+				if (enableVerbose) System.out.println("Loaded native support for DitherAndRemoveDcOffset");
+			}
 		}
 
 		if (processWindow == null) {
@@ -121,7 +127,9 @@ public class FeatureComputer implements CodeFeatures {
 				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess400().get();
 			}
 
-			System.out.println("Loaded native support for WindowPreprocess");
+			if (preemphasizeAndWindowFunctionAndPad != null) {
+				if (enableVerbose) System.out.println("Loaded native support for WindowPreprocess");
+			}
 		}
 
 		if (preemphasizeAndWindowFunctionAndPad == null) {
@@ -182,17 +190,14 @@ public class FeatureComputer implements CodeFeatures {
 		} else {
 			if (newSampleFreq.getValue() < sampleFreq.getValue() &&
 					!settings.getFrameExtractionSettings().isAllowDownsample())
-				System.err.println("Waveform and config sample Frequency mismatch: "
-						+ sampleFreq + " .vs " + newSampleFreq
-						+ " (use --allow-downsample=true to allow "
-						+ " downsampling the waveform).");
+				throw new IllegalArgumentException("Waveform and config sample Frequency mismatch: "
+						+ sampleFreq + " .vs " + newSampleFreq);
 			else if (newSampleFreq.getValue() > sampleFreq.getValue() &&
 					!settings.getFrameExtractionSettings().isAllowUpsample())
-				System.err.println("Waveform and config sample Frequency mismatch: "
-						+ sampleFreq + " .vs " + newSampleFreq
-						+ " (use --allow-upsample=true option to allow "
-						+ " upsampling the waveform).");
-			// Resample the waveform.
+				throw new IllegalArgumentException("Waveform and config sample Frequency mismatch: "
+						+ sampleFreq + " .vs " + newSampleFreq);
+
+			// Resample the waveform
 			ScalarBank resampledWave = new ScalarBank(wave.getCount());
 			Resampler.resampleWaveform(sampleFreq, wave,
 					newSampleFreq, resampledWave);
@@ -218,7 +223,7 @@ public class FeatureComputer implements CodeFeatures {
 			TensorRow outputRow = new TensorRow(output, r);
 			long start = System.currentTimeMillis();
 			compute(rawLogEnergy, vtlnWarp, window, outputRow);
-			System.out.println("-----> " + (System.currentTimeMillis() - start) + " total");
+			if (enableVerbose) System.out.println("-----> " + (System.currentTimeMillis() - start) + " total");
 		}
 	}
 
@@ -243,32 +248,32 @@ public class FeatureComputer implements CodeFeatures {
 			throw new UnsupportedOperationException();
 		}
 
-		System.out.println("--> FFT: " + (System.currentTimeMillis() - start));
+		if (enableVerbose) System.out.println("--> FFT: " + (System.currentTimeMillis() - start));
 
 		// Convert the FFT into a power spectrum.
 		start = System.currentTimeMillis();
 		ScalarBank powerSpectrum = this.powerSpectrum.evaluate(signalFrame).range(0, signalFrame.getCount() / 2 + 1);
-		System.out.println("--> computePowerSpectrum: " + (System.currentTimeMillis() - start));
+		if (enableVerbose) System.out.println("--> computePowerSpectrum: " + (System.currentTimeMillis() - start));
 
 		start = System.currentTimeMillis();
 		melBanks.compute(powerSpectrum, melEnergies);
-		System.out.println("--> melBanks: " + (System.currentTimeMillis() - start));
+		if (enableVerbose) System.out.println("--> melBanks: " + (System.currentTimeMillis() - start));
 
 		// avoid log of zero (which should be prevented anyway by dithering).
 		start = System.currentTimeMillis();
 		melEnergies.applyFloor(FeatureComputer.epsilon);
 		melEnergies.applyLog();  // take the log.
-		System.out.println("--> applyLog: " + (System.currentTimeMillis() - start));
+		if (enableVerbose) System.out.println("--> applyLog: " + (System.currentTimeMillis() - start));
 
 		start = System.currentTimeMillis();
 		feature.setZero();  // in case there were NaNs.
 		feature.addMatVec(dctMatrix, melEnergies);
-		System.out.println("--> dctMatrix: " + (System.currentTimeMillis() - start));
+		if (enableVerbose) System.out.println("--> dctMatrix: " + (System.currentTimeMillis() - start));
 
 		start = System.currentTimeMillis();
 		if (settings.getCepstralLifter().getValue() != 0.0)
 			feature.mulElements(lifterCoeffs);
-		System.out.println("--> lifterCoeffs: " + (System.currentTimeMillis() - start));
+		if (enableVerbose) System.out.println("--> lifterCoeffs: " + (System.currentTimeMillis() - start));
 
 		// TODO 12
 		if (settings.isUseEnergy()) {
@@ -428,7 +433,7 @@ public class FeatureComputer implements CodeFeatures {
 
 		window = preemphasizeAndWindowFunctionAndPad.evaluate(window);
 
-		System.out.println("--> processWindow: " + (System.currentTimeMillis() - start));
+		if (enableVerbose) System.out.println("--> processWindow: " + (System.currentTimeMillis() - start));
 
 		return window;
 	}
