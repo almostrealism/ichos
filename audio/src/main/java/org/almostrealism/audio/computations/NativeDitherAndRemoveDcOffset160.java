@@ -16,9 +16,17 @@
 
 package org.almostrealism.audio.computations;
 
+import org.almostrealism.algebra.Pair;
+
+import java.util.function.Supplier;
+
 public class NativeDitherAndRemoveDcOffset160 extends NativeDitherAndRemoveDcOffset {
 	public NativeDitherAndRemoveDcOffset160() {
 		super(160);
+	}
+
+	public NativeDitherAndRemoveDcOffset160(Supplier<Pair> randDestination) {
+		super(160, randDestination);
 	}
 
 	@Override

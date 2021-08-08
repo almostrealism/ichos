@@ -1,33 +1,23 @@
 package org.almostrealism.audio.feature;
 
-import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
-import org.almostrealism.algebra.computations.ScalarBankDotProduct;
-import org.almostrealism.algebra.computations.jni.NativeScalarBankDotProduct;
-import org.almostrealism.hardware.Hardware;
 import org.almostrealism.util.CodeFeatures;
-import org.almostrealism.util.Ops;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.IntStream;
 
 public class MelBanks implements CodeFeatures {
 
-	private static final Map<Integer, Evaluable<? extends Scalar>> vecDot = new HashMap<>();
+	private final WaveMath math;
 
 	/**
-	 * center frequencies of bins, numbered from 0 ... num_bins-1.
-	 * Needed by GetCenterFreqs().
+	 * Center frequencies of bins, numbered from 0 ... num_bins-1.
 	 */
 	private final List<Scalar> centerFreqs;
 
 	/**
-	 * the "bins_" vector is a vector, one for each bin, of a pair:
-	 * (the first nonzero fft-bin), (the vector of weights).
+	 * A pair, one for each bin: (the first nonzero fft-bin), (the vector of weights).
 	 */
 	private final List<Bin> bins;
 
@@ -36,6 +26,7 @@ public class MelBanks implements CodeFeatures {
 
 	public MelBanks(MelBanksSettings opts, FrameExtractionSettings frameExtractionSettings,
 					   Scalar vtlnWarpFactor) {
+		this.math = new WaveMath();
 		this.centerFreqs = new ArrayList<>();
 		this.bins = new ArrayList<>();
 		this.htkMode = opts.isHtkMode();
@@ -186,7 +177,7 @@ public class MelBanks implements CodeFeatures {
    			// System.out.println("Spectrum:");
    			// IntStream.range(0, spec.getCount()).mapToObj(spec::get).forEach(System.out::println);
 
-   			Scalar r = vecDot(v, spec);
+   			Scalar r = math.dot(v, spec);
    			// System.out.println(r);
 			// double energy = vecDot(v, powerSpectrum.range(offset, v.getCount())).getValue();
 			double energy = r.getValue();
@@ -201,11 +192,6 @@ public class MelBanks implements CodeFeatures {
 				System.err.print(" " + melEnergiesOut.get(i));
 			System.err.print("\n");
 		}
-	}
-
-	protected static Scalar vecDot(ScalarBank a, ScalarBank b) {
-		assert a.getCount() == b.getCount();
-		return NativeScalarBankDotProduct.get(a.getCount()).evaluate(a, b);
 	}
 
 	// Durbin's recursion - converts autocorrelation coefficients to the LPC

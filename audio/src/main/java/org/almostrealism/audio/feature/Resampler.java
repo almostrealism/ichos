@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Resampler {
+	private final WaveMath math;
 	private final int sampRateIn;
 	private final int sampRateOut;
 	private final Scalar filterCutoff;
@@ -22,6 +23,7 @@ public class Resampler {
 
 	public Resampler(int sampRateInHz, int sampRateOutHz,
 					 Scalar filterCutoffHz, int numZeros) {
+		this.math = new WaveMath();
 		this.sampRateIn = sampRateInHz;
 		this.sampRateOut = sampRateOutHz;
 		this.filterCutoff = filterCutoffHz;
@@ -35,7 +37,7 @@ public class Resampler {
 
 		// baseFreq is the frequency of the repeating unit, which is the gcd
 		// of the input frequencies.
-		int baseFreq = gcd(sampRateIn, sampRateOut);
+		int baseFreq = WaveMath.gcd(sampRateIn, sampRateOut);
 		inputSamplesInUnit = sampRateIn / baseFreq;
 		outputSamplesInUnit = sampRateOut / baseFreq;
 
@@ -54,7 +56,7 @@ public class Resampler {
 		// For exact computation, we measure time in "ticks" of 1.0 / tickFreq,
 		// where tickFreq is the least common multiple of sampRateIn and
 		// sampRateOut.
-		int tickFreq = lcm(sampRateIn, sampRateOut);
+		int tickFreq = WaveMath.lcm(sampRateIn, sampRateOut);
 		int ticksPerInputPeriod = tickFreq / sampRateIn;
 
 		// work out the number of ticks in the time interval
@@ -164,7 +166,7 @@ public class Resampler {
 			if (firstInputIndex >= 0 &&
 					firstInputIndex + weights.getCount() <= inputDim) {
 				ScalarBank inputPart = listSegment(input, firstInputIndex, weights.getCount());
-				thisOutput = vecVec(inputPart, weights);
+				thisOutput = math.dot(inputPart, weights);
 			} else {  // Handle edge cases.
 				thisOutput = new Scalar(0.0);
 				for (int i = 0; i < weights.getCount(); i++) {
@@ -254,42 +256,6 @@ public class Resampler {
 	}
 
 	private int numSamplesOut() { return weights.size(); }
-
-	private static int gcd(int m, int n) {
-		if (m == 0 || n == 0) {
-			if (m == 0 && n == 0) {  // gcd not defined, as all integers are divisors.
-				System.err.println("Undefined GCD since m = 0, n = 0.");
-			}
-
-			return m == 0 ? n > 0 ? n : -n : m > 0 ? m : -m;
-			// return absolute value of whichever is nonzero
-		}
-
-		while (true) {
-			m %= n;
-			if (m == 0) return n > 0 ? n : -n;
-			n %= m;
-			if (n == 0) return m > 0 ? m : -m;
-		}
-	}
-
-	private static int lcm(int m, int n) {
-		assert m > 0 && n > 0;
-		int gcd = gcd(m, n);
-		return gcd * (m / gcd) * (n / gcd);
-	}
-
-	@Deprecated
-	public static Scalar vecVec(ScalarBank a, ScalarBank b) {
-		assert a.getCount() == b.getCount();
-		return dot(a, b);
-	}
-
-	@Deprecated
-	public static Scalar dot(ScalarBank a, ScalarBank b) {
-		assert a.getCount() == b.getCount();
-		return NativeScalarBankDotProduct.get(a.getCount()).evaluate(a, b);
-	}
 
 	public static void resampleWaveform(Scalar origFreq, ScalarBank wave,
 										Scalar newFreq, ScalarBank newWave) {

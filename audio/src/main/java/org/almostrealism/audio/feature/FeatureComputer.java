@@ -1,5 +1,7 @@
 package org.almostrealism.audio.feature;
 
+import org.almostrealism.algebra.Pair;
+import org.almostrealism.algebra.computations.jni.NativePowerSpectrum;
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum256;
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
@@ -25,6 +27,7 @@ import org.almostrealism.algebra.computations.PowerSpectrum;
 import org.almostrealism.algebra.computations.ScalarBankAdd;
 import org.almostrealism.algebra.computations.ScalarBankSum;
 import org.almostrealism.audio.computations.SplitRadixFFT;
+import org.almostrealism.hardware.DestinationSupport;
 import org.almostrealism.hardware.Hardware;
 import org.almostrealism.util.CodeFeatures;
 
@@ -42,6 +45,8 @@ public class FeatureComputer implements CodeFeatures {
 	private final FeatureSettings settings;
 	private final FeatureWindowFunction featureWindowFunction;
 
+	private final WaveMath math;
+
 	private final Evaluable<? extends PairBank> fft;
 
 	private final Evaluable<? extends ScalarBank> processWindow;
@@ -56,10 +61,15 @@ public class FeatureComputer implements CodeFeatures {
 
 	private final ScalarBank melEnergies;
 
+	private final ScalarBank windowInput;
+	private final Scalar rawLogEnergy;
+	private final PairBank complexSignalFrame;
+
 	public FeatureComputer(FeatureSettings settings) {
 		this.settings = settings;
 		this.featureWindowFunction = new FeatureWindowFunction(settings.getFrameExtractionSettings());
 		this.allMelBanks = new HashMap<>();
+		this.math = new WaveMath();
 
 		int binCount = this.settings.getMelBanksSettings().getNumBins();
 		this.melEnergies = new ScalarBank(binCount);
@@ -73,6 +83,12 @@ public class FeatureComputer implements CodeFeatures {
 		dctMatrix = new Tensor<>();
 		computeDctMatrix(dctMatrix, binCount, binCount);
 
+		int paddedWindowSize = this.settings.getFrameExtractionSettings().getPaddedWindowSize();
+
+		windowInput = new ScalarBank(paddedWindowSize);
+		rawLogEnergy = new Scalar(0.0);
+		complexSignalFrame = new PairBank(paddedWindowSize);
+
 		// Note that we include zeroth dct in either case.  If using the
 		// energy we replace this with the energy.  This means a different
 		// ordering of features than HTK.
@@ -84,13 +100,17 @@ public class FeatureComputer implements CodeFeatures {
 		if (this.settings.getEnergyFloor().getValue() > 0.0)
 			logEnergyFloor = new Scalar(Math.log(this.settings.getEnergyFloor().getValue()));
 
-		int paddedWindowSize = this.settings.getFrameExtractionSettings().getPaddedWindowSize();
+		PairBank fftOutput = new PairBank(paddedWindowSize);
 
 		if (Hardware.getLocalHardware().isNativeSupported() && paddedWindowSize == 512) {
-			fft = new NativeFFT512().get();
+			NativeFFT512 nfft = new NativeFFT512();
+			nfft.setDestination(() -> fftOutput);
+			fft = nfft.get();
 			if (enableVerbose) System.out.println("Loaded native support for FFT");
 		} else if (Hardware.getLocalHardware().isNativeSupported() && paddedWindowSize == 256) {
-			fft = new NativeFFT256().get();
+			NativeFFT256 nfft = new NativeFFT256();
+			nfft.setDestination(() -> fftOutput);
+			fft = nfft.get();
 			if (enableVerbose) System.out.println("Loaded native support for FFT");
 		} else {
 			fft = new ComplexFFT(paddedWindowSize, true, v(2 * paddedWindowSize, 0));
@@ -99,16 +119,20 @@ public class FeatureComputer implements CodeFeatures {
 		int count = settings.getFrameExtractionSettings().getWindowSize();
 		Supplier<Evaluable<? extends ScalarBank>> processWindow = null;
 
+
 		if (settings.getFrameExtractionSettings().isRemoveDcOffset() && Hardware.getLocalHardware().isNativeSupported()) {
+			Pair randDestination = new Pair();
 			if (settings.getFrameExtractionSettings().getWindowSize() == 160) {
-				processWindow = new NativeDitherAndRemoveDcOffset160();
+				processWindow = new NativeDitherAndRemoveDcOffset160(() -> randDestination);
 			} else if (settings.getFrameExtractionSettings().getWindowSize() == 320) {
-				processWindow = new NativeDitherAndRemoveDcOffset320();
+				processWindow = new NativeDitherAndRemoveDcOffset320(() -> randDestination);
 			} else if (settings.getFrameExtractionSettings().getWindowSize() == 400) {
-				processWindow = new NativeDitherAndRemoveDcOffset400();
+				processWindow = new NativeDitherAndRemoveDcOffset400(() -> randDestination);
 			}
 
 			if (processWindow != null) {
+				ScalarBank processWindowOutput = new ScalarBank(settings.getFrameExtractionSettings().getWindowSize());
+				((DestinationSupport) processWindow).setDestination(() -> processWindowOutput);
 				if (enableVerbose) System.out.println("Loaded native support for DitherAndRemoveDcOffset");
 			}
 		}
@@ -125,15 +149,20 @@ public class FeatureComputer implements CodeFeatures {
 		this.processWindow = processWindow.get();
 
 		if (Hardware.getLocalHardware().isNativeSupported()) {
+			NativeWindowPreprocess npp = null;
+
 			if (settings.getFrameExtractionSettings().getWindowSize() == 160) {
-				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess160().get();
+				npp = new NativeWindowPreprocess160();
 			} else if (settings.getFrameExtractionSettings().getWindowSize() == 320) {
-				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess320().get();
+				npp = new NativeWindowPreprocess320();
 			} else if (settings.getFrameExtractionSettings().getWindowSize() == 400) {
-				this.preemphasizeAndWindowFunctionAndPad = new NativeWindowPreprocess400().get();
+				npp = new NativeWindowPreprocess400();
 			}
 
-			if (preemphasizeAndWindowFunctionAndPad != null) {
+			if (npp != null) {
+				ScalarBank windowFunctionOutput = new ScalarBank(settings.getFrameExtractionSettings().getWindowSize());
+				npp.setDestination(() -> windowFunctionOutput);
+				this.preemphasizeAndWindowFunctionAndPad = npp.get();
 				if (enableVerbose) System.out.println("Loaded native support for WindowPreprocess");
 			}
 		}
@@ -143,10 +172,16 @@ public class FeatureComputer implements CodeFeatures {
 																		v(2 * count, 0)).get();
 		}
 
+		ScalarBank powerSpectrumOutput = new ScalarBank(paddedWindowSize);
+
 		if (paddedWindowSize == 512 && Hardware.getLocalHardware().isNativeSupported()) {
-			this.powerSpectrum = new NativePowerSpectrum512().get();
+			NativePowerSpectrum nps = new NativePowerSpectrum512();
+			nps.setDestination(() -> powerSpectrumOutput);
+			this.powerSpectrum = nps.get();
 		} else if (paddedWindowSize == 256 && Hardware.getLocalHardware().isNativeSupported()) {
-			this.powerSpectrum = new NativePowerSpectrum256().get();
+			NativePowerSpectrum nps = new NativePowerSpectrum256();
+			nps.setDestination(() -> powerSpectrumOutput);
+			this.powerSpectrum = nps.get();
 		} else {
 			if (Hardware.getLocalHardware().isNativeSupported())
 				System.out.println("WARN: Unable to use NativePowerSpectrum with window " + paddedWindowSize);
@@ -221,11 +256,9 @@ public class FeatureComputer implements CodeFeatures {
 		}
 
 		boolean useRawLogEnergy = settings.isNeedRawLogEnergy();
-		for (int r = 0; r < rowsOut; r++) {  // r is frame index.
-			ScalarBank window = new ScalarBank(settings.getFrameExtractionSettings().getPaddedWindowSize());  // windowed waveform.
-			Scalar rawLogEnergy = new Scalar(0.0);
-			window = extractWindow(0, wave, r, settings.getFrameExtractionSettings(),
-					featureWindowFunction, window,
+		for (int r = 0; r < rowsOut; r++) {
+			ScalarBank window = extractWindow(0, wave, r, settings.getFrameExtractionSettings(),
+					featureWindowFunction, windowInput,
 					useRawLogEnergy ? rawLogEnergy : null);
 
 			TensorRow outputRow = new TensorRow(output, r);
@@ -244,7 +277,7 @@ public class FeatureComputer implements CodeFeatures {
 		MelBanks melBanks = getMelBanks(vtlnWarp);
 
 		if (settings.isUseEnergy() && !settings.isRawEnergy())
-			signalRawLogEnergy.setValue(Math.log(Math.max(Resampler.vecVec(realSignalFrame, realSignalFrame).getValue(), epsilon)));
+			signalRawLogEnergy.setValue(Math.log(Math.max(math.dot(realSignalFrame, realSignalFrame).getValue(), epsilon)));
 
 		long start = System.currentTimeMillis();
 
@@ -252,8 +285,8 @@ public class FeatureComputer implements CodeFeatures {
 
 		PairBank signalFrame;
 
-		if (fft != null) {  // Compute FFT using the split-radix algorithm.
-			signalFrame = fft.evaluate(toPairBank(realSignalFrame));
+		if (fft != null) {
+			signalFrame = fft.evaluate(toPairBank(realSignalFrame, complexSignalFrame));
 		} else {
 			throw new UnsupportedOperationException();
 		}
@@ -383,7 +416,9 @@ public class FeatureComputer implements CodeFeatures {
 		long numSamples = sampleOffset + wave.getCount(),
 				startSample = firstSampleOfFrame(f, opts);
 
-		// System.out.println(Arrays.toString(IntStream.range((int) startSample, (int) startSample + 5).mapToDouble(i -> wave.get(i).x()).toArray()));
+		if (enableVerbose) {
+			// System.out.println("Wave: " + Arrays.toString(IntStream.range((int) startSample, (int) startSample + 24).mapToDouble(i -> wave.get(i).x()).toArray()));
+		}
 
 		if (opts.isSnipEdges()) {
 			long endSample = startSample + frameLength;
@@ -403,7 +438,6 @@ public class FeatureComputer implements CodeFeatures {
 //					wave.Range(waveStart, frameLength));
 			for (int i = 0; i < frameLength; i++) {
 				window.set(i, wave.get(waveStart + i));
-				assert window.get(i).getValue() == wave.get(waveStart + 1).getValue();
 			}
 		} else {
 			// Deal with any end effects by reflection, if needed.  This code will only
@@ -431,6 +465,11 @@ public class FeatureComputer implements CodeFeatures {
 		ScalarBank frame = window;
 		if (frameLengthPadded > frameLength) frame = frame.range(0, frameLength);
 
+		if (enableVerbose) {
+			ScalarBank fr = frame;
+			// System.out.println("Frame: " + Arrays.toString(IntStream.range(0, frameLength).mapToDouble(i -> fr.get(i).x()).toArray()));
+		}
+
 		return processWindow(opts, frame, logEnergyPreWindow);
 	}
 
@@ -442,24 +481,23 @@ public class FeatureComputer implements CodeFeatures {
 		int frameLength = opts.getWindowSize();
 		assert window.getCount() == frameLength;
 
-		// ScalarBank w = window;
-		// System.out.println(Arrays.toString(IntStream.range(0, window.getCount()).mapToDouble(i -> w.get(i).x()).toArray()));
+		if (enableVerbose) {
+			ScalarBank w = window;
+			System.out.println("Preprocessed Window: " + Arrays.toString(IntStream.range(0, window.getCount()).mapToDouble(i -> w.get(i).x()).toArray()));
+		}
 
 		window = processWindow.evaluate(window, settings.getFrameExtractionSettings().getDither());
 
 		ScalarBank w1 = window;
 		if (enableVerbose)
-			System.out.println(Arrays.toString(IntStream.range(0, w1.getCount()).mapToDouble(i -> w1.get(i).x()).toArray()));
+			System.out.println("Processed Window: " + Arrays.toString(IntStream.range(0, w1.getCount()).mapToDouble(i -> w1.get(i).x()).toArray()));
 
 		if (logEnergyPreWindow != null) {
-			double energy = Math.max(Resampler.vecVec(window, window).getValue(), epsilon);
+			double energy = Math.max(math.dot(window, window).getValue(), epsilon);
 			logEnergyPreWindow.setValue(Math.log(energy));
 		}
 
 		window = preemphasizeAndWindowFunctionAndPad.evaluate(window);
-
-//		ScalarBank w2 = window;
-//		System.out.println("2: " + Arrays.toString(IntStream.range(0, w2.getCount()).mapToDouble(i -> w2.get(i).x()).toArray()));
 
 		if (enableVerbose) System.out.println("--> processWindow: " + (System.currentTimeMillis() - start));
 
@@ -482,8 +520,11 @@ public class FeatureComputer implements CodeFeatures {
 	}
 
 	static PairBank toPairBank(ScalarBank real) {
-		PairBank p = new PairBank(real.getCount());
-		IntStream.range(0, real.getCount()).forEach(i -> p.set(i, real.get(i).getValue(), 0.0));
-		return p;
+		return toPairBank(real, new PairBank(real.getCount()));
+	}
+
+	static PairBank toPairBank(ScalarBank real, PairBank out) {
+		IntStream.range(0, real.getCount()).forEach(i -> out.set(i, real.get(i).getValue(), 0.0));
+		return out;
 	}
 }

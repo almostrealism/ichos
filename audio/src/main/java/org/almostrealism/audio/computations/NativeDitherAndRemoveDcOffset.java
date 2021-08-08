@@ -16,14 +16,22 @@
 
 package org.almostrealism.audio.computations;
 
+import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.hardware.jni.NativeComputationEvaluable;
 import org.almostrealism.hardware.jni.NativeSupport;
 import org.almostrealism.util.Ops;
 
+import java.util.function.Supplier;
+
 public abstract class NativeDitherAndRemoveDcOffset extends DitherAndRemoveDcOffset implements NativeSupport<NativeComputationEvaluable> {
 	public NativeDitherAndRemoveDcOffset(int count) {
 		super(count, Ops.ops().v(2 * count, 0), Ops.ops().v(2 * count, 1));
+		initNative();
+	}
+
+	public NativeDitherAndRemoveDcOffset(int count, Supplier<Pair> randDestination) {
+		super(count, Ops.ops().v(2 * count, 0), Ops.ops().v(2 * count, 1), randDestination);
 		initNative();
 	}
 

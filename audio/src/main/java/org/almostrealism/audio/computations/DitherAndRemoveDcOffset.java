@@ -17,6 +17,7 @@
 package org.almostrealism.audio.computations;
 
 import io.almostrealism.relation.Evaluable;
+import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.Dither;
@@ -28,6 +29,12 @@ import java.util.function.Supplier;
 public class DitherAndRemoveDcOffset extends ScalarBankAdd {
 	public DitherAndRemoveDcOffset(int count, Supplier<Evaluable<? extends ScalarBank>> input, Supplier<Evaluable<? extends Scalar>> ditherValue) {
 		this(count, new Dither(count, input, ditherValue));
+	}
+
+	public DitherAndRemoveDcOffset(int count, Supplier<Evaluable<? extends ScalarBank>> input,
+								   Supplier<Evaluable<? extends Scalar>> ditherValue,
+								   Supplier<Pair> randDestination) {
+		this(count, new Dither(count, input, ditherValue, randDestination));
 	}
 
 	private DitherAndRemoveDcOffset(int count, Dither dither) {
