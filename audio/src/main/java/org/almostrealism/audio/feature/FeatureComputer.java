@@ -1,11 +1,11 @@
 package org.almostrealism.audio.feature;
 
 import org.almostrealism.algebra.Pair;
+import org.almostrealism.algebra.ScalarTable;
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum;
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum256;
 import org.almostrealism.algebra.computations.jni.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
-import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset160;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset320;
 import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset400;
@@ -31,9 +31,9 @@ import org.almostrealism.hardware.DestinationSupport;
 import org.almostrealism.hardware.Hardware;
 import org.almostrealism.util.CodeFeatures;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -55,7 +55,7 @@ public class FeatureComputer implements CodeFeatures {
 	private final Evaluable<ScalarBank> powerSpectrum;
 
 	private ScalarBank lifterCoeffs;
-	private final Tensor<Scalar> dctMatrix;  // matrix we left-multiply by to perform DCT.
+	private final ScalarTable dctMatrix;  // matrix we left-multiply by to perform DCT.
 	private Scalar logEnergyFloor;
 	private final Map<Double, MelBanks> allMelBanks;  // BaseFloat is VTLN coefficient.
 
@@ -64,12 +64,17 @@ public class FeatureComputer implements CodeFeatures {
 	private final ScalarBank windowInput;
 	private final Scalar rawLogEnergy;
 	private final PairBank complexSignalFrame;
+	private final ScalarBank featureEnergies;
+
+	private int featureCount = -1;
+	private Tensor<Double> logTensor;
 
 	public FeatureComputer(FeatureSettings settings) {
 		this.settings = settings;
 		this.featureWindowFunction = new FeatureWindowFunction(settings.getFrameExtractionSettings());
 		this.allMelBanks = new HashMap<>();
 		this.math = new WaveMath();
+		this.logTensor = new Tensor<>();
 
 		int binCount = this.settings.getMelBanksSettings().getNumBins();
 		this.melEnergies = new ScalarBank(binCount);
@@ -80,8 +85,8 @@ public class FeatureComputer implements CodeFeatures {
 					+ settings.getNumCeps() + "  and num-mel-bins: "
 					+ binCount);
 
-		dctMatrix = new Tensor<>();
-		computeDctMatrix(dctMatrix, binCount, binCount);
+		ScalarTable dctm = new ScalarTable(binCount, binCount);
+		computeDctMatrix(dctm, binCount, binCount);
 
 		int paddedWindowSize = this.settings.getFrameExtractionSettings().getPaddedWindowSize();
 
@@ -92,7 +97,9 @@ public class FeatureComputer implements CodeFeatures {
 		// Note that we include zeroth dct in either case.  If using the
 		// energy we replace this with the energy.  This means a different
 		// ordering of features than HTK.
-		dctMatrix.trim(this.settings.getNumCeps(), binCount);
+		// dctMatrix.trim(this.settings.getNumCeps(), binCount);
+		dctMatrix = dctm.copy(this.settings.getNumCeps(), binCount);
+		featureEnergies = new ScalarBank(this.settings.getNumCeps());
 		if (this.settings.getCepstralLifter().getValue() != 0.0) {
 			lifterCoeffs = new ScalarBank(this.settings.getNumCeps());
 			computeLifterCoeffs(this.settings.getCepstralLifter().getValue(), lifterCoeffs);
@@ -193,7 +200,15 @@ public class FeatureComputer implements CodeFeatures {
 		getMelBanks(1.0);
 	}
 
-	protected void computeDctMatrix(Tensor<Scalar> M, int K, int N) {
+	public void setLogTensor(Tensor<Double> logTensor) {
+		this.logTensor = logTensor;
+	}
+
+	public Tensor<Double> getLogTensor() {
+		return logTensor;
+	}
+
+	protected void computeDctMatrix(ScalarTable M, int K, int N) {
 //		MatrixIndexT K = M->NumRows();
 //		MatrixIndexT N = M->NumCols();
 
@@ -201,12 +216,12 @@ public class FeatureComputer implements CodeFeatures {
 		assert N > 0;
 		Scalar normalizer = new Scalar(Math.sqrt(1.0 / N));  // normalizer for
 															 // X.0.
-		for (int j = 0; j < N; j++) M.insert(normalizer, 0, j);
+		for (int j = 0; j < N; j++) M.set(0, j, normalizer);
 		normalizer = new Scalar(Math.sqrt(2.0 / N));  // normalizer for other
 													  // elements.
 		for (int k = 1; k < K; k++)
 			for (int n = 0; n < N; n++)
-				M.insert(new Scalar(normalizer.getValue() * Math.cos(Math.PI /N * (n + 0.5) * k)), k, n);
+				M.set(k, n, new Scalar(normalizer.getValue() * Math.cos(Math.PI /N * (n + 0.5) * k)));
 	}
 
 	protected void computeLifterCoeffs(double Q, ScalarBank coeffs) {
@@ -248,7 +263,45 @@ public class FeatureComputer implements CodeFeatures {
 		}
 	}
 
+	public void computeFeatures(ScalarBank wave,
+								Scalar sampleFreq,
+								BiConsumer<Integer, ScalarBank> output) {
+		computeFeatures(wave, sampleFreq, 1.0, output);
+	}
+
+	public void computeFeatures(ScalarBank wave,
+								Scalar sampleFreq,
+								double vtlnWarp,
+								BiConsumer<Integer, ScalarBank> output) {
+		Scalar newSampleFreq = settings.getFrameExtractionSettings().getSampFreq();
+		if (sampleFreq.getValue() == newSampleFreq.getValue()) {
+			compute(wave, vtlnWarp, output);
+		} else {
+			if (newSampleFreq.getValue() < sampleFreq.getValue() &&
+					!settings.getFrameExtractionSettings().isAllowDownsample())
+				throw new IllegalArgumentException("Waveform and config sample Frequency mismatch: "
+						+ sampleFreq + " .vs " + newSampleFreq);
+			else if (newSampleFreq.getValue() > sampleFreq.getValue() &&
+					!settings.getFrameExtractionSettings().isAllowUpsample())
+				throw new IllegalArgumentException("Waveform and config sample Frequency mismatch: "
+						+ sampleFreq + " .vs " + newSampleFreq);
+
+			// Resample the waveform
+			ScalarBank resampledWave = new ScalarBank(wave.getCount());
+			Resampler.resampleWaveform(sampleFreq, wave,
+					newSampleFreq, resampledWave);
+			compute(resampledWave, vtlnWarp, output);
+		}
+	}
+
 	protected void compute(ScalarBank wave, double vtlnWarp, Tensor<Scalar> output) {
+		compute(wave, vtlnWarp,
+				(r, v) -> IntStream.range(0, v.getCount())
+						.forEach(i ->
+								new TensorRow<>(output, r).set(i, new Scalar(featureEnergies.get(i).getValue()))));
+	}
+
+	public void compute(ScalarBank wave, double vtlnWarp, BiConsumer<Integer, ScalarBank> output) {
 		int rowsOut = numFrames(wave.getCount(), settings.getFrameExtractionSettings(), false);
 
 		if (rowsOut == 0) {
@@ -257,31 +310,47 @@ public class FeatureComputer implements CodeFeatures {
 
 		boolean useRawLogEnergy = settings.isNeedRawLogEnergy();
 		for (int r = 0; r < rowsOut; r++) {
+			featureCount++;
+			logTensor.insert((double) featureCount, featureCount, 0); // Number column
 			ScalarBank window = extractWindow(0, wave, r, settings.getFrameExtractionSettings(),
 					featureWindowFunction, windowInput,
 					useRawLogEnergy ? rawLogEnergy : null);
 
-			TensorRow outputRow = new TensorRow(output, r);
 			long start = System.currentTimeMillis();
-			compute(rawLogEnergy, vtlnWarp, window, outputRow);
+			compute(rawLogEnergy, vtlnWarp, window, featureEnergies);
+			output.accept(r, featureEnergies);
 			if (enableVerbose) System.out.println("-----> " + (System.currentTimeMillis() - start) + " total");
 		}
+	}
+
+	private double dot(ScalarBank x, ScalarBank y) {
+		return Math.max(
+				IntStream.range(0, x.getCount()).mapToDouble(i ->
+						x.get(i).x() * y.get(i).x()).sum(), epsilon);
+	}
+
+	private double logDot(ScalarBank x, ScalarBank y) {
+		return Math.log(dot(x, y));
+	}
+
+	private void removeDcOffset(ScalarBank window) {
+		double dcOffset = window.stream().mapToDouble(Scalar::getValue).sum();
+		window.forEach(scalar -> scalar.setValue(scalar.getValue() - dcOffset));
 	}
 
 	protected void compute(Scalar signalRawLogEnergy,
 						double vtlnWarp,
 						ScalarBank realSignalFrame,
-						TensorRow<Scalar> feature) {
+						ScalarBank feature) {
 		assert realSignalFrame.getCount() == settings.getFrameExtractionSettings().getPaddedWindowSize();
 
 		MelBanks melBanks = getMelBanks(vtlnWarp);
 
-		if (settings.isUseEnergy() && !settings.isRawEnergy())
+		if (settings.isUseEnergy() && !settings.isRawEnergy()) {
 			signalRawLogEnergy.setValue(Math.log(Math.max(math.dot(realSignalFrame, realSignalFrame).getValue(), epsilon)));
+		}
 
 		long start = System.currentTimeMillis();
-
-		// System.out.println(Arrays.toString(IntStream.range(0, realSignalFrame.getCount()).mapToDouble(i -> realSignalFrame.get(i).x()).toArray()));
 
 		PairBank signalFrame;
 
@@ -290,8 +359,6 @@ public class FeatureComputer implements CodeFeatures {
 		} else {
 			throw new UnsupportedOperationException();
 		}
-
-		// System.out.println(Arrays.toString(IntStream.range(0, signalFrame.getCount()).mapToDouble(i -> signalFrame.get(i).x()).toArray()));
 
 		if (enableVerbose) System.out.println("--> FFT: " + (System.currentTimeMillis() - start));
 
@@ -320,11 +387,13 @@ public class FeatureComputer implements CodeFeatures {
 			feature.mulElements(lifterCoeffs);
 		if (enableVerbose) System.out.println("--> lifterCoeffs: " + (System.currentTimeMillis() - start));
 
-		// TODO 12
 		if (settings.isUseEnergy()) {
 			if (settings.getEnergyFloor().getValue() > 0.0 &&
-					signalRawLogEnergy.getValue() < logEnergyFloor.getValue())
-				signalRawLogEnergy = logEnergyFloor;
+					signalRawLogEnergy.getValue() < logEnergyFloor.getValue()) {
+				if (enableVerbose) System.out.println("Assigning energy floor: " + logEnergyFloor.getValue());
+				signalRawLogEnergy.setValue(logEnergyFloor.getValue());
+			}
+
 			feature.set(0, signalRawLogEnergy);
 		}
 
@@ -465,11 +534,6 @@ public class FeatureComputer implements CodeFeatures {
 		ScalarBank frame = window;
 		if (frameLengthPadded > frameLength) frame = frame.range(0, frameLength);
 
-		if (enableVerbose) {
-			ScalarBank fr = frame;
-			// System.out.println("Frame: " + Arrays.toString(IntStream.range(0, frameLength).mapToDouble(i -> fr.get(i).x()).toArray()));
-		}
-
 		return processWindow(opts, frame, logEnergyPreWindow);
 	}
 
@@ -481,20 +545,24 @@ public class FeatureComputer implements CodeFeatures {
 		int frameLength = opts.getWindowSize();
 		assert window.getCount() == frameLength;
 
-		if (enableVerbose) {
-			ScalarBank w = window;
-			System.out.println("Preprocessed Window: " + Arrays.toString(IntStream.range(0, window.getCount()).mapToDouble(i -> w.get(i).x()).toArray()));
-		}
+		// System.out.println("dot(window) before processing: " + dot(window, window));
+		// System.out.println("logDot(window) before processing: " + logDot(window, window));
 
-		window = processWindow.evaluate(window, settings.getFrameExtractionSettings().getDither());
+		logTensor.insert(dot(window, window), featureCount, 1);
+		logTensor.insert(logDot(window, window), featureCount, 2);
 
-		ScalarBank w1 = window;
-		if (enableVerbose)
-			System.out.println("Processed Window: " + Arrays.toString(IntStream.range(0, w1.getCount()).mapToDouble(i -> w1.get(i).x()).toArray()));
+		// TODO window = processWindow.evaluate(window, settings.getFrameExtractionSettings().getDither());
+		// removeDcOffset(window);
 
 		if (logEnergyPreWindow != null) {
-			double energy = Math.max(math.dot(window, window).getValue(), epsilon);
-			logEnergyPreWindow.setValue(Math.log(energy));
+			double logDot = logDot(window, window);
+			double logEnergy = Math.log(Math.max(math.dot(window, window).getValue(), epsilon));
+			logTensor.insert(logDot, featureCount, 3);
+			logTensor.insert(logEnergy, featureCount, 4);
+			logEnergyPreWindow.setValue(logDot); // TODO
+			if (Math.abs(logEnergyPreWindow.getValue() - logDot) > 0.0001) {
+				throw new RuntimeException("Native energy computation appears to be wrong");
+			}
 		}
 
 		window = preemphasizeAndWindowFunctionAndPad.evaluate(window);

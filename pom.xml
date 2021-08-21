@@ -6,7 +6,7 @@
 	<groupId>org.almostrealism</groupId>
 	<artifactId>Ichos</artifactId>
 	<packaging>pom</packaging>
-	<version>1.26</version>
+	<version>1.27</version>
 	
     <build>
 		<plugins>

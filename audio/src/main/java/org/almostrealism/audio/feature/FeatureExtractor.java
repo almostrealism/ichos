@@ -5,24 +5,33 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.Tensor;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class FeatureExtractor {
 	private static final ThreadLocal<FeatureComputer> computers = new ThreadLocal<>();
 
-	public static void main(String args[]) {
+	public static void main(String args[]) throws InterruptedException, ExecutionException {
 		ExecutorService executor = Executors.newFixedThreadPool(1);
 
-		IntStream.range(0, 10).mapToObj(i -> (Runnable) () -> {
+		List<Future<?>> futures = IntStream.range(0, 10).mapToObj(i -> (Runnable) () -> {
 			try {
 				main(
 						Collections.singletonList(WavFile.openWavFile(
@@ -31,7 +40,31 @@ public class FeatureExtractor {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-		}).forEach(executor::submit);
+		}).map(executor::submit).collect(Collectors.toList());
+
+		f: while (true) {
+			for (Future<?> future : futures) {
+				if (!future.isDone()) {
+					Thread.sleep(5000);
+					continue f;
+				}
+			}
+
+			break f;
+		}
+
+		executor.submit(() -> {
+			File file = new File("/Users/michael/Desktop/feature-log.csv");
+
+			try (FileOutputStream fs = new FileOutputStream(file);
+				 BufferedWriter out = new BufferedWriter(new OutputStreamWriter(fs))) {
+				out.write(computers.get().getLogTensor().toCSV());
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}).get();
+
+		System.exit(0);
 	}
 
 	public static int main(List<WavFile> files, Consumer<Tensor<Scalar>> output) throws IOException {
