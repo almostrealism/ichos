@@ -16,7 +16,6 @@
 
 package org.almostrealism.audio;
 
-import org.almostrealism.audio.AudioSample;
 import org.almostrealism.space.ShadableSurface;
 import org.almostrealism.space.Animation;
 import org.almostrealism.time.AutomationData;
