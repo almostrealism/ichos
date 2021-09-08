@@ -21,8 +21,8 @@ import org.almostrealism.audio.sources.SineWaveCellData;
 import org.almostrealism.audio.sources.WavCellData;
 import org.almostrealism.hardware.MemoryData;
 
-public class PolymorphicAudioData extends ScalarBank implements SineWaveCellData, WavCellData {
-	public static final int SIZE = 7;
+public class PolymorphicAudioData extends ScalarBank implements SineWaveCellData, WavCellData, AudioFilterData {
+	public static final int SIZE = 15;
 
 	public PolymorphicAudioData() {
 		super(SIZE);

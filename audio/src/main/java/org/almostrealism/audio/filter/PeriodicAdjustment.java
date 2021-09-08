@@ -20,14 +20,10 @@ import io.almostrealism.relation.Evaluable;
 import org.almostrealism.audio.sources.SineWaveCell;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.audio.OutputLine;
 import org.almostrealism.graph.Adjustable;
-import org.almostrealism.graph.Adjustment;
-import org.almostrealism.graph.Receptor;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.hardware.OperationList;
-import org.almostrealism.util.CodeFeatures;
 
 import java.util.function.Supplier;
 

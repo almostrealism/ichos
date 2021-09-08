@@ -87,6 +87,13 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 					e.printStackTrace();
 				}
 			}
+
+			try {
+				wav.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+				return;
+			}
 		};
 	}
 
