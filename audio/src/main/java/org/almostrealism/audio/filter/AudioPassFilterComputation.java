@@ -31,10 +31,10 @@ import java.util.function.Supplier;
 public class AudioPassFilterComputation extends DynamicOperationComputationAdapter implements CodeFeatures {
 	private boolean high;
 
-	public AudioPassFilterComputation(AudioFilterData data, Producer<Scalar> input, boolean high) {
+	public AudioPassFilterComputation(AudioFilterData data, Producer<Scalar> frequency, Producer<Scalar> resonance, Producer<Scalar> input, boolean high) {
 		super(data::getOutput,
-				data::getFrequency,
-				data::getResonance,
+				(Supplier) frequency,
+				(Supplier) resonance,
 				data::getSampleRate,
 				data::getC,
 				data::getA1,

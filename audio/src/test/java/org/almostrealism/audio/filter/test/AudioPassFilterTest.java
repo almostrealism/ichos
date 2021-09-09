@@ -24,10 +24,7 @@ public class AudioPassFilterTest implements TestFeatures {
 		ScalarBank out = new ScalarBank(values.getCount());
 		Scalar current = new Scalar();
 
-		AudioPassFilter filter = new AudioPassFilter(true);
-		filter.setFrequency(2000);
-		filter.setResonance(0.1);
-		filter.setSampleRate((int) f.getSampleRate());
+		AudioPassFilter filter = new AudioPassFilter((int) f.getSampleRate(), v(2000), v(0.1), true);
 		Evaluable<Scalar> ev = filter.getResultant(p(current)).get();
 		Runnable tick = filter.tick().get();
 
