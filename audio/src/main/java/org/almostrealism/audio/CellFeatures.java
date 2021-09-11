@@ -43,7 +43,7 @@ public interface CellFeatures extends TemporalFeatures, CodeFeatures {
 
 	default CellList w(File f) throws IOException {
 		CellList cells = new CellList();
-		cells.add(WavCell.load(f, 1.0, 0).apply(new PolymorphicAudioData()));
+		cells.addRoot(WavCell.load(f, 1.0, 0).apply(new PolymorphicAudioData()));
 		return cells;
 	}
 
@@ -79,16 +79,7 @@ public interface CellFeatures extends TemporalFeatures, CodeFeatures {
 	}
 
 	default Supplier<Runnable> sec(Temporal t, double seconds) {
-		Supplier<Runnable> iter = iter(t, (int) (seconds * OutputLine.sampleRate));
-
-		if (t instanceof Lifecycle) {
-			OperationList o = new OperationList();
-			o.add(iter);
-			o.add(() -> ((Lifecycle) t)::reset);
-			return o;
-		} else {
-			return iter;
-		}
+		return iter(t, (int) (seconds * OutputLine.sampleRate));
 	}
 
 	default AudioPassFilter hp(double frequency, double resonance) {

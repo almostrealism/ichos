@@ -21,13 +21,16 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.function.Supplier;
 
 public class AudioCellTest implements CellFeatures {
 	@Test
 	public void filter() throws IOException {
-		w("src/test/resources/Snare Perc DD.wav")
-				.f(i -> hp(2000, 0.1))
-				.o(i -> new File("filter-cell-test.wav"))
-				.sec(10).get().run();
+		Supplier<Runnable> r =
+				w("src/test/resources/Snare Perc DD.wav")
+						.f(i -> hp(2000, 0.1))
+						.o(i -> new File("filter-cell-test.wav"))
+						.sec(10);
+		r.get().run();
 	}
 }

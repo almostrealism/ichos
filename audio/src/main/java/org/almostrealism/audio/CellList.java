@@ -16,9 +16,11 @@
 
 package org.almostrealism.audio;
 
+import io.almostrealism.code.Setup;
 import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.graph.Cell;
+import org.almostrealism.graph.Receptor;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.Factor;
 import org.almostrealism.time.Temporal;
@@ -31,15 +33,22 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Lifecycle, CellFeatures {
+public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Setup, Lifecycle, CellFeatures {
 	private CellList parent;
+	private List<Receptor<Scalar>> roots;
 	private List<Runnable> finals;
 
 	public CellList() { this(null); }
 
 	public CellList(CellList parent) {
 		this.parent = parent;
+		this.roots = new ArrayList<>();
 		this.finals = new ArrayList<>();
+	}
+
+	public void addRoot(Cell<Scalar> c) {
+		roots.add(c);
+		add(c);
 	}
 
 	public CellList f(IntFunction<Factor<Scalar>> filter) {
@@ -77,9 +86,39 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Lifec
 		return all;
 	}
 
+	public Collection<Receptor<Scalar>> getAllRoots() {
+		List<Receptor<Scalar>> all = new ArrayList<>();
+		if (parent != null) {
+			all.addAll(parent.getAllRoots());
+		}
+
+		roots.forEach(c -> {
+			for (int i = 0; i < all.size(); i++) {
+				if (all.get(i) == c) {
+					return;
+				}
+			}
+
+			all.add(c);
+		});
+
+		return all;
+	}
+
+	@Override
+	public Supplier<Runnable> setup() {
+		OperationList setup = new OperationList();
+		getAll().stream().map(c -> c instanceof Setup ? (Setup) c : null)
+				.filter(Objects::nonNull)
+				.map(Setup::setup)
+				.forEach(setup::add);
+		return setup;
+	}
+
 	@Override
 	public Supplier<Runnable> tick() {
 		OperationList tick = new OperationList();
+		getAllRoots().stream().map(r -> r.push(v(0.0))).forEach(tick::add);
 		getAll().stream().map(c -> c instanceof Temporal ? (Temporal) c : null)
 				.filter(Objects::nonNull)
 				.map(Temporal::tick)
