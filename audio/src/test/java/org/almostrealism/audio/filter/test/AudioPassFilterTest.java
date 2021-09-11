@@ -34,7 +34,7 @@ public class AudioPassFilterTest implements TestFeatures {
 			tick.run();
 		}
 
-		WavFile wav = WavFile.newWavFile(new File("filter-test-2.wav"), 1, out.getCount(),
+		WavFile wav = WavFile.newWavFile(new File("filter-test.wav"), 1, out.getCount(),
 				f.getValidBits(), f.getSampleRate());
 
 		for (int i = 0; i < out.getCount(); i++) {

@@ -32,7 +32,7 @@ public class AudioPassFilter implements TemporalFactor<Scalar>, CodeFeatures {
 
 	private boolean high;
 
-	public AudioPassFilter( int sampleRate, Producer<Scalar> frequency, Producer<Scalar> resonance, boolean high) {
+	public AudioPassFilter(int sampleRate, Producer<Scalar> frequency, Producer<Scalar> resonance, boolean high) {
 		this(sampleRate, new PolymorphicAudioData(), frequency, resonance, high);
 	}
 
