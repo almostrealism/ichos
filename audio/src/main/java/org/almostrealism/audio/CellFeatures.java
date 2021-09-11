@@ -17,12 +17,14 @@
 package org.almostrealism.audio;
 
 import io.almostrealism.relation.Producer;
+import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.filter.AudioPassFilter;
 import org.almostrealism.audio.sources.WavCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.FilteredCell;
+import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.Factor;
 import org.almostrealism.time.Temporal;
 import org.almostrealism.time.TemporalFeatures;
@@ -49,10 +51,9 @@ public interface CellFeatures extends TemporalFeatures, CodeFeatures {
 		CellList result = new CellList(cells);
 
 		for (int i = 0; i < cells.size(); i++) {
-			// TODO The output needs to be stored with the resulting CellList
-			// TODO so that the file can be written later on
 			WaveOutput out = new WaveOutput(f.apply(i));
 			cells.get(i).setReceptor(out);
+			result.getFinals().add(out.write().get());
 		}
 
 		return result;
@@ -78,7 +79,16 @@ public interface CellFeatures extends TemporalFeatures, CodeFeatures {
 	}
 
 	default Supplier<Runnable> sec(Temporal t, double seconds) {
-		return iter(t, (int) (seconds * OutputLine.sampleRate));
+		Supplier<Runnable> iter = iter(t, (int) (seconds * OutputLine.sampleRate));
+
+		if (t instanceof Lifecycle) {
+			OperationList o = new OperationList();
+			o.add(iter);
+			o.add(() -> ((Lifecycle) t)::reset);
+			return o;
+		} else {
+			return iter;
+		}
 	}
 
 	default AudioPassFilter hp(double frequency, double resonance) {

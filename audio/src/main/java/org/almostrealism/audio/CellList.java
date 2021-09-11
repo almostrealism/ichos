@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio;
 
+import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.hardware.OperationList;
@@ -30,13 +31,15 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, CellFeatures {
+public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Lifecycle, CellFeatures {
 	private CellList parent;
+	private List<Runnable> finals;
 
 	public CellList() { this(null); }
 
 	public CellList(CellList parent) {
 		this.parent = parent;
+		this.finals = new ArrayList<>();
 	}
 
 	public CellList f(IntFunction<Factor<Scalar>> filter) {
@@ -50,6 +53,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, CellF
 	public Supplier<Runnable> min(double minutes) { return min(this, minutes); }
 
 	public Supplier<Runnable> sec(double seconds) { return sec(this, seconds); }
+
+	public CellList getParent() { return parent; }
+
+	public List<Runnable> getFinals() { return finals; }
 
 	public Collection<Cell<Scalar>> getAll() {
 		List<Cell<Scalar>> all = new ArrayList<>();
@@ -78,5 +85,11 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, CellF
 				.map(Temporal::tick)
 				.forEach(tick::add);
 		return tick;
+	}
+
+	@Override
+	public void reset() {
+		if (parent != null) parent.reset();
+		finals.forEach(Runnable::run);
 	}
 }
