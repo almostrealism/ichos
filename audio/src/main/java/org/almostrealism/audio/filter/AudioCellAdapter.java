@@ -43,9 +43,15 @@ public abstract class AudioCellAdapter extends ScalarCachedStateCell implements 
 		this.setup.add(setup);
 	}
 
-	protected int toFrames(int msec) { return (int) (OutputLine.sampleRate * msec / 1000d); }
+	protected int toFrames(double sec) { return (int) (OutputLine.sampleRate * sec); }
 
-	protected Supplier<Evaluable<? extends Scalar>> toFrames(Supplier<Evaluable<? extends Scalar>> msec) {
+	protected Supplier<Evaluable<? extends Scalar>> toFrames(Supplier<Evaluable<? extends Scalar>> sec) {
+		return scalarsMultiply(v(OutputLine.sampleRate), sec);
+	}
+
+	protected int toFramesMilli(int msec) { return (int) (OutputLine.sampleRate * msec / 1000d); }
+
+	protected Supplier<Evaluable<? extends Scalar>> toFramesMilli(Supplier<Evaluable<? extends Scalar>> msec) {
 		return scalarsMultiply(v(OutputLine.sampleRate / 1000d), msec);
 	}
 

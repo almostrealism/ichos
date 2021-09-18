@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio;
 
+import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
@@ -24,6 +25,7 @@ import org.almostrealism.audio.filter.AudioPassFilter;
 import org.almostrealism.audio.sources.WavCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.FilteredCell;
+import org.almostrealism.graph.Receptor;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.Factor;
 import org.almostrealism.time.Temporal;
@@ -37,6 +39,10 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 public interface CellFeatures extends TemporalFeatures, CodeFeatures {
+	default Receptor<Scalar> a(Supplier<Evaluable<? extends Scalar>> destination) {
+		return protein -> a(2, destination, protein);
+	}
+
 	default CellList w(String path) throws IOException {
 		return w(new File(path));
 	}

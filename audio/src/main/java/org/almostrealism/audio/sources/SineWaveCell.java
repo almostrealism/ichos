@@ -56,10 +56,10 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 		return a(2, data::getWaveLength, scalarsDivide(hertz, v(OutputLine.sampleRate)));
 	}
 
-	public void setNoteLength(int msec) { this.noteLength = toFrames(msec); }
+	public void setNoteLength(int msec) { this.noteLength = toFramesMilli(msec); }
 
 	public Supplier<Runnable> setNoteLength(Supplier<Evaluable<? extends Scalar>> noteLength) {
-		return a(2, data::getNoteLength, toFrames(noteLength));
+		return a(2, data::getNoteLength, toFramesMilli(noteLength));
 	}
 	
 	public void setPhase(double phase) { this.phase = phase; }

@@ -17,7 +17,6 @@
 package org.almostrealism.audio.sources;
 
 import org.almostrealism.audio.Envelope;
-import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.filter.AudioCellAdapter;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.HardwareFeatures;
@@ -50,7 +49,7 @@ public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, H
 	@Override
 	public Supplier<Runnable> setup() {
 		return () -> () -> {
-			data.setNoteLength(toFrames(1000));
+			data.setNoteLength(toFramesMilli(1000));
 			data.setDepth(AudioCellAdapter.depth);
 		};
 	}
