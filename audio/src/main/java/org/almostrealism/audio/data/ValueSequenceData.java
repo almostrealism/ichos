@@ -16,19 +16,5 @@
 
 package org.almostrealism.audio.data;
 
-import org.almostrealism.algebra.ScalarBank;
-import org.almostrealism.audio.sources.SineWaveCellData;
-import org.almostrealism.audio.sources.WavCellData;
-import org.almostrealism.hardware.MemoryData;
-
-public class PolymorphicAudioData extends ScalarBank implements SineWaveCellData, WavCellData, AudioFilterData, ValueSequenceData {
-	public static final int SIZE = 15;
-
-	public PolymorphicAudioData() {
-		super(SIZE);
-	}
-
-	public PolymorphicAudioData(MemoryData delegate, int delegateOffset) {
-		super(SIZE, delegate, delegateOffset, null);
-	}
+public interface ValueSequenceData extends BaseAudioData {
 }

@@ -22,6 +22,7 @@ import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.filter.AudioPassFilter;
+import org.almostrealism.audio.sources.ValueSequenceCell;
 import org.almostrealism.audio.sources.WavCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.FilteredCell;
@@ -37,19 +38,31 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public interface CellFeatures extends TemporalFeatures, CodeFeatures {
 	default Receptor<Scalar> a(Supplier<Evaluable<? extends Scalar>> destination) {
 		return protein -> a(2, destination, protein);
 	}
 
-	default CellList w(String path) throws IOException {
-		return w(new File(path));
+	default CellList silence() {
+		throw new RuntimeException("Not implemented");
 	}
 
-	default CellList w(File f) throws IOException {
+	default CellList w(String... path) throws IOException {
+		return w(Stream.of(path).map(File::new).toArray(File[]::new));
+	}
+
+	default CellList w(File... files) throws IOException {
 		CellList cells = new CellList();
-		cells.addRoot(WavCell.load(f, 1.0, 0).apply(new PolymorphicAudioData()));
+		Stream.of(files).map(f -> {
+			try {
+				return WavCell.load(f, 1.0, 0).apply(new PolymorphicAudioData());
+			} catch (IOException e) {
+				e.printStackTrace();
+				return silence().get(0);
+			}
+		}).forEach(cells::addRoot);
 		return cells;
 	}
 
@@ -78,6 +91,12 @@ public interface CellFeatures extends TemporalFeatures, CodeFeatures {
 		}
 
 		return layer;
+	}
+
+	default CellList seq(IntFunction<Producer<Scalar>> values, Producer<Scalar> duration, int steps) {
+		CellList cells = new CellList();
+		cells.addRoot(new ValueSequenceCell(values, duration, steps));
+		return cells;
 	}
 
 	default Supplier<Runnable> min(Temporal t, double minutes) {
