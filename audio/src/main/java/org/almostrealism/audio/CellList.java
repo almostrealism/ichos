@@ -17,13 +17,14 @@
 package org.almostrealism.audio;
 
 import io.almostrealism.code.Setup;
-import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.Factor;
+import org.almostrealism.heredity.Gene;
 import org.almostrealism.time.Temporal;
+import org.almostrealism.time.TemporalList;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,9 +34,10 @@ import java.util.Objects;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Setup, Lifecycle, CellFeatures {
+public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 	private CellList parent;
 	private List<Receptor<Scalar>> roots;
+	private TemporalList requirements;
 	private List<Runnable> finals;
 
 	public CellList() { this(null); }
@@ -43,6 +45,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Setup
 	public CellList(CellList parent) {
 		this.parent = parent;
 		this.roots = new ArrayList<>();
+		this.requirements = new TemporalList();
 		this.finals = new ArrayList<>();
 	}
 
@@ -51,8 +54,24 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Setup
 		add(c);
 	}
 
+	public void addRequirement(Temporal t) {
+		requirements.add(t);
+	}
+
 	public CellList f(IntFunction<Factor<Scalar>> filter) {
 		return f(this, filter);
+	}
+
+	public CellList m(List<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+		return m(this, adapter, destinations, transmission);
+	}
+
+	public CellList m(IntFunction<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+		return m(this, adapter, destinations, transmission);
+	}
+
+	public CellList m(IntFunction<Cell<Scalar>> adapter, IntFunction<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+		return m(this, adapter, destinations, transmission);
 	}
 
 	public CellList o(IntFunction<File> f) {
@@ -65,6 +84,8 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Setup
 
 	public CellList getParent() { return parent; }
 
+	public TemporalList getRequirements() { return requirements; }
+
 	public List<Runnable> getFinals() { return finals; }
 
 	public Collection<Cell<Scalar>> getAll() {
@@ -74,6 +95,28 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Setup
 		}
 
 		forEach(c -> {
+			for (int i = 0; i < all.size(); i++) {
+				if (all.get(i) == c) {
+					return;
+				}
+			}
+
+			all.add(c);
+		});
+
+		return all;
+	}
+
+	public TemporalList getAllTemporals() {
+		TemporalList all = new TemporalList();
+		if (parent != null) {
+			all.addAll(parent.getAllTemporals());
+		}
+
+		stream().map(c -> c instanceof Temporal ? (Temporal) c : null)
+				.filter(Objects::nonNull).forEach(all::add);
+
+		requirements.forEach(c -> {
 			for (int i = 0; i < all.size(); i++) {
 				if (all.get(i) == c) {
 					return;
@@ -119,10 +162,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Temporal, Setup
 	public Supplier<Runnable> tick() {
 		OperationList tick = new OperationList();
 		getAllRoots().stream().map(r -> r.push(v(0.0))).forEach(tick::add);
-		getAll().stream().map(c -> c instanceof Temporal ? (Temporal) c : null)
-				.filter(Objects::nonNull)
-				.map(Temporal::tick)
-				.forEach(tick::add);
+		tick.add(getAllTemporals().tick());
 		return tick;
 	}
 

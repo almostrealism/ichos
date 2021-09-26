@@ -23,7 +23,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 	@Test
 	public void mix() {
 		silence().and(w("a.wav", "b.wav")) // silence and two samples
-				.g(bpm(128).l(4), 8,			  // 4 beats, divided into 8 segments
+				.gr(bpm(128).l(4), 8,			  // 4 beats, divided into 8 segments
 						(IntUnaryOperator) (i -> i % 2 == 0 ?
 													i % 4 == 0 ? 1 : 2
 													: 0))

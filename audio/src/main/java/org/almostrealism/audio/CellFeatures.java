@@ -25,22 +25,30 @@ import org.almostrealism.audio.filter.AudioPassFilter;
 import org.almostrealism.audio.sources.ValueSequenceCell;
 import org.almostrealism.audio.sources.WavCell;
 import org.almostrealism.graph.Cell;
+import org.almostrealism.graph.CellPair;
 import org.almostrealism.graph.FilteredCell;
+import org.almostrealism.graph.MultiCell;
 import org.almostrealism.graph.Receptor;
-import org.almostrealism.hardware.OperationList;
+import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.heredity.Factor;
+import org.almostrealism.heredity.Gene;
+import org.almostrealism.heredity.HeredityFeatures;
 import org.almostrealism.time.Temporal;
 import org.almostrealism.time.TemporalFeatures;
 import org.almostrealism.util.CodeFeatures;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public interface CellFeatures extends TemporalFeatures, CodeFeatures {
+public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFeatures {
 	default Receptor<Scalar> a(Supplier<Evaluable<? extends Scalar>> destination) {
 		return protein -> a(2, destination, protein);
 	}
@@ -66,6 +74,18 @@ public interface CellFeatures extends TemporalFeatures, CodeFeatures {
 		return cells;
 	}
 
+	default CellList o(int count, IntFunction<File> f) {
+		CellList result = new CellList();
+
+		for (int i = 0; i < count; i++) {
+			WaveOutput out = new WaveOutput(f.apply(i));
+			result.add(new ReceptorCell<>(out));
+			result.getFinals().add(out.write().get());
+		}
+
+		return result;
+	}
+
 	default CellList o(CellList cells, IntFunction<File> f) {
 		CellList result = new CellList(cells);
 
@@ -78,6 +98,16 @@ public interface CellFeatures extends TemporalFeatures, CodeFeatures {
 		return result;
 	}
 
+	default CellList f(int count, IntFunction<Factor<Scalar>> filter) {
+		CellList layer = new CellList();
+
+		for (int i = 0; i < count; i++) {
+			layer.add(new FilteredCell<>(filter.apply(i)));
+		}
+
+		return layer;
+	}
+
 	default CellList f(CellList cells, IntFunction<Factor<Scalar>> filter) {
 		CellList layer = new CellList(cells);
 		Iterator<Cell<Scalar>> itr = cells.iterator();
@@ -88,6 +118,42 @@ public interface CellFeatures extends TemporalFeatures, CodeFeatures {
 
 			c.setReceptor(f);
 			layer.add(f);
+		}
+
+		return layer;
+	}
+
+	default CellList m(CellList cells, List<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+		CellList result = m(cells, adapter::get, destinations, transmission);
+		if (adapter instanceof CellList) {
+			result.getFinals().addAll(((CellList) adapter).getFinals());
+			((CellList) adapter).getRequirements().forEach(result::addRequirement);
+		}
+		return result;
+	}
+
+	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+		CellList result = m(cells, adapter, destinations::get, transmission);
+		if (destinations instanceof CellList) {
+			result.getFinals().addAll(((CellList) destinations).getFinals());
+			((CellList) destinations).getRequirements().forEach(result::addRequirement);
+		}
+		return result;
+	}
+
+	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, IntFunction<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+		CellList layer = new CellList(cells);
+		Iterator<Cell<Scalar>> itr = cells.iterator();
+
+		for (AtomicInteger i = new AtomicInteger(); itr.hasNext(); i.incrementAndGet()) {
+			Gene g = transmission.apply(i.get());
+			Cell<Scalar> source = itr.next();
+
+			List<Cell<Scalar>> dest = new ArrayList<>();
+			IntStream.range(0, g.length()).mapToObj(j -> destinations.apply(j)).forEach(dest::add);
+
+			MultiCell.split(source, adapter.apply(i.get()), dest, g);
+			layer.addAll(dest);
 		}
 
 		return layer;
