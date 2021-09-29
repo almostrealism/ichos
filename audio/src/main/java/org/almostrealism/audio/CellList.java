@@ -62,6 +62,8 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return f(this, filter);
 	}
 
+	public CellList d(IntFunction<Scalar> delay) { return d(this, delay); }
+
 	public CellList m(List<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
 		return m(this, adapter, destinations, transmission);
 	}

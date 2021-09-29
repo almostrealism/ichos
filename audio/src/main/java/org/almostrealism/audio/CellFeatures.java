@@ -21,6 +21,7 @@ import io.almostrealism.relation.Producer;
 import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.audio.filter.AdjustableDelayCell;
 import org.almostrealism.audio.filter.AudioPassFilter;
 import org.almostrealism.audio.sources.ValueSequenceCell;
 import org.almostrealism.audio.sources.WavCell;
@@ -123,6 +124,31 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return layer;
 	}
 
+	default CellList d(int count, IntFunction<Scalar> d) {
+		CellList result = new CellList();
+
+		for (int i = 0; i < count; i++) {
+			result.add(new AdjustableDelayCell(d.apply(i)));
+		}
+
+		return result;
+	}
+
+	default CellList d(CellList cells, IntFunction<Scalar> delay) {
+		CellList layer = new CellList(cells);
+		Iterator<Cell<Scalar>> itr = cells.iterator();
+
+		for (int i = 0; itr.hasNext(); i++) {
+			AdjustableDelayCell d = new AdjustableDelayCell(delay.apply(i));
+			Cell<Scalar> c = itr.next();
+
+			c.setReceptor(d);
+			layer.add(d);
+		}
+
+		return layer;
+	}
+
 	default CellList m(CellList cells, List<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
 		CellList result = m(cells, adapter::get, destinations, transmission);
 		if (adapter instanceof CellList) {
@@ -152,7 +178,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 			List<Cell<Scalar>> dest = new ArrayList<>();
 			IntStream.range(0, g.length()).mapToObj(j -> destinations.apply(j)).forEach(dest::add);
 
-			MultiCell.split(source, adapter.apply(i.get()), dest, g);
+			layer.addRequirement(MultiCell.split(source, adapter.apply(i.get()), dest, g));
 			layer.addAll(dest);
 		}
 

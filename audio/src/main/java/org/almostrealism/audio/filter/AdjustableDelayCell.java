@@ -35,7 +35,10 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 
 	private final Scalar scale;
 
-	public AdjustableDelayCell(int delay) {
+	public AdjustableDelayCell(double delay) {
+		this(new Scalar(delay));
+	}
+	public AdjustableDelayCell(Scalar delay) {
 		initCursors();
 		buffer = AcceleratedTimeSeries.defaultSeries();
 		setDelay(delay);
@@ -52,11 +55,19 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 
 	public Scalar getScale() { return scale; }
 
-	public synchronized void setDelay(double msec) {
+	public synchronized void setDelay(Scalar sec) {
+		cursors.setDelayCursor(cursors.getCursor() + OutputLine.sampleRate * sec.getValue());
+	}
+
+	public synchronized Scalar getDelay() {
+		return new Scalar((cursors.getDelayCursor() - cursors.getCursor()) / OutputLine.sampleRate);
+	}
+
+	public synchronized void setDelayMsec(double msec) {
 		cursors.setDelayCursor(cursors.getCursor() + OutputLine.sampleRate * (msec / 1000d));
 	}
 
-	public synchronized double getDelay() {
+	public synchronized double getDelayMsec() {
 		return 1000 * (cursors.getDelayCursor() - cursors.getCursor()) / OutputLine.sampleRate;
 	}
 
