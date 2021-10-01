@@ -17,6 +17,7 @@
 package org.almostrealism.audio;
 
 import io.almostrealism.code.Setup;
+import io.almostrealism.uml.Plural;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
@@ -64,6 +65,14 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList d(IntFunction<Scalar> delay) { return d(this, delay); }
 
+	public CellList m(IntFunction<Cell<Scalar>> adapter, Plural<Gene<Scalar>> transmission) {
+		return m(this, adapter, transmission);
+	}
+
+	public CellList m(IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
+		return m(this, adapter, transmission);
+	}
+
 	public CellList m(List<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
 		return m(this, adapter, destinations, transmission);
 	}
@@ -96,15 +105,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 			all.addAll(parent.getAll());
 		}
 
-		forEach(c -> {
-			for (int i = 0; i < all.size(); i++) {
-				if (all.get(i) == c) {
-					return;
-				}
-			}
-
-			all.add(c);
-		});
+		forEach(c -> append(all, c));
 
 		return all;
 	}
@@ -116,17 +117,9 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		}
 
 		stream().map(c -> c instanceof Temporal ? (Temporal) c : null)
-				.filter(Objects::nonNull).forEach(all::add);
+				.filter(Objects::nonNull).forEach(t -> append(all, t));
 
-		requirements.forEach(c -> {
-			for (int i = 0; i < all.size(); i++) {
-				if (all.get(i) == c) {
-					return;
-				}
-			}
-
-			all.add(c);
-		});
+		requirements.forEach(c -> append(all, c));
 
 		return all;
 	}
@@ -137,15 +130,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 			all.addAll(parent.getAllRoots());
 		}
 
-		roots.forEach(c -> {
-			for (int i = 0; i < all.size(); i++) {
-				if (all.get(i) == c) {
-					return;
-				}
-			}
-
-			all.add(c);
-		});
+		roots.forEach(c -> append(all, c));
 
 		return all;
 	}

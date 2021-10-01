@@ -38,6 +38,7 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 	public AdjustableDelayCell(double delay) {
 		this(new Scalar(delay));
 	}
+
 	public AdjustableDelayCell(Scalar delay) {
 		initCursors();
 		buffer = AcceleratedTimeSeries.defaultSeries();

@@ -19,6 +19,7 @@ package org.almostrealism.audio;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import io.almostrealism.uml.Lifecycle;
+import io.almostrealism.uml.Plural;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.filter.AdjustableDelayCell;
@@ -26,6 +27,7 @@ import org.almostrealism.audio.filter.AudioPassFilter;
 import org.almostrealism.audio.sources.ValueSequenceCell;
 import org.almostrealism.audio.sources.WavCell;
 import org.almostrealism.graph.Cell;
+import org.almostrealism.graph.CellAdapter;
 import org.almostrealism.graph.CellPair;
 import org.almostrealism.graph.FilteredCell;
 import org.almostrealism.graph.MultiCell;
@@ -34,6 +36,8 @@ import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.heredity.Factor;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.heredity.HeredityFeatures;
+import org.almostrealism.heredity.IdentityFactor;
+import org.almostrealism.heredity.ScaleFactor;
 import org.almostrealism.time.Temporal;
 import org.almostrealism.time.TemporalFeatures;
 import org.almostrealism.util.CodeFeatures;
@@ -92,11 +96,33 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 
 		for (int i = 0; i < cells.size(); i++) {
 			WaveOutput out = new WaveOutput(f.apply(i));
-			cells.get(i).setReceptor(out);
+
+			if (cells.get(i) instanceof CellAdapter) {
+				((CellAdapter) cells.get(i)).setMeter(out);
+			} else {
+				cells.get(i).setReceptor(out);
+			}
+
 			result.getFinals().add(out.write().get());
 		}
 
 		return result;
+	}
+
+	default IntFunction<Cell<Scalar>> fi() {
+		return i -> new FilteredCell<>(i().apply(i));
+	}
+
+	default IntFunction<Factor<Scalar>> i() {
+		return i -> new IdentityFactor<>();
+	}
+
+	default CellList fi(int count) {
+		return f(count, i());
+	}
+
+	default IntFunction<Cell<Scalar>> fc(IntFunction<Factor<Scalar>> filter) {
+		return i -> new FilteredCell<>(filter.apply(i));
 	}
 
 	default CellList f(int count, IntFunction<Factor<Scalar>> filter) {
@@ -149,6 +175,14 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return layer;
 	}
 
+	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, Plural<Gene<Scalar>> transmission) {
+		return m(cells, adapter, cells::get, transmission::valueAt);
+	}
+
+	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
+		return m(cells, adapter, cells::get, transmission);
+	}
+
 	default CellList m(CellList cells, List<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
 		CellList result = m(cells, adapter::get, destinations, transmission);
 		if (adapter instanceof CellList) {
@@ -179,10 +213,18 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 			IntStream.range(0, g.length()).mapToObj(j -> destinations.apply(j)).forEach(dest::add);
 
 			layer.addRequirement(MultiCell.split(source, adapter.apply(i.get()), dest, g));
-			layer.addAll(dest);
+			dest.forEach(c -> append(layer, c));
 		}
 
 		return layer;
+	}
+
+	default <T> void append(List<T> dest, T v) {
+		for (T c : dest) {
+			if (c == v) return;
+		}
+
+		dest.add(v);
 	}
 
 	default CellList seq(IntFunction<Producer<Scalar>> values, Producer<Scalar> duration, int steps) {
@@ -197,6 +239,14 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 
 	default Supplier<Runnable> sec(Temporal t, double seconds) {
 		return iter(t, (int) (seconds * OutputLine.sampleRate));
+	}
+
+	default ScaleFactor sf(double scale) {
+		return sf(new Scalar(scale));
+	}
+
+	default ScaleFactor sf(Scalar scale) {
+		return new ScaleFactor(scale);
 	}
 
 	default AudioPassFilter hp(double frequency, double resonance) {

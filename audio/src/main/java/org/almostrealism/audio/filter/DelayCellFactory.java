@@ -23,20 +23,14 @@ import org.almostrealism.heredity.Gene;
 import org.almostrealism.util.CodeFeatures;
 
 public class DelayCellFactory implements CellFactory<Scalar, Scalar, Object>, CodeFeatures {
-	private final int min;
-	private final Scalar delta;
 	private final int factorIndex;
 	
-	public DelayCellFactory(int minDelay, int maxDelay, int factorIndex) {
-		this.min = minDelay;
-		this.delta = new Scalar(maxDelay - minDelay);
+	public DelayCellFactory(int factorIndex) {
 		this.factorIndex = factorIndex;
 	}
 
 	@Override
 	public Cell<Scalar> generateCell(Gene<Scalar> gene, Object v) {
-		throw new UnsupportedOperationException(); // TODO  Use resultant directly
-		// return new AdjustableDelayCell((int) (min + gene.valueAt(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
-		// return new BasicDelayCell((int) (min + gene.getFactor(factorIndex).getResultant(p(delta)).get().evaluate().getValue()));
+		return new AdjustableDelayCell(gene.valueAt(factorIndex).getResultant(v(60.0)).get().evaluate());
 	}
 }
