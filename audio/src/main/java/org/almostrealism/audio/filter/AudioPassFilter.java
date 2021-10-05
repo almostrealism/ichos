@@ -17,6 +17,7 @@
 package org.almostrealism.audio.filter;
 
 import io.almostrealism.relation.Producer;
+import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.AudioFilterData;
 import org.almostrealism.audio.data.PolymorphicAudioData;
@@ -25,7 +26,7 @@ import org.almostrealism.util.CodeFeatures;
 
 import java.util.function.Supplier;
 
-public class AudioPassFilter implements TemporalFactor<Scalar>, CodeFeatures {
+public class AudioPassFilter implements TemporalFactor<Scalar>, Lifecycle, CodeFeatures {
 	private AudioFilterData data;
 	private Producer<Scalar> frequency, resonance;
 	private Producer<Scalar> input;
@@ -74,8 +75,8 @@ public class AudioPassFilter implements TemporalFactor<Scalar>, CodeFeatures {
 
 	@Override
 	public Producer<Scalar> getResultant(Producer<Scalar> value) {
-		if (input != null) {
-			throw new IllegalArgumentException("AudioPassFilter cannot be reused");
+		if (input != null && input != value) {
+			throw new UnsupportedOperationException("WARN: AudioPassFilter cannot be reused");
 		}
 
 		input = value;
