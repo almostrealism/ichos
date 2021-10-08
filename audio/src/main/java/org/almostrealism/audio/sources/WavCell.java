@@ -52,11 +52,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		this.amplitude = amplitude;
 
 		if (sampleRate != OutputLine.sampleRate) {
-			double ratio = OutputLine.sampleRate;
-			ratio = ratio / sampleRate;
-			wave = new ScalarBank((int) (wav.getCount() * ratio));
-
-			Resampler.resampleWaveform(new Scalar(sampleRate), wav, new Scalar(OutputLine.sampleRate), wave);
+			wave = Resampler.resampleWaveform(new Scalar(sampleRate), wav, new Scalar(OutputLine.sampleRate));
 		} else {
 			wave = wav;
 		}

@@ -3,6 +3,7 @@ package org.almostrealism.audio.feature;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.jni.NativeScalarBankDotProduct;
+import org.almostrealism.hardware.HardwareException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -144,10 +145,16 @@ public class Resampler {
 	}
 
 
-	void resample(ScalarBank input, boolean flush, ScalarBank output) {
+	ScalarBank resample(ScalarBank input, boolean flush) {
 		int inputDim = input.getCount();
 		long totInputSamp = inputSampleOffset + inputDim,
 				totOutputSamp = getNumOutputSamples(totInputSamp, flush);
+
+		if (totOutputSamp >= Integer.MAX_VALUE) {
+			throw new UnsupportedOperationException("Cannot resample");
+		}
+
+		ScalarBank output = new ScalarBank((int) totOutputSamp);
 
 		assert totOutputSamp >= outputSampleOffset;
 
@@ -184,6 +191,7 @@ public class Resampler {
 				}
 			}
 			int outputIndex = (int) (sampOut - outputSampleOffset);
+
 			output.set(outputIndex, thisOutput);
 		}
 
@@ -194,6 +202,8 @@ public class Resampler {
 			inputSampleOffset = totInputSamp;
 			outputSampleOffset = totOutputSamp;
 		}
+		
+		return output;
 	}
 
 	// TODO  This doesn't look right. What data is impacted by this method?
@@ -257,14 +267,13 @@ public class Resampler {
 
 	private int numSamplesOut() { return weights.size(); }
 
-	public static void resampleWaveform(Scalar origFreq, ScalarBank wave,
-										Scalar newFreq, ScalarBank newWave) {
+	public static ScalarBank resampleWaveform(Scalar origFreq, ScalarBank wave, Scalar newFreq) {
 		Scalar minFreq = new Scalar(Math.min(origFreq.getValue(), newFreq.getValue()));
 		Scalar lowpassCutoff = new Scalar(0.99 * 0.5 * minFreq.getValue());
 		int lowpassFilterWidth = 6;
 		Resampler resampler = new Resampler((int) origFreq.getValue(), (int) newFreq.getValue(),
 				lowpassCutoff, lowpassFilterWidth);
-		resampler.resample(wave, true, newWave);
+		return resampler.resample(wave, true);
 	}
 
 	private ScalarBank listSegment(ScalarBank input, int index, int len) {

@@ -256,9 +256,7 @@ public class FeatureComputer implements CodeFeatures {
 						+ sampleFreq + " .vs " + newSampleFreq);
 
 			// Resample the waveform
-			ScalarBank resampledWave = new ScalarBank(wave.getCount());
-			Resampler.resampleWaveform(sampleFreq, wave,
-					newSampleFreq, resampledWave);
+			ScalarBank resampledWave = Resampler.resampleWaveform(sampleFreq, wave, newSampleFreq);
 			compute(resampledWave, vtlnWarp, output);
 		}
 	}
@@ -287,9 +285,7 @@ public class FeatureComputer implements CodeFeatures {
 						+ sampleFreq + " .vs " + newSampleFreq);
 
 			// Resample the waveform
-			ScalarBank resampledWave = new ScalarBank(wave.getCount());
-			Resampler.resampleWaveform(sampleFreq, wave,
-					newSampleFreq, resampledWave);
+			ScalarBank resampledWave = Resampler.resampleWaveform(sampleFreq, wave, newSampleFreq);
 			compute(resampledWave, vtlnWarp, output);
 		}
 	}
