@@ -59,6 +59,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		requirements.add(t);
 	}
 
+	public CellList map(IntFunction<Cell<Scalar>> dest) {
+		return map(this, dest);
+	}
+
 	public CellList f(IntFunction<Factor<Scalar>> filter) {
 		return f(this, filter);
 	}
@@ -77,8 +81,16 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return m(this, adapter, destinations, transmission);
 	}
 
+	public CellList mself(List<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
+		return mself(this, adapter, transmission);
+	}
+
 	public CellList m(IntFunction<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
 		return m(this, adapter, destinations, transmission);
+	}
+
+	public CellList mself(IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
+		return mself(this, adapter, transmission);
 	}
 
 	public CellList m(IntFunction<Cell<Scalar>> adapter, IntFunction<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
@@ -156,6 +168,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 	@Override
 	public void reset() {
 		if (parent != null) parent.reset();
+		forEach(Cell::reset);
 		finals.forEach(Runnable::run);
 	}
 }

@@ -62,6 +62,24 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		throw new RuntimeException("Not implemented");
 	}
 
+	default CellList cells(int count, IntFunction<Cell<Scalar>> cells) {
+		CellList c = new CellList();
+		IntStream.range(0, count).mapToObj(cells).forEach(c::addRoot);
+		return c;
+	}
+
+	default CellList map(CellList cells, IntFunction<Cell<Scalar>> dest) {
+		CellList c = new CellList(cells);
+
+		IntStream.range(0, cells.size()).forEach(i -> {
+			Cell<Scalar> d = dest.apply(i);
+			cells.get(i).setReceptor(d);
+			c.add(d);
+		});
+
+		return c;
+	}
+
 	default CellList w(String... path) throws IOException {
 		return w(Stream.of(path).map(File::new).toArray(File[]::new));
 	}
@@ -183,21 +201,33 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return m(cells, adapter, cells::get, transmission);
 	}
 
+	default CellList mself(CellList cells, List<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
+		return m(cells, adapter, cells, transmission);
+	}
+
 	default CellList m(CellList cells, List<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
 		CellList result = m(cells, adapter::get, destinations, transmission);
+
 		if (adapter instanceof CellList) {
 			result.getFinals().addAll(((CellList) adapter).getFinals());
 			((CellList) adapter).getRequirements().forEach(result::addRequirement);
 		}
+
 		return result;
+	}
+
+	default CellList mself(CellList cells, IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
+		return m(cells, adapter, cells, transmission);
 	}
 
 	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
 		CellList result = m(cells, adapter, destinations::get, transmission);
+
 		if (destinations instanceof CellList) {
 			result.getFinals().addAll(((CellList) destinations).getFinals());
 			((CellList) destinations).getRequirements().forEach(result::addRequirement);
 		}
+
 		return result;
 	}
 
