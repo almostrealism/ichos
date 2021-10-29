@@ -14,7 +14,7 @@ public class DelayCellTest implements CellFeatures {
 		Supplier<Runnable> r =
 				w("src/test/resources/Snare Perc DD.wav")
 						.d(i -> new Scalar(2.0))
-						.o(i -> new File("delay-cell-test.wav"))
+						.om(i -> new File("delay-cell-test.wav"))
 						.sec(6);
 		r.get().run();
 	}
@@ -25,7 +25,7 @@ public class DelayCellTest implements CellFeatures {
 				w("src/test/resources/Snare Perc DD.wav")
 						.f(i -> hp(2000, 0.1))
 						.d(i -> new Scalar(2.0))
-						.o(i -> new File("filter-delay-cell-test.wav"))
+						.om(i -> new File("filter-delay-cell-test.wav"))
 						.sec(6);
 		r.get().run();
 	}

@@ -16,9 +16,12 @@
 
 package org.almostrealism.audio;
 
+import io.almostrealism.code.ProducerComputation;
 import io.almostrealism.code.Setup;
 import io.almostrealism.uml.Plural;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.audio.filter.AudioCellAdapter;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.hardware.OperationList;
@@ -32,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
@@ -50,6 +54,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		this.finals = new ArrayList<>();
 	}
 
+	private void setParent(CellList parent) {
+		this.parent = parent;
+	}
+
 	public void addRoot(Cell<Scalar> c) {
 		roots.add(c);
 		add(c);
@@ -61,6 +69,17 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList map(IntFunction<Cell<Scalar>> dest) {
 		return map(this, dest);
+	}
+
+	public CellList poly(IntFunction<ProducerComputation<Scalar>> decision) {
+		CellList l = poly(1, () -> null, decision,
+				stream().map(c -> (Function<PolymorphicAudioData, AudioCellAdapter>) data -> (AudioCellAdapter) c).toArray(Function[]::new));
+		// TODO  By dropping the parent, we may be losing necessary dependencies
+		// TODO  However, if it is included, operations will be invoked multiple times
+		// TODO  Since the new polymorphic cells delegate to the operations of the
+		// TODO  original cells in this current CellList
+		// l.setParent(this);
+		return l;
 	}
 
 	public CellList f(IntFunction<Factor<Scalar>> filter) {
@@ -99,6 +118,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList o(IntFunction<File> f) {
 		return o(this, f);
+	}
+
+	public CellList om(IntFunction<File> f) {
+		return om(this, f);
 	}
 
 	public Supplier<Runnable> min(double minutes) { return min(this, minutes); }
@@ -169,6 +192,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 	public void reset() {
 		if (parent != null) parent.reset();
 		forEach(Cell::reset);
+		requirements.reset();
 		finals.forEach(Runnable::run);
 	}
 }

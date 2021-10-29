@@ -18,6 +18,7 @@ package org.almostrealism.audio;
 
 import io.almostrealism.code.Computation;
 import io.almostrealism.code.ProducerComputation;
+import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
@@ -63,8 +64,10 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 
 	@Override
 	public Supplier<Runnable> setup() {
+		Evaluable<Scalar> d = decision.get();
+
 		return () -> () -> {
-			double v = decision.get().evaluate().getValue();
+			double v = d.evaluate().getValue();
 			double in = 1.0 / cells.size();
 
 			for (int i = 0; i < cells.size(); i++) {

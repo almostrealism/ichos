@@ -31,6 +31,7 @@ import java.util.function.Supplier;
 public class AdjustableDelayCell extends SummationCell implements Adjustable<Scalar>, CodeFeatures {
 
 	private final AcceleratedTimeSeries buffer;
+	private CursorPair initCursors;
 	private CursorPair cursors;
 
 	private final Scalar scale;
@@ -47,6 +48,7 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 	}
 
 	protected void initCursors() {
+		initCursors = new CursorPair();
 		cursors = new CursorPair();
 	}
 
@@ -57,30 +59,38 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 	public Scalar getScale() { return scale; }
 
 	public synchronized void setDelay(Scalar sec) {
-		cursors.setDelayCursor(cursors.getCursor() + OutputLine.sampleRate * sec.getValue());
+		initCursors.setDelayCursor(initCursors.getCursor() + OutputLine.sampleRate * sec.getValue());
 	}
 
 	public synchronized Scalar getDelay() {
-		return new Scalar((cursors.getDelayCursor() - cursors.getCursor()) / OutputLine.sampleRate);
+		return new Scalar((initCursors.getDelayCursor() - initCursors.getCursor()) / OutputLine.sampleRate);
 	}
 
 	public synchronized void setDelayMsec(double msec) {
-		cursors.setDelayCursor(cursors.getCursor() + OutputLine.sampleRate * (msec / 1000d));
+		initCursors.setDelayCursor(initCursors.getCursor() + OutputLine.sampleRate * (msec / 1000d));
 	}
 
 	public synchronized double getDelayMsec() {
-		return 1000 * (cursors.getDelayCursor() - cursors.getCursor()) / OutputLine.sampleRate;
+		return 1000 * (initCursors.getDelayCursor() - initCursors.getCursor()) / OutputLine.sampleRate;
 	}
 
 	public synchronized void setDelayInFrames(double frames) {
-		cursors.setDelayCursor(cursors.getCursor() + frames);
+		initCursors.setDelayCursor(initCursors.getCursor() + frames);
 	}
 
-	public synchronized double getDelayInFrames() { return cursors.getDelayCursor() - cursors.getCursor(); }
+	public synchronized double getDelayInFrames() { return initCursors.getDelayCursor() - initCursors.getCursor(); }
 
 	@Override
 	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
 		return a(2, p(scale), value);
+	}
+
+	@Override
+	public Supplier<Runnable> setup() {
+		OperationList setup = new OperationList();
+		setup.add(super.setup());
+		setup.add(a(2, p(cursors), p(initCursors)));
+		return setup;
 	}
 
 	@Override

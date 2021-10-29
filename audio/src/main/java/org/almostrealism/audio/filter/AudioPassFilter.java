@@ -87,4 +87,9 @@ public class AudioPassFilter implements TemporalFactor<Scalar>, Lifecycle, CodeF
 	public Supplier<Runnable> tick() {
 		return new AudioPassFilterComputation(data, frequency, resonance, input, high);
 	}
+
+	@Override
+	public void reset() {
+		this.data.reset();
+	}
 }

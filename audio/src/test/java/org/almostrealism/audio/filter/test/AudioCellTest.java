@@ -29,7 +29,7 @@ public class AudioCellTest implements CellFeatures {
 		Supplier<Runnable> r =
 				w("src/test/resources/Snare Perc DD.wav")
 						.f(i -> hp(2000, 0.1))
-						.o(i -> new File("filter-cell-test.wav"))
+						.om(i -> new File("filter-cell-test.wav"))
 						.sec(10);
 		r.get().run();
 	}

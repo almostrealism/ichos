@@ -43,4 +43,19 @@ public interface AudioFilterData extends BaseAudioData {
 	default Provider<Scalar> getOutputHistory0() { return new Provider<>(outputHistory0()); }
 	default Provider<Scalar> getOutputHistory1() { return new Provider<>(outputHistory1()); }
 	default Provider<Scalar> getOutputHistory2() { return new Provider<>(outputHistory2()); }
+
+	default void reset() {
+		c().setValue(0.0);
+		a1().setValue(0.0);
+		a2().setValue(0.0);
+		a3().setValue(0.0);
+		b1().setValue(0.0);
+		b2().setValue(0.0);
+		output().setValue(0.0);
+		inputHistory0().setValue(0.0);
+		inputHistory1().setValue(0.0);
+		outputHistory0().setValue(0.0);
+		outputHistory1().setValue(0.0);
+		outputHistory2().setValue(0.0);
+	}
 }
