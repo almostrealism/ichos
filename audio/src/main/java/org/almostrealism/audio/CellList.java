@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 
 public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
@@ -82,6 +83,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return l;
 	}
 
+	public CellList gr(double duration, int segments, IntUnaryOperator choices) {
+		return gr(this, duration, segments, choices);
+	}
+
 	public CellList f(IntFunction<Factor<Scalar>> filter) {
 		return f(this, filter);
 	}
@@ -114,6 +119,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList m(IntFunction<Cell<Scalar>> adapter, IntFunction<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
 		return m(this, adapter, destinations, transmission);
+	}
+
+	public CellList csv(IntFunction<File> f) {
+		return csv(this, f);
 	}
 
 	public CellList o(IntFunction<File> f) {

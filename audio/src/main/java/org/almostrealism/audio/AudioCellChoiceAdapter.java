@@ -28,15 +28,18 @@ import org.almostrealism.audio.filter.AudioCellAdapter;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.hardware.OperationList;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements CellFeatures {
-	private final ProducerComputation<Scalar> decision;
+	private ProducerComputation<Scalar> decision;
 	private final List<AudioCellAdapter> cells;
 	private final boolean parallel;
 
@@ -54,12 +57,38 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 
 		if (parallel) {
 			storage = new ScalarBank(choices.size());
-			IntStream.range(0, cells.size())
-					.forEach(i -> cells.get(i).setReceptor(a(p(storage.get(i)))));
+			initParallel();
 		} else {
 			storage = new ScalarBank(1);
 			cells.forEach(cell -> cell.setReceptor(a(p(storage.get(0)))));
 		}
+	}
+
+	public void setDecision(ProducerComputation<Scalar> decision) {
+		this.decision = decision;
+	}
+
+	private void initParallel() {
+		getCellSet().forEach(c ->
+				c.setReceptor(a(indexes(c).mapToObj(storage::get).map(this::p).toArray(Supplier[]::new))));
+	}
+
+	private IntStream indexes(AudioCellAdapter c) {
+		return IntStream.range(0, cells.size()).filter(i -> cells.get(i) == c);
+	}
+
+	protected Set<AudioCellAdapter> getCellSet() {
+		HashSet<AudioCellAdapter> set = new HashSet<>();
+
+		n: for (AudioCellAdapter n : cells) {
+			for (AudioCellAdapter c : set) {
+				if (c == n) continue n;
+			}
+
+			set.add(n);
+		}
+
+		return set;
 	}
 
 	@Override
@@ -67,15 +96,17 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 		Evaluable<Scalar> d = decision.get();
 
 		return () -> () -> {
-			double v = d.evaluate().getValue();
-			double in = 1.0 / cells.size();
+			if (parallel) {
+				getCellSet().forEach(c -> c.setup().get().run());
+			} else {
+				double v = d.evaluate().getValue();
+				double in = 1.0 / cells.size();
 
-			for (int i = 0; i < cells.size(); i++) {
-				if (parallel) {
-					cells.get(i).setup().get().run();
-				} else if (v <= (i + 1) * in) {
-					cells.get(i).setup().get().run();
-					return;
+				for (int i = 0; i < cells.size(); i++) {
+					if (v <= (i + 1) * in) {
+						cells.get(i).setup().get().run();
+						return;
+					}
 				}
 			}
 		};
@@ -86,7 +117,7 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 		OperationList push = new OperationList();
 
 		if (parallel) {
-			cells.stream().map(cell -> cell.push(protein)).forEach(push::add);
+			getCellSet().stream().map(cell -> cell.push(protein)).forEach(push::add);
 			push.add(new Choice(decision, storage.stream()
 					.map(v -> (Computation) getReceptor().push(p(v)))
 					.collect(Collectors.toList())));
@@ -103,9 +134,7 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 	@Override
 	public Supplier<Runnable> tick() {
 		if (parallel) {
-			OperationList tick = new OperationList();
-			cells.stream().map(AudioCellAdapter::tick).forEach(tick::add);
-			return tick;
+			return getCellSet().stream().map(AudioCellAdapter::tick).collect(OperationList.collector());
 		} else {
 			return new Choice(decision,
 					cells.stream().map(AudioCellAdapter::tick).map(v -> (Computation) v)
@@ -116,6 +145,6 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 	@Override
 	public void reset() {
 		super.reset();
-		cells.forEach(Cell::reset);
+		getCellSet().forEach(Cell::reset);
 	}
 }

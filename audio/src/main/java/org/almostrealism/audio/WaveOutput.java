@@ -17,7 +17,13 @@
 package org.almostrealism.audio;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.function.Supplier;
 
 import io.almostrealism.uml.Lifecycle;
@@ -93,6 +99,25 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 			} catch (IOException e) {
 				e.printStackTrace();
 				return;
+			}
+		};
+	}
+
+	public Supplier<Runnable> writeCsv(File file) {
+		return () -> () -> {
+			StringBuffer buf = new StringBuffer();
+
+			int frames = (int) cursor.left();
+
+			for (int i = 0; i < frames; i++) {
+				double value = data.get(i).getValue();
+				buf.append(i + "," + value + "\n");
+			}
+
+			try (PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file)))) {
+				out.println(buf);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
 			}
 		};
 	}

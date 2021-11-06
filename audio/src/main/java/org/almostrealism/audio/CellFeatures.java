@@ -36,6 +36,7 @@ import org.almostrealism.graph.FilteredCell;
 import org.almostrealism.graph.MultiCell;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.graph.ReceptorCell;
+import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.Factor;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.heredity.HeredityFeatures;
@@ -55,13 +56,19 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFeatures {
-	default Receptor<Scalar> a(Supplier<Evaluable<? extends Scalar>> destination) {
-		return protein -> a(2, destination, protein);
+	default Receptor<Scalar> a(Supplier<Evaluable<? extends Scalar>>... destinations) {
+		if (destinations.length == 1) {
+			return protein -> a(2, destinations[0], protein);
+		} else {
+			return protein -> Stream.of(destinations).map(v -> a(2, v, protein)).collect(OperationList.collector());
+		}
 	}
 
 	default CellList silence() {
@@ -119,15 +126,27 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return w(Stream.of(path).map(File::new).toArray(File[]::new));
 	}
 
+	default CellList w(double repeat, String... path) {
+		return w(repeat, Stream.of(path).map(File::new).toArray(File[]::new));
+	}
+
 	default CellList w(File... files) {
 		return w(PolymorphicAudioData::new, files);
 	}
 
+	default CellList w(double repeat, File... files) {
+		return w(PolymorphicAudioData::new, repeat, files);
+	}
+
 	default CellList w(Supplier<PolymorphicAudioData> data, File... files) {
+		return w(data, 0.0, files);
+	}
+
+	default CellList w(Supplier<PolymorphicAudioData> data, double repeat, File... files) {
 		CellList cells = new CellList();
 		Stream.of(files).map(f -> {
 			try {
-				return WavCell.load(f, 1.0, 0).apply(data.get());
+				return WavCell.load(f, 1.0, repeat).apply(data.get());
 			} catch (IOException e) {
 				e.printStackTrace();
 				return silence().get(0);
@@ -171,6 +190,18 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 			WaveOutput out = new WaveOutput(f.apply(i));
 			result.add(new ReceptorCell<>(out));
 			result.getFinals().add(out.write().get());
+		}
+
+		return result;
+	}
+
+	default CellList csv(CellList cells, IntFunction<File> f) {
+		CellList result = new CellList(cells);
+
+		for (int i = 0; i < cells.size(); i++) {
+			WaveOutput out = new WaveOutput(f.apply(i));
+			cells.get(i).setReceptor(out);
+			result.getFinals().add(out.writeCsv(f.apply(i)).get());
 		}
 
 		return result;
@@ -340,6 +371,31 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		CellList cells = new CellList();
 		cells.addRoot(new ValueSequenceCell(values, duration, steps));
 		return cells;
+	}
+
+	default CellList gr(CellList cells, double duration, int segments, IntUnaryOperator choices) {
+		Scalar out = new Scalar();
+//		List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> cellChoices =
+//				IntStream.range(0, segments).map(choices).mapToObj(cells::get)
+//						.map(c -> (Function<PolymorphicAudioData, ? extends AudioCellAdapter>) data -> (AudioCellAdapter) c).collect(Collectors.toList());
+		List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> cellChoices =
+				cells.stream()
+						.map(c -> (Function<PolymorphicAudioData, ? extends AudioCellAdapter>) data -> (AudioCellAdapter) c).collect(Collectors.toList());
+		DynamicAudioCell cell = new DynamicAudioCell(v(1).multiply(p(out)), cellChoices);
+		ValueSequenceCell c = (ValueSequenceCell) seq(i -> v((2.0 * choices.applyAsInt(i) + 1) / (2.0 * cells.size())), v(duration), segments).get(0);
+		c.setReceptor(a(p(out)));
+
+		// TODO  By dropping the parent, we may be losing necessary dependencies
+		// TODO  However, if it is included, operations will be invoked multiple times
+		// TODO  Since the new dynamic cell delegates to the operations of the
+		// TODO  original cells in this current CellList
+		CellList result = new CellList();
+		result.addRoot(c);
+
+		result = new CellList(result);
+		result.addRoot(cell);
+
+		return result;
 	}
 
 	default Supplier<Runnable> min(Temporal t, double minutes) {

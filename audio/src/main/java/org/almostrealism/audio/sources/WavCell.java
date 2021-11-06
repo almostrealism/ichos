@@ -57,12 +57,13 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 			wave = wav;
 		}
 
-		// TODO  This should not be required, there is some problem that is causing the output to be half speed
-		setFreq(2 * OutputLine.sampleRate);
+		int correctiveMultiplier = 2; // TODO  This should not be required, there is some problem that is causing the output to be half speed
+
+		setFreq(correctiveMultiplier * OutputLine.sampleRate);
 
 		if (repeat > 0) {
 			this.repeat = true;
-			this.duration = repeat * OutputLine.sampleRate;
+			this.duration = correctiveMultiplier * repeat * OutputLine.sampleRate;
 		} else {
 			this.repeat = false;
 			this.duration = 1.0;
