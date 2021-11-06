@@ -44,7 +44,7 @@ public class WavCellPush extends WavCellComputation {
 		exp.accept(" = ");
 		exp.accept(getAmplitude().valueAt(0).getExpression());
 		exp.accept(" * ");
-		exp.accept(getWave().get(getWavePosition().valueAt(0).getExpression()).getExpression());
+		exp.accept(getWave().get("2 * floor(" + getWavePosition().valueAt(0).getExpression() + ")").getExpression());
 		exp.accept(";\n");
 		exp.accept("} else {\n");
 		exp.accept(getOutput().valueAt(0).getExpression());

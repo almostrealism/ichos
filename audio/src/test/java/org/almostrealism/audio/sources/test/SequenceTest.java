@@ -14,6 +14,7 @@ import org.almostrealism.audio.sources.ValueSequenceTick;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.hardware.AcceleratedOperation;
 import org.almostrealism.hardware.DynamicAcceleratedOperation;
+import org.almostrealism.time.Frequency;
 import org.almostrealism.time.TemporalRunner;
 import org.almostrealism.util.TestFeatures;
 import org.junit.Test;
@@ -119,28 +120,28 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 	}
 
 	@Test
-	public void mix() {
-		CellList cells =
-				w(bpm(128).l(1), "src/test/resources/BD 909 Color 06.wav", "src/test/resources/Snare Perc DD.wav")
-				.gr(bpm(128).l(4), 4,
-//						 i -> i % 2 == 0 ? 1 : 0)
-						i -> {
-							switch (i) {
-								case 0:
-									return 0;
-								case 1:
-									return 1;
-								case 2:
-									return 0;
-								case 3:
-									return 1;
-							}
+	public void notes() {
+		CellList cells = w(new Frequency(196), new Frequency(196));
+		((SineWaveCell) cells.get(0)).setNoteLength(2000);
+		((SineWaveCell) cells.get(1)).setNoteLength(2000);
 
-							return 0;
-						})
+		cells = cells.gr(2000, 8,
+				i -> i % 2 == 0 ? 0 : 1)
+				.o(i -> new File("notes-seq-test.wav"));
+		cells.sec(2).get().run();
+	}
+
+	@Test
+	public void mix() {
+		int count = 32;
+
+		CellList cells =
+				 w(bpm(128).l(1), "src/test/resources/BD 909 Color 06.wav", "src/test/resources/Snare Perc DD.wav")
+				.gr(bpm(128).l(count), count,
+						 i -> i % 2 == 0 ? 0 : 1)
 				.o(i -> new File("mix-test.wav"));
 
-		cells.sec(bpm(128).l(16)).get().run();
+		cells.sec(bpm(128).l(count)).get().run();
 	}
 
 	protected Receptor<Scalar> loggingReceptor() {

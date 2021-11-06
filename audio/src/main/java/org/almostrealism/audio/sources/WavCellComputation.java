@@ -43,13 +43,13 @@ public abstract class WavCellComputation extends DynamicOperationComputationAdap
 		this.repeat = repeat;
 	}
 
-	public ArrayVariable getOutput() { return getArgument(0); }
+	public ArrayVariable getOutput() { return getArgument(0, 2); }
 	public ArrayVariable getWave() { return getArgument(1); }
-	public ArrayVariable getWavePosition() { return getArgument(2); }
-	public ArrayVariable getWaveLength() { return getArgument(3); }
-	public ArrayVariable getWaveCount() { return getArgument(4); }
-	public ArrayVariable getAmplitude() { return getArgument(5); }
-	public ArrayVariable getDuration() { return getArgument(6); }
+	public ArrayVariable getWavePosition() { return getArgument(2, 2); }
+	public ArrayVariable getWaveLength() { return getArgument(3, 2); }
+	public ArrayVariable getWaveCount() { return getArgument(4, 2); }
+	public ArrayVariable getAmplitude() { return getArgument(5, 2); }
+	public ArrayVariable getDuration() { return getArgument(6, 2); }
 
 	@Override
 	public Scope getScope() { return scope; }

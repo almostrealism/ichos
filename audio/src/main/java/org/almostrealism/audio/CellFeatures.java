@@ -385,6 +385,9 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		ValueSequenceCell c = (ValueSequenceCell) seq(i -> v((2.0 * choices.applyAsInt(i) + 1) / (2.0 * cells.size())), v(duration), segments).get(0);
 		c.setReceptor(a(p(out)));
 
+		WaveOutput csv = new WaveOutput(new File("value-sequence-debug.wav"));
+		c.setMeter(csv);
+
 		// TODO  By dropping the parent, we may be losing necessary dependencies
 		// TODO  However, if it is included, operations will be invoked multiple times
 		// TODO  Since the new dynamic cell delegates to the operations of the
@@ -394,6 +397,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 
 		result = new CellList(result);
 		result.addRoot(cell);
+		result.getFinals().add(csv.writeCsv(new File("value-sequence-debug.csv")).get());
 
 		return result;
 	}
