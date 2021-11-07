@@ -18,10 +18,13 @@ package org.almostrealism.audio.filter;
 
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
+import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.graph.Adjustable;
+import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.CellAdapter;
+import org.almostrealism.graph.Receptor;
 import org.almostrealism.graph.ScalarCachedStateCell;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.util.CodeFeatures;
@@ -66,5 +69,14 @@ public abstract class AudioCellAdapter extends ScalarCachedStateCell implements 
 		setup.add(super.setup());
 		setup.add(this.setup);
 		return setup;
+	}
+
+	public static AudioCellAdapter from(Producer<Scalar> p) {
+		return new AudioCellAdapter() {
+			@Override
+			public Supplier<Runnable> push(Producer<Scalar> protein) {
+				return assign(() -> new Provider<>(getCachedValue()), p);
+			}
+		};
 	}
 }

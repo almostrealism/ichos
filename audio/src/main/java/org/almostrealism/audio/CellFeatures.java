@@ -36,6 +36,7 @@ import org.almostrealism.graph.FilteredCell;
 import org.almostrealism.graph.MultiCell;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.graph.ReceptorCell;
+import org.almostrealism.graph.SummationCell;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.Factor;
 import org.almostrealism.heredity.Gene;
@@ -72,13 +73,28 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 	}
 
 	default CellList silence() {
-		throw new RuntimeException("Not implemented");
+		CellList cells = new CellList();
+		cells.addRoot(AudioCellAdapter.from(v(0.0)));
+		return cells;
 	}
 
 	default CellList cells(int count, IntFunction<Cell<Scalar>> cells) {
 		CellList c = new CellList();
 		IntStream.range(0, count).mapToObj(cells).forEach(c::addRoot);
 		return c;
+	}
+
+	default CellList cells(CellList... cells) {
+		return all(cells.length, i -> cells[i]);
+	}
+
+	default CellList all(int count, IntFunction<CellList> cells) {
+		CellList all[] = new CellList[count];
+		IntStream.range(0, count).forEach(i -> all[i] = cells.apply(i));
+
+		CellList result = new CellList(all);
+		IntStream.range(0, all.length).mapToObj(i -> all[i]).flatMap(Collection::stream).forEach(result::add);
+		return result;
 	}
 
 	default CellList map(CellList cells, IntFunction<Cell<Scalar>> dest) {
@@ -181,6 +197,15 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		CellList cells = new CellList();
 		IntStream.range(0, count).mapToObj(i -> new PolymorphicAudioCell(data.apply(i), decision.apply(i), choices)).forEach(cells::addRoot);
 		return cells;
+	}
+
+	default CellList sum(CellList cells) {
+		SummationCell sum = new SummationCell();
+		cells.forEach(c -> c.setReceptor(sum));
+
+		CellList result = new CellList(cells);
+		result.add(sum);
+		return result;
 	}
 
 	default CellList o(int count, IntFunction<File> f) {

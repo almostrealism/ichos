@@ -32,6 +32,7 @@ import org.almostrealism.time.TemporalList;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -41,22 +42,20 @@ import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 
 public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
-	private CellList parent;
+	private List<CellList> parents;
 	private List<Receptor<Scalar>> roots;
 	private TemporalList requirements;
 	private List<Runnable> finals;
 
-	public CellList() { this(null); }
+	public CellList(CellList... parents) {
+		this(Arrays.asList(parents));
+	}
 
-	public CellList(CellList parent) {
-		this.parent = parent;
+	public CellList(List<CellList> parents) {
+		this.parents = parents;
 		this.roots = new ArrayList<>();
 		this.requirements = new TemporalList();
 		this.finals = new ArrayList<>();
-	}
-
-	private void setParent(CellList parent) {
-		this.parent = parent;
 	}
 
 	public void addRoot(Cell<Scalar> c) {
@@ -70,6 +69,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList map(IntFunction<Cell<Scalar>> dest) {
 		return map(this, dest);
+	}
+
+	public CellList and(CellList cells) {
+		return cells(this, cells);
 	}
 
 	public CellList poly(IntFunction<ProducerComputation<Scalar>> decision) {
@@ -121,6 +124,8 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return m(this, adapter, destinations, transmission);
 	}
 
+	public CellList sum() { return sum(this); }
+
 	public CellList csv(IntFunction<File> f) {
 		return csv(this, f);
 	}
@@ -137,7 +142,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public Supplier<Runnable> sec(double seconds) { return sec(this, seconds); }
 
-	public CellList getParent() { return parent; }
+	public List<CellList> getParents() { return parents; }
 
 	public TemporalList getRequirements() { return requirements; }
 
@@ -145,10 +150,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public Collection<Cell<Scalar>> getAll() {
 		List<Cell<Scalar>> all = new ArrayList<>();
-		if (parent != null) {
-			all.addAll(parent.getAll());
-		}
-
+		parents.stream().map(CellList::getAll).flatMap(Collection::stream).forEach(c -> append(all, c));
 		forEach(c -> append(all, c));
 
 		return all;
@@ -156,9 +158,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public TemporalList getAllTemporals() {
 		TemporalList all = new TemporalList();
-		if (parent != null) {
-			all.addAll(parent.getAllTemporals());
-		}
+		parents.stream().map(CellList::getAllTemporals).flatMap(Collection::stream).forEach(c -> append(all, c));
 
 		stream().map(c -> c instanceof Temporal ? (Temporal) c : null)
 				.filter(Objects::nonNull).forEach(t -> append(all, t));
@@ -170,10 +170,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public Collection<Receptor<Scalar>> getAllRoots() {
 		List<Receptor<Scalar>> all = new ArrayList<>();
-		if (parent != null) {
-			all.addAll(parent.getAllRoots());
-		}
-
+		parents.stream().map(CellList::getAllRoots).flatMap(Collection::stream).forEach(c -> append(all, c));
 		roots.forEach(c -> append(all, c));
 
 		return all;
@@ -199,7 +196,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	@Override
 	public void reset() {
-		if (parent != null) parent.reset();
+		parents.forEach(CellList::reset);
 		forEach(Cell::reset);
 		requirements.reset();
 		finals.forEach(Runnable::run);
