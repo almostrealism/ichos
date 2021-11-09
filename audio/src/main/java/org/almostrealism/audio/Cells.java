@@ -20,5 +20,10 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.heredity.TemporalCellular;
 
+import java.util.function.Supplier;
+
 public interface Cells extends TemporalCellular, CellFeatures, Iterable<Cell<Scalar>> {
+	default Supplier<Runnable> min(double minutes) { return min(this, minutes); }
+
+	default Supplier<Runnable> sec(double seconds) { return sec(this, seconds); }
 }

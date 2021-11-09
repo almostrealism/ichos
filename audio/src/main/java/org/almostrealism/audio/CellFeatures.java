@@ -109,6 +109,23 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return c;
 	}
 
+	default CellList[] branch(CellList cells, IntFunction<Cell<Scalar>>... dest) {
+		CellList c[] = IntStream.range(0, dest.length).mapToObj(i -> new CellList(cells)).toArray(CellList[]::new);
+
+		IntStream.range(0, cells.size()).forEach(i -> {
+			Cell<Scalar> d[] = new Cell[dest.length];
+
+			IntStream.range(0, dest.length).forEach(j -> {
+				d[j] = dest[j].apply(i);
+				c[j].add(d[j]);
+			});
+
+			cells.get(i).setReceptor(Receptor.to(d));
+		});
+
+		return c;
+	}
+
 	default CellList w(Collection<Frequency> frequencies) {
 		return w(PolymorphicAudioData::new, frequencies);
 	}
@@ -142,27 +159,35 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return w(Stream.of(path).map(File::new).toArray(File[]::new));
 	}
 
-	default CellList w(double repeat, String... path) {
-		return w(repeat, Stream.of(path).map(File::new).toArray(File[]::new));
+	default CellList w(Producer<Scalar> repeat, String... path) {
+		return w(null, repeat, path);
+	}
+
+	default CellList w(Producer<Scalar> offset, Producer<Scalar> repeat, String... path) {
+		return w(offset, repeat, Stream.of(path).map(File::new).toArray(File[]::new));
 	}
 
 	default CellList w(File... files) {
-		return w(PolymorphicAudioData::new, files);
+		return w((Supplier<PolymorphicAudioData>) PolymorphicAudioData::new, files);
 	}
 
-	default CellList w(double repeat, File... files) {
-		return w(PolymorphicAudioData::new, repeat, files);
+	default CellList w(Producer<Scalar> repeat, File... files) {
+		return w(null, repeat, files);
+	}
+
+	default CellList w(Producer<Scalar> offset, Producer<Scalar> repeat, File... files) {
+		return w(PolymorphicAudioData::new, offset, repeat, files);
 	}
 
 	default CellList w(Supplier<PolymorphicAudioData> data, File... files) {
-		return w(data, 0.0, files);
+		return w(data, null, null, files);
 	}
 
-	default CellList w(Supplier<PolymorphicAudioData> data, double repeat, File... files) {
+	default CellList w(Supplier<PolymorphicAudioData> data, Producer<Scalar> offset, Producer<Scalar> repeat, File... files) {
 		CellList cells = new CellList();
 		Stream.of(files).map(f -> {
 			try {
-				return WavCell.load(f, 1.0, repeat).apply(data.get());
+				return WavCell.load(f, 1.0, offset, repeat).apply(data.get());
 			} catch (IOException e) {
 				e.printStackTrace();
 				return silence().get(0);

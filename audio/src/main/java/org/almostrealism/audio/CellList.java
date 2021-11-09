@@ -138,10 +138,6 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return om(this, f);
 	}
 
-	public Supplier<Runnable> min(double minutes) { return min(this, minutes); }
-
-	public Supplier<Runnable> sec(double seconds) { return sec(this, seconds); }
-
 	public List<CellList> getParents() { return parents; }
 
 	public TemporalList getRequirements() { return requirements; }

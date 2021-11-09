@@ -49,10 +49,16 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 								  IntFunction<PolymorphicAudioData> data,
 								  List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> choices,
 								  boolean parallel) {
+		this(decision, IntStream.range(0, choices.size())
+			.mapToObj(i -> choices.get(i).apply(data.apply(i)))
+			.collect(Collectors.toList()), parallel);
+	}
+
+	public AudioCellChoiceAdapter(ProducerComputation<Scalar> decision,
+								  List<AudioCellAdapter> choices,
+								  boolean parallel) {
 		this.decision = decision;
-		this.cells = IntStream.range(0, choices.size())
-				.mapToObj(i -> choices.get(i).apply(data.apply(i)))
-				.collect(Collectors.toList());
+		this.cells = choices;
 		this.parallel = parallel;
 
 		if (parallel) {

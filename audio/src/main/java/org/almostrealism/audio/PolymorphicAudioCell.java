@@ -26,10 +26,6 @@ import java.util.List;
 import java.util.function.Function;
 
 public class PolymorphicAudioCell extends AudioCellChoiceAdapter {
-	public PolymorphicAudioCell(ProducerComputation<Scalar> decision,
-								List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> choices) {
-		this(new PolymorphicAudioData(), decision, choices);
-	}
 
 	public PolymorphicAudioCell(PolymorphicAudioData data, ProducerComputation<Scalar> decision,
 								Function<PolymorphicAudioData, ? extends AudioCellAdapter>... choices) {
@@ -39,5 +35,10 @@ public class PolymorphicAudioCell extends AudioCellChoiceAdapter {
 	public PolymorphicAudioCell(PolymorphicAudioData data, ProducerComputation<Scalar> decision,
 								List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> choices) {
 		super(decision, i -> data, choices, false);
+	}
+
+	public PolymorphicAudioCell(ProducerComputation<Scalar> decision,
+								List<AudioCellAdapter> choices) {
+		super(decision, choices, false);
 	}
 }

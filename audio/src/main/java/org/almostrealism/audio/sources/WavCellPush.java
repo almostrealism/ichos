@@ -35,11 +35,13 @@ public class WavCellPush extends WavCellComputation {
 		scope = new HybridScope(this);
 
 		Consumer<String> exp = scope.code();
-		exp.accept("if (");
+		exp.accept("if ((");
+		exp.accept(getWavePosition().valueAt(0).getExpression());
+		exp.accept(" >= 0) & (");
 		exp.accept(getWavePosition().valueAt(0).getExpression());
 		exp.accept(" < ");
 		exp.accept(getWaveCount().valueAt(0).getExpression());
-		exp.accept(") {\n");
+		exp.accept(")) {\n");
 		exp.accept(getOutput().valueAt(0).getExpression());
 		exp.accept(" = ");
 		exp.accept(getAmplitude().valueAt(0).getExpression());

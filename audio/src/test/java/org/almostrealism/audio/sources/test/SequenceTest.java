@@ -137,11 +137,11 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		int count = 32;
 
 		CellList cells = cells(
-					silence().and(w(bpm(128).l(1), "src/test/resources/BD 909 Color 06.wav"))
+					silence().and(w(v(bpm(128).l(1)), "src/test/resources/BD 909 Color 06.wav"))
 						.gr(bpm(128).l(count), count, i -> 1),
-					silence().and(w(bpm(128).l(1), "src/test/resources/Snare Perc DD.wav"))
+					silence().and(w(v(bpm(128).l(1)), "src/test/resources/Snare Perc DD.wav"))
 						.gr(bpm(128).l(count), count, i -> i % 2 == 0 ? 0 : 1),
-					silence().and(w(bpm(128).l(0.5), "src/test/resources/GT_HAT_31.wav"))
+					silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "src/test/resources/GT_HAT_31.wav"))
 						.gr(bpm(128).l(count), count * 2, i -> i % 2 == 0 ? 0 : 1))
 				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
 				.sum().o(i -> new File("mix-test.wav"));

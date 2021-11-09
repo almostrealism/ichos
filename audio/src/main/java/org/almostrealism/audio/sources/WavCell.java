@@ -37,17 +37,17 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	private final WavCellData data;
 	private final ScalarBank wave;
 
-	private final double duration;
+	private final Producer<Scalar> offset, duration;
 	private final boolean repeat;
 
 	private double amplitude;
 	private double waveLength;
 
-	public WavCell(ScalarBank wav, int sampleRate, double amplitude, double repeat) {
-		this(new PolymorphicAudioData(), wav, sampleRate, amplitude, repeat);
+	public WavCell(ScalarBank wav, int sampleRate, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) {
+		this(new PolymorphicAudioData(), wav, sampleRate, amplitude, offset, repeat);
 	}
 
-	public WavCell(WavCellData data, ScalarBank wav, int sampleRate, double amplitude, double repeat) {
+	public WavCell(WavCellData data, ScalarBank wav, int sampleRate, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) {
 		this.data = data;
 		this.amplitude = amplitude;
 
@@ -57,16 +57,20 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 			wave = wav;
 		}
 
-		int correctiveMultiplier = 1; // TODO  This should not be required, there is some problem that is causing the output to be half speed
+		setFreq(OutputLine.sampleRate);
 
-		setFreq(correctiveMultiplier * OutputLine.sampleRate);
+		if (offset != null) {
+			this.offset = scalarsMultiply(offset, v(OutputLine.sampleRate));
+		} else {
+			this.offset = null;
+		}
 
-		if (repeat > 0) {
+		if (repeat != null) {
 			this.repeat = true;
-			this.duration = repeat * OutputLine.sampleRate;
+			this.duration = scalarsMultiply(repeat, v(OutputLine.sampleRate));
 		} else {
 			this.repeat = false;
-			this.duration = 1.0;
+			this.duration = null;
 		}
 	}
 
@@ -76,19 +80,27 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 
 	@Override
 	public Supplier<Runnable> setup() {
-		return () -> () -> {
-			data.setWavePosition(0.0);
+		OperationList setup = new OperationList();
+		if (offset == null) {
+			setup.add(a(2, data::getWavePosition, v(0.0)));
+		} else {
+			setup.add(a(2, data::getWavePosition, scalarsMultiply(v(-1.0), offset)));
+		}
+
+		setup.add(() -> () -> {
 			data.setWaveLength(waveLength);
 			data.setWaveCount(wave.getCount());
 			data.setAmplitude(amplitude);
-			data.setDuration(duration);
-		};
+		});
+
+		return setup;
 	}
 
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
 		OperationList push = new OperationList();
+		if (duration != null) push.add(a(2, data::getDuration, v(bpm(128).l(1) * OutputLine.sampleRate)));
 		push.add(new WavCellPush(data, wave, value, repeat));
 		push.add(super.push(p(value)));
 		return push;
@@ -102,14 +114,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		return tick;
 	}
 
-	@Override
-	public void reset() {
-		super.reset();
-		// TODO  Move to init Runnable
-		data.setWavePosition(0);
-	}
-
-	public static Function<WavCellData, WavCell> load(File f, double amplitude, double repeat) throws IOException {
+	public static Function<WavCellData, WavCell> load(File f, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) throws IOException {
 		WavFile w = WavFile.openWavFile(f);
 
 		double[][] wave = new double[w.getNumChannels()][(int) w.getFramesRemaining()];
@@ -121,7 +126,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		int channel = 0;
 
 		ScalarBank waveform = WavFile.channel(wave, channel);
-		return data -> new WavCell(data, waveform, (int) w.getSampleRate(), amplitude, repeat);
+		return data -> new WavCell(data, waveform, (int) w.getSampleRate(), amplitude, offset, repeat);
 	}
 }
 
