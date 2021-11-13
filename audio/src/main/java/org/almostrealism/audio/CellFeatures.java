@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -353,10 +354,6 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return layer;
 	}
 
-	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, Plural<Gene<Scalar>> transmission) {
-		return m(cells, adapter, cells::get, transmission::valueAt);
-	}
-
 	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
 		return m(cells, adapter, cells::get, transmission);
 	}
@@ -380,8 +377,21 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return m(cells, adapter, cells, transmission);
 	}
 
-	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
-		CellList result = m(cells, adapter, destinations::get, transmission);
+	default CellList mself(CellList cells, IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission, IntFunction<Cell<Scalar>> passthrough) {
+		return m(cells, adapter, cells, transmission, passthrough);
+	}
+
+	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter,
+					   List<Cell<Scalar>> destinations,
+					   IntFunction<Gene<Scalar>> transmission) {
+		return m(cells, adapter, destinations, transmission, null);
+	}
+
+	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter,
+					   List<Cell<Scalar>> destinations,
+					   IntFunction<Gene<Scalar>> transmission,
+					   IntFunction<Cell<Scalar>> passthrough) {
+		CellList result = m(cells, adapter, destinations::get, transmission, passthrough);
 
 		if (destinations instanceof CellList) {
 			result.getFinals().addAll(((CellList) destinations).getFinals());
@@ -391,22 +401,34 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return result;
 	}
 
-	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, IntFunction<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter,
+					   IntFunction<Cell<Scalar>> destinations,
+					   IntFunction<Gene<Scalar>> transmission) {
+		return m(cells, adapter, destinations, transmission, null);
+	}
+
+	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter,
+					   IntFunction<Cell<Scalar>> destinations,
+					   IntFunction<Gene<Scalar>> transmission,
+					   IntFunction<Cell<Scalar>> passthrough) {
 		CellList layer = new CellList(cells);
+		CellList cleanLayer = passthrough == null ? null : new CellList(layer);
 		Iterator<Cell<Scalar>> itr = cells.iterator();
 
 		for (AtomicInteger i = new AtomicInteger(); itr.hasNext(); i.incrementAndGet()) {
 			Gene g = transmission.apply(i.get());
 			Cell<Scalar> source = itr.next();
+			Cell<Scalar> clean = Optional.ofNullable(passthrough).map(p -> p.apply(i.get())).orElse(null);
 
 			List<Cell<Scalar>> dest = new ArrayList<>();
 			IntStream.range(0, g.length()).mapToObj(j -> destinations.apply(j)).forEach(dest::add);
 
-			layer.addRequirement(MultiCell.split(source, adapter.apply(i.get()), dest, g));
+			layer.addRequirement(MultiCell.split(source, adapter.apply(i.get()), dest, g, clean));
 			dest.forEach(c -> append(layer, c));
+			if (cleanLayer != null) cleanLayer.add(clean);
 		}
 
-		return layer;
+		return cleanLayer == null ? layer : cleanLayer;
 	}
 
 	default <T> void append(List<T> dest, T v) {

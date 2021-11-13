@@ -1,5 +1,6 @@
 package org.almostrealism.audio.sources.test;
 
+import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
@@ -130,6 +131,37 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 				i -> i % 2 == 0 ? 0 : 1)
 				.o(i -> new File("notes-seq-test.wav"));
 		cells.sec(2).get().run();
+	}
+
+	@Test
+	public void samples() {
+		int count = 32;
+
+		CellList cells =
+				silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "src/test/resources/GT_HAT_31.wav"))
+						.gr(bpm(128).l(count), count * 2, i -> i % 2 == 0 ? 0 : 1)
+				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
+				.sum().o(i -> new File("sample-seq-test.wav"));
+
+		cells.sec(bpm(128).l(count)).get().run();
+	}
+
+	@Test
+	public void stems() {
+		int count = 212;
+
+		Producer<Scalar> one = v(1.0);
+
+		CellList cells = cells(
+//				silence().and(w(one, "src/test/resources/BD 909 Color 06.wav"))
+//						.gr(10, count, i -> 0),
+				silence().and(w(one, "src/test/resources/Snare Perc DD.wav"))
+						.gr(10, count, i -> 0)
+				)
+				 .o(i -> new File("stems-test- " + i + ".wav"));
+
+		Runnable r = cells.sec(10).get();
+		r.run();
 	}
 
 	@Test

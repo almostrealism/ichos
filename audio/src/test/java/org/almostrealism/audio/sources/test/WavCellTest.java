@@ -54,14 +54,25 @@ public class WavCellTest implements CellFeatures, TestFeatures {
 	}
 
 	@Test
-	public void test() {
+	public void repeat() {
+		int count = 32;
+
+		CellList cells = w(v(bpm(128).l(0.5)), v(bpm(128).l(4)),
+						"src/test/resources/GT_HAT_31.wav")
+				.o(i -> new File("wav-cell-repeat-test-" + i + ".wav"));
+
+		cells.sec(bpm(128).l(count)).get().run();
+	}
+
+	@Test
+	public void sequence() {
 		int count = 32;
 
 		CellList cells = silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)),
 							"src/test/resources/GT_HAT_31.wav"))
 							.gr(bpm(128).l(count), count, i -> 1)
 							.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
-							.o(i -> new File("wav-cell-test-" + i + ".wav"));
+							.o(i -> new File("wav-cell-seq-test-" + i + ".wav"));
 
 		cells.sec(bpm(128).l(count)).get().run();
 	}

@@ -100,7 +100,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
 		OperationList push = new OperationList();
-		if (duration != null) push.add(a(2, data::getDuration, v(bpm(128).l(1) * OutputLine.sampleRate)));
+		if (duration != null) push.add(a(2, data::getDuration, duration));
 		push.add(new WavCellPush(data, wave, value, repeat));
 		push.add(super.push(p(value)));
 		return push;

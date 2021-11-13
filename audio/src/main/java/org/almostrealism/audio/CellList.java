@@ -75,6 +75,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return cells(this, cells);
 	}
 
+	public CellList[] branch(IntFunction<Cell<Scalar>>... dest) {
+		return branch(this, dest);
+	}
+
 	public CellList poly(IntFunction<ProducerComputation<Scalar>> decision) {
 		CellList l = poly(1, () -> null, decision,
 				stream().map(c -> (Function<PolymorphicAudioData, AudioCellAdapter>) data -> (AudioCellAdapter) c).toArray(Function[]::new));
@@ -96,10 +100,6 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList d(IntFunction<Scalar> delay) { return d(this, delay); }
 
-	public CellList m(IntFunction<Cell<Scalar>> adapter, Plural<Gene<Scalar>> transmission) {
-		return m(this, adapter, transmission);
-	}
-
 	public CellList m(IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
 		return m(this, adapter, transmission);
 	}
@@ -118,6 +118,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList mself(IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
 		return mself(this, adapter, transmission);
+	}
+
+	public CellList mself(IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission, IntFunction<Cell<Scalar>> passthrough) {
+		return mself(this, adapter, transmission, passthrough);
 	}
 
 	public CellList m(IntFunction<Cell<Scalar>> adapter, IntFunction<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
