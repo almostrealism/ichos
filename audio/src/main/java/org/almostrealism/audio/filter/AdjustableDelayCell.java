@@ -25,30 +25,34 @@ import org.almostrealism.graph.SummationCell;
 import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.util.Ops;
 
 import java.util.function.Supplier;
 
 public class AdjustableDelayCell extends SummationCell implements Adjustable<Scalar>, CodeFeatures {
 
 	private final AcceleratedTimeSeries buffer;
-	private CursorPair initCursors;
 	private CursorPair cursors;
 
-	private final Scalar scale;
+	private final Producer<Scalar> delay;
+	private final Producer<Scalar> scale;
 
 	public AdjustableDelayCell(double delay) {
 		this(new Scalar(delay));
 	}
 
 	public AdjustableDelayCell(Scalar delay) {
+		this(Ops.ops().v(delay), Ops.ops().v(1.0));
+	}
+
+	public AdjustableDelayCell(Producer<Scalar> delay, Producer<Scalar> scale) {
 		initCursors();
 		buffer = AcceleratedTimeSeries.defaultSeries();
-		setDelay(delay);
-		scale = new Scalar(1.0);
+		this.delay = delay;
+		this.scale = scale;
 	}
 
 	protected void initCursors() {
-		initCursors = new CursorPair();
 		cursors = new CursorPair();
 	}
 
@@ -56,40 +60,21 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 
 	public AcceleratedTimeSeries getBuffer() { return buffer; }
 
-	public Scalar getScale() { return scale; }
+	public Producer<Scalar> getDelay() { return delay; }
 
-	public synchronized void setDelay(Scalar sec) {
-		initCursors.setDelayCursor(initCursors.getCursor() + OutputLine.sampleRate * sec.getValue());
-	}
-
-	public synchronized Scalar getDelay() {
-		return new Scalar((initCursors.getDelayCursor() - initCursors.getCursor()) / OutputLine.sampleRate);
-	}
-
-	public synchronized void setDelayMsec(double msec) {
-		initCursors.setDelayCursor(initCursors.getCursor() + OutputLine.sampleRate * (msec / 1000d));
-	}
-
-	public synchronized double getDelayMsec() {
-		return 1000 * (initCursors.getDelayCursor() - initCursors.getCursor()) / OutputLine.sampleRate;
-	}
-
-	public synchronized void setDelayInFrames(double frames) {
-		initCursors.setDelayCursor(initCursors.getCursor() + frames);
-	}
-
-	public synchronized double getDelayInFrames() { return initCursors.getDelayCursor() - initCursors.getCursor(); }
+	public Producer<Scalar> getScale() { return scale; }
 
 	@Override
 	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
-		return a(2, p(scale), value);
+		// return a(2, p(scale), value);
+		return new OperationList();
 	}
 
 	@Override
 	public Supplier<Runnable> setup() {
 		OperationList setup = new OperationList();
 		setup.add(super.setup());
-		setup.add(a(2, p(cursors), p(initCursors)));
+		setup.add(a(2, p(cursors), pair(v(0.0), v(OutputLine.sampleRate).multiply(delay))));
 		return setup;
 	}
 
@@ -101,7 +86,7 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 		push.add(buffer.add(temporal(r(p(cursors)), protein)));
 		push.add(a(2, p(value), buffer.valueAt(p(cursors))));
 		push.add(buffer.purge(p(cursors)));
-		push.add(cursors.increment(p(scale)));
+		push.add(cursors.increment(scale));
 		push.add(super.push(p(value)));
 		return push;
 	}

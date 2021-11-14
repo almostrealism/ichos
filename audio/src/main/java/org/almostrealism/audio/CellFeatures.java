@@ -329,22 +329,30 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return layer;
 	}
 
-	default CellList d(int count, IntFunction<Scalar> d) {
+	default CellList d(int count, IntFunction<Producer<Scalar>> d) {
+		return d(count, d, i -> v(1.0));
+	}
+
+	default CellList d(int count, IntFunction<Producer<Scalar>> d, IntFunction<Producer<Scalar>> s) {
 		CellList result = new CellList();
 
 		for (int i = 0; i < count; i++) {
-			result.add(new AdjustableDelayCell(d.apply(i)));
+			result.add(new AdjustableDelayCell(d.apply(i), s.apply(i)));
 		}
 
 		return result;
 	}
 
-	default CellList d(CellList cells, IntFunction<Scalar> delay) {
+	default CellList d(CellList cells, IntFunction<Producer<Scalar>> delay) {
+		return d(cells, delay, i -> v(1.0));
+	}
+
+	default CellList d(CellList cells, IntFunction<Producer<Scalar>> delay, IntFunction<Producer<Scalar>> scale) {
 		CellList layer = new CellList(cells);
 		Iterator<Cell<Scalar>> itr = cells.iterator();
 
 		for (int i = 0; itr.hasNext(); i++) {
-			AdjustableDelayCell d = new AdjustableDelayCell(delay.apply(i));
+			AdjustableDelayCell d = new AdjustableDelayCell(delay.apply(i), scale.apply(i));
 			Cell<Scalar> c = itr.next();
 
 			c.setReceptor(d);

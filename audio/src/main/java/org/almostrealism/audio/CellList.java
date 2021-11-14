@@ -18,6 +18,7 @@ package org.almostrealism.audio;
 
 import io.almostrealism.code.ProducerComputation;
 import io.almostrealism.code.Setup;
+import io.almostrealism.relation.Producer;
 import io.almostrealism.uml.Plural;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.PolymorphicAudioData;
@@ -98,7 +99,9 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return f(this, filter);
 	}
 
-	public CellList d(IntFunction<Scalar> delay) { return d(this, delay); }
+	public CellList d(IntFunction<Producer<Scalar>> delay) { return d(this, delay); }
+
+	public CellList d(IntFunction<Producer<Scalar>> delay, IntFunction<Producer<Scalar>> scale) { return d(this, delay, scale); }
 
 	public CellList m(IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
 		return m(this, adapter, transmission);
