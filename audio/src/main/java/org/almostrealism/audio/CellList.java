@@ -171,6 +171,19 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return all;
 	}
 
+	public List<Setup> getAllSetup() {
+		List<Setup> all = new ArrayList<>();
+		parents.stream().map(CellList::getAllSetup).flatMap(Collection::stream).forEach(c -> append(all, c));
+
+		stream().map(c -> c instanceof Setup ? (Setup) c : null)
+				.filter(Objects::nonNull).forEach(t -> append(all, t));
+
+		requirements.stream().map(c -> c instanceof Setup ? (Setup) c : null)
+				.filter(Objects::nonNull).forEach(c -> append(all, c));
+
+		return all;
+	}
+
 	public Collection<Receptor<Scalar>> getAllRoots() {
 		List<Receptor<Scalar>> all = new ArrayList<>();
 		parents.stream().map(CellList::getAllRoots).flatMap(Collection::stream).forEach(c -> append(all, c));
@@ -182,10 +195,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 	@Override
 	public Supplier<Runnable> setup() {
 		OperationList setup = new OperationList();
-		getAll().stream().map(c -> c instanceof Setup ? (Setup) c : null)
-				.filter(Objects::nonNull)
-				.map(Setup::setup)
-				.forEach(setup::add);
+		getAllSetup().stream().map(Setup::setup).forEach(setup::add);
 		return setup;
 	}
 
