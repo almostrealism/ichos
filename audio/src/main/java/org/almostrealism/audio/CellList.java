@@ -64,8 +64,14 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		add(c);
 	}
 
-	public void addRequirement(Temporal t) {
+	public CellList addRequirement(Temporal t) {
 		requirements.add(t);
+		return this;
+	}
+
+	public <T extends Temporal> CellList addRequirements(T... t) {
+		requirements.addAll(Arrays.asList(t));
+		return this;
 	}
 
 	public CellList map(IntFunction<Cell<Scalar>> dest) {
