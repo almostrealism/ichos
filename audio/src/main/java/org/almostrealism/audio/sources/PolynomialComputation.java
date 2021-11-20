@@ -17,31 +17,27 @@
 package org.almostrealism.audio.sources;
 
 import io.almostrealism.code.ArrayVariable;
-import io.almostrealism.code.expressions.Expression;
 import io.almostrealism.relation.Producer;
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
-import io.almostrealism.code.ScopeInputManager;
 
 import java.util.function.Supplier;
 
-public abstract class ExponentialComputation extends DynamicOperationComputationAdapter {
-	public ExponentialComputation(ExponentialCellData data, Producer<Scalar> envelope, Scalar output) {
+public abstract class PolynomialComputation extends DynamicOperationComputationAdapter {
+	public PolynomialComputation(PolynomialCellData data, Producer<Scalar> envelope, Scalar output) {
 		super(() -> new Provider<>(output),
-				data::getNotePosition,
-				data::getNoteLength,
-				data::getInputScale,
-				data::getOutputScale,
-				data::getDepth,
+				data::getWavePosition,
+				data::getWaveLength,
+				data::getExponent,
+				data::getAmplitude,
 				(Supplier) envelope);
 	}
 
 	public ArrayVariable getOutput() { return getArgument(0, 2); }
-	public ArrayVariable getNotePosition() { return getArgument(1, 2); }
-	public ArrayVariable getNoteLength() { return getArgument(2, 2); }
-	public ArrayVariable getInputScale() { return getArgument(3, 2); }
+	public ArrayVariable getWavePosition() { return getArgument(1, 2); }
+	public ArrayVariable getWaveLength() { return getArgument(2, 2); }
+	public ArrayVariable getExponent() { return getArgument(3, 2); }
 	public ArrayVariable getOutputScale() { return getArgument(4, 2); }
-	public ArrayVariable getDepth() { return getArgument(5, 2); }
-	public ArrayVariable getEnvelope() { return getArgument(6, 2); }
+	public ArrayVariable getEnvelope() { return getArgument(5, 2); }
 }

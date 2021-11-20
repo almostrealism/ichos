@@ -17,11 +17,12 @@
 package org.almostrealism.audio.data;
 
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.audio.sources.PolynomialCellData;
 import org.almostrealism.audio.sources.SineWaveCellData;
 import org.almostrealism.audio.sources.WavCellData;
 import org.almostrealism.hardware.MemoryData;
 
-public class PolymorphicAudioData extends ScalarBank implements SineWaveCellData, WavCellData, AudioFilterData, ValueSequenceData {
+public class PolymorphicAudioData extends ScalarBank implements SineWaveCellData, WavCellData, AudioFilterData, ValueSequenceData, PolynomialCellData {
 	public static final int SIZE = 15;
 
 	public PolymorphicAudioData() {
