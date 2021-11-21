@@ -16,11 +16,13 @@
 
 package org.almostrealism.audio.data;
 
+import org.almostrealism.algebra.PairPool;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.sources.PolynomialCellData;
 import org.almostrealism.audio.sources.SineWaveCellData;
 import org.almostrealism.audio.sources.WavCellData;
 import org.almostrealism.hardware.MemoryData;
+import org.almostrealism.hardware.PooledMem;
 
 public class PolymorphicAudioData extends ScalarBank implements SineWaveCellData, WavCellData, AudioFilterData, ValueSequenceData, PolynomialCellData {
 	public static final int SIZE = 15;
@@ -32,4 +34,7 @@ public class PolymorphicAudioData extends ScalarBank implements SineWaveCellData
 	public PolymorphicAudioData(MemoryData delegate, int delegateOffset) {
 		super(SIZE, delegate, delegateOffset, null);
 	}
+
+	@Override
+	public PooledMem getDefaultDelegate() { return PolymorphicAudioDataPool.getLocal(); }
 }

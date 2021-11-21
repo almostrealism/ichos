@@ -1,3 +1,19 @@
+/*
+ * Copyright 2021 Michael Murray
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
 package org.almostrealism.audio.sources.test;
 
 import io.almostrealism.relation.Producer;
@@ -13,7 +29,6 @@ import org.almostrealism.audio.sources.ValueSequenceCell;
 import org.almostrealism.audio.sources.ValueSequencePush;
 import org.almostrealism.audio.sources.ValueSequenceTick;
 import org.almostrealism.graph.Receptor;
-import org.almostrealism.hardware.AcceleratedOperation;
 import org.almostrealism.hardware.DynamicAcceleratedOperation;
 import org.almostrealism.heredity.ScaleFactor;
 import org.almostrealism.time.Frequency;
@@ -69,7 +84,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 
 	@Test
 	public void valueSequenceCsv() {
-		CellList cells = seq(i -> v(i + 1), v(0.1), 2).csv(i -> new File("value-sequence-test.csv"));
+		CellList cells = seq(i -> v(i + 1), v(0.1), 2).csv(i -> new File("results/value-sequence-test.csv"));
 
 		TemporalRunner runner = new TemporalRunner(cells, OutputLine.sampleRate / 10);
 		runner.get().run();
@@ -112,7 +127,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		cells.addRoot(seq);
 		cells = new CellList(cells);
 		cells.addRoot(new DynamicAudioCell(v(1).multiply(p(out)), Arrays.asList(data -> cell1, data -> cell2)));
-		cells = cells.o(i -> new File("seq-dynamic-test.wav"));
+		cells = cells.o(i -> new File("results/seq-dynamic-test.wav"));
 
 		TemporalRunner runner = new TemporalRunner(cells, 4 * OutputLine.sampleRate);
 		runner.get().run();
@@ -129,7 +144,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 
 		cells = cells.gr(2000, 8,
 				i -> i % 2 == 0 ? 0 : 1)
-				.o(i -> new File("notes-seq-test.wav"));
+				.o(i -> new File("results/notes-seq-test.wav"));
 		cells.sec(2).get().run();
 	}
 
@@ -138,10 +153,10 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		int count = 32;
 
 		CellList cells =
-				silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "src/test/resources/GT_HAT_31.wav"))
+				silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
 						.gr(bpm(128).l(count), count * 2, i -> i % 2 == 0 ? 0 : 1)
 				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
-				.sum().o(i -> new File("sample-seq-test.wav"));
+				.sum().o(i -> new File("results/sample-seq-test.wav"));
 
 		cells.sec(bpm(128).l(count)).get().run();
 	}
@@ -153,12 +168,12 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		Producer<Scalar> one = v(1.0);
 
 		CellList cells = cells(
-//				silence().and(w(one, "src/test/resources/BD 909 Color 06.wav"))
+//				silence().and(w(one, "Library/BD 909 Color 06.wav"))
 //						.gr(10, count, i -> 0),
-				silence().and(w(one, "src/test/resources/Snare Perc DD.wav"))
+				silence().and(w(one, "Library/Snare Perc DD.wav"))
 						.gr(10, count, i -> 0)
 				)
-				 .o(i -> new File("stems-test- " + i + ".wav"));
+				 .o(i -> new File("results/stems-test-" + i + ".wav"));
 
 		Runnable r = cells.sec(10).get();
 		r.run();
@@ -169,14 +184,14 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		int count = 32;
 
 		CellList cells = cells(
-					silence().and(w(v(bpm(128).l(1)), "src/test/resources/BD 909 Color 06.wav"))
+					silence().and(w(v(bpm(128).l(1)), "Library/BD 909 Color 06.wav"))
 						.gr(bpm(128).l(count), count, i -> 1),
-					silence().and(w(v(bpm(128).l(1)), "src/test/resources/Snare Perc DD.wav"))
+					silence().and(w(v(bpm(128).l(1)), "Library/Snare Perc DD.wav"))
 						.gr(bpm(128).l(count), count, i -> i % 2 == 0 ? 0 : 1),
-					silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "src/test/resources/GT_HAT_31.wav"))
+					silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
 						.gr(bpm(128).l(count), count * 2, i -> i % 2 == 0 ? 0 : 1))
 				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
-				.sum().o(i -> new File("mix-test.wav"));
+				.sum().o(i -> new File("results/mix-test.wav"));
 
 		cells.sec(bpm(128).l(count)).get().run();
 	}
