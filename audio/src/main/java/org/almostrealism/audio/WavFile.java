@@ -11,10 +11,17 @@
 package org.almostrealism.audio;
 
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.algebra.ScalarBankHeap;
+import org.almostrealism.hardware.ContextSpecific;
 
 import java.io.*;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class WavFile {
+	private static ContextSpecific<ScalarBankHeap> heap;
+
 	private enum ReaderState {
 		READING, WRITING, CLOSED
 	}
@@ -163,8 +170,18 @@ public class WavFile {
 		return wavFile;
 	}
 
+	public static void setHeap(Supplier<ScalarBankHeap> create, Consumer<ScalarBankHeap> destroy) {
+		heap = new ContextSpecific<>(create, destroy);
+		heap.init();
+	}
+
+	public static void dropHeap() {
+		heap = null;
+	}
+
 	public static ScalarBank channel(double[][] data, int chan) {
-		ScalarBank waveform = new ScalarBank(data[chan].length);
+		ScalarBank waveform = Optional.ofNullable(heap).map(ContextSpecific::getValue)
+				.map(h -> h.allocate(data[chan].length)).orElse(new ScalarBank(data[chan].length));
 
 		int index = 0;
 		for (double frame : data[chan]) waveform.set(index++, frame);
