@@ -99,23 +99,32 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 
 	@Override
 	public Supplier<Runnable> setup() {
-		Evaluable<Scalar> d = decision.get();
+//		TODO  Remove
+//		Evaluable<Scalar> d = decision.get();
+//
+//		return () -> () -> {
+//			if (parallel) {
+//				getCellSet().forEach(c -> c.setup().get().run());
+//			} else {
+//				double v = d.evaluate().getValue();
+//				double in = 1.0 / cells.size();
+//
+//				for (int i = 0; i < cells.size(); i++) {
+//					if (v <= (i + 1) * in) {
+//						cells.get(i).setup().get().run();
+//						return;
+//					}
+//				}
+//			}
+//		};
 
-		return () -> () -> {
-			if (parallel) {
-				getCellSet().forEach(c -> c.setup().get().run());
-			} else {
-				double v = d.evaluate().getValue();
-				double in = 1.0 / cells.size();
-
-				for (int i = 0; i < cells.size(); i++) {
-					if (v <= (i + 1) * in) {
-						cells.get(i).setup().get().run();
-						return;
-					}
-				}
-			}
-		};
+		if (parallel) {
+			return getCellSet().stream().map(Cell::setup).collect(OperationList.collector());
+		} else {
+			return new Choice(decision,
+					cells.stream().map(cell -> (Computation) cell.setup())
+							.collect(Collectors.toList()));
+		}
 	}
 
 	@Override

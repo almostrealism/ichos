@@ -87,11 +87,16 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 			setup.add(a(2, data::getWavePosition, scalarsMultiply(v(-1.0), offset)));
 		}
 
-		setup.add(() -> () -> {
-			data.setWaveLength(waveLength);
-			data.setWaveCount(wave.getCount());
-			data.setAmplitude(amplitude);
-		});
+		setup.add(a(2, data::getWaveLength, v(waveLength)));
+		setup.add(a(2, data::getWaveCount, v(wave.getCount())));
+		setup.add(a(2, data::getAmplitude, v(amplitude)));
+
+//		TODO  Remove
+//		setup.add(() -> () -> {
+//			data.setWaveLength(waveLength);
+//			data.setWaveCount(wave.getCount());
+//			data.setAmplitude(amplitude);
+//		});
 
 		return setup;
 	}

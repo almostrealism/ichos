@@ -74,15 +74,15 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 
 	@Override
 	public Supplier<Runnable> setup() {
-		Supplier<Runnable> defaults = () -> () -> {
-			data.setDepth(AudioCellAdapter.depth);
-			data.setNotePosition(0);
-			data.setWavePosition(0);
-			data.setNoteLength(noteLength);
-			data.setWaveLength(waveLength);
-			data.setPhase(phase);
-			data.setAmplitude(amplitude);
-		};
+		OperationList defaults = new OperationList();
+		defaults.add(a(2, data::getDepth, v(AudioCellAdapter.depth)));
+		defaults.add(a(2, data::getNotePosition, v(0)));
+		defaults.add(a(2, data::getWavePosition, v(0)));
+		defaults.add(a(2, data::getNoteLength, v(noteLength)));
+		defaults.add(a(2, data::getWaveLength, v(waveLength)));
+		defaults.add(a(2, data::getPhase, v(phase)));
+		defaults.add(a(2, data::getAmplitude, v(amplitude)));
+
 		Supplier<Runnable> customization = super.setup();
 
 		OperationList setup = new OperationList();
