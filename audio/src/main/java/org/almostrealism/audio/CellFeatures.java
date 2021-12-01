@@ -67,9 +67,9 @@ import java.util.stream.Stream;
 public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFeatures {
 	default Receptor<Scalar> a(Supplier<Evaluable<? extends Scalar>>... destinations) {
 		if (destinations.length == 1) {
-			return protein -> a(2, destinations[0], protein);
+			return protein -> a(1, destinations[0], protein);
 		} else {
-			return protein -> Stream.of(destinations).map(v -> a(2, v, protein)).collect(OperationList.collector());
+			return protein -> Stream.of(destinations).map(v -> a(1, v, protein)).collect(OperationList.collector());
 		}
 	}
 
@@ -263,7 +263,9 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 
 		for (int i = 0; i < cells.size(); i++) {
 			WaveOutput out = new WaveOutput(f.apply(i));
-			cells.get(i).setReceptor(out);
+			ReceptorCell c = new ReceptorCell(out);
+			cells.get(i).setReceptor(c);
+			result.add(c);
 			result.getFinals().add(out.write().get());
 		}
 
@@ -477,7 +479,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 
 		result = new CellList(result);
 		result.addRoot(cell);
-		result.getFinals().add(csv.writeCsv(new File("value-sequence-debug.csv")).get());
+		// result.getFinals().add(csv.writeCsv(new File("value-sequence-debug.csv")).get());
 
 		return result;
 	}

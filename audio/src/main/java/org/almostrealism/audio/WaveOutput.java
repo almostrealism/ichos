@@ -49,7 +49,7 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	}
 
 	public WaveOutput(File f, int bits) {
-		this(() -> f, 120 * OutputLine.sampleRate, bits);
+		this(() -> f, 180 * OutputLine.sampleRate, bits);
 	}
 
 	public WaveOutput(Supplier<File> f, int maxFrames, int bits) {
@@ -75,7 +75,8 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	public Supplier<Runnable> write() {
 		// TODO  Write frames in larger batches than 1
 		return () -> () -> {
-			int frames = (int) cursor.left();
+			int frames = (int) cursor.left() - 1;
+			System.out.println("Writing " + frames + " frames");
 
 			try {
 				this.wav = WavFile.newWavFile(file.get(), 2, frames, bits, sampleRate);
@@ -85,7 +86,8 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 			}
 
 			for (int i = 0; i < frames; i++) {
-				double value = data.get(i).getValue();
+				// double value = data.valueAt(i).getValue();
+				double value = data.get(i + 1).getValue();
 
 				try {
 					wav.writeFrames(new double[][]{{value}, {value}}, 1);

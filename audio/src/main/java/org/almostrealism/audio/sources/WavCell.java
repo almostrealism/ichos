@@ -82,14 +82,14 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	public Supplier<Runnable> setup() {
 		OperationList setup = new OperationList();
 		if (offset == null) {
-			setup.add(a(2, data::getWavePosition, v(0.0)));
+			setup.add(a(1, data::getWavePosition, v(0.0)));
 		} else {
-			setup.add(a(2, data::getWavePosition, scalarsMultiply(v(-1.0), offset)));
+			setup.add(a(1, data::getWavePosition, scalarsMultiply(v(-1.0), offset)));
 		}
 
-		setup.add(a(2, data::getWaveLength, v(waveLength)));
-		setup.add(a(2, data::getWaveCount, v(wave.getCount())));
-		setup.add(a(2, data::getAmplitude, v(amplitude)));
+		setup.add(a(1, data::getWaveLength, v(waveLength)));
+		setup.add(a(1, data::getWaveCount, v(wave.getCount())));
+		setup.add(a(1, data::getAmplitude, v(amplitude)));
 
 //		TODO  Remove
 //		setup.add(() -> () -> {
@@ -105,7 +105,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
 		OperationList push = new OperationList();
-		if (duration != null) push.add(a(2, data::getDuration, duration));
+		if (duration != null) push.add(a(1, data::getDuration, duration));
 		push.add(new WavCellPush(data, wave, value, repeat));
 		push.add(super.push(p(value)));
 		return push;

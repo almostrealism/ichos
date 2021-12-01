@@ -38,7 +38,7 @@ public class ValueSequencePush extends ValueSequenceComputation implements CodeF
 	public ValueSequencePush(ValueSequenceData data, Producer<Scalar> durationFrames, Scalar output, boolean repeat, Producer<Scalar>... choices) {
 		super(data, durationFrames, output, repeat, choices);
 		choice = new Choice(scalarsDivide(wavePosition(), durationFrames()),
-						choices(in -> a(2, output(), in)));
+						choices(in -> a(1, output(), in)));
 	}
 
 	@Override

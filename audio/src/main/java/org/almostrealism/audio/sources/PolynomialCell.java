@@ -39,18 +39,18 @@ public class PolynomialCell extends AudioCellAdapter implements CodeFeatures, Ha
 
 	public PolynomialCell(PolynomialCellData data) {
 		this.data = data;
-		addSetup(a(2, data::getWavePosition, v(0.0)));
-		addSetup(a(2, data::getAmplitude, v(1.0)));
+		addSetup(a(1, data::getWavePosition, v(0.0)));
+		addSetup(a(1, data::getAmplitude, v(1.0)));
 	}
 
 	public void setEnvelope(Envelope e) { this.env = e; }
 
 	public Supplier<Runnable> setWaveLength(Supplier<Evaluable<? extends Scalar>> seconds) {
-		return a(2, data::getWaveLength, scalarsMultiply(seconds, v(OutputLine.sampleRate)));
+		return a(1, data::getWaveLength, scalarsMultiply(seconds, v(OutputLine.sampleRate)));
 	}
 
 	public Supplier<Runnable> setExponent(Supplier<Evaluable<? extends Scalar>> exp) {
-		return a(2, data::getExponent, exp);
+		return a(1, data::getExponent, exp);
 	}
 
 	@Override

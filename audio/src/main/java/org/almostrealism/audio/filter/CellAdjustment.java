@@ -64,6 +64,6 @@ public class CellAdjustment<T extends Cell<Scalar>> implements Adjustment<Scalar
 	// TODO  This is never called
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
-		return a(2, p(factor), v(1).add(protein).divide(2.0));
+		return a(1, p(factor), v(1).add(protein).divide(2.0));
 	}
 }

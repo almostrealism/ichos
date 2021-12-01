@@ -182,7 +182,11 @@ public class WavFile {
 	public static ScalarBank channel(double[][] data, int chan) {
 		ScalarBank waveform = Optional.ofNullable(heap).map(ContextSpecific::getValue)
 				.map(h -> h.allocate(data[chan].length)).orElse(new ScalarBank(data[chan].length));
-		waveform.set(0, data[chan]);
+
+		for (int i = 0; i < data[chan].length; i++) {
+			waveform.set(i, data[chan][i]);
+		}
+
 		return waveform;
 	}
 

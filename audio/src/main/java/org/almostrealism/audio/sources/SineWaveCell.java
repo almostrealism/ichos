@@ -53,7 +53,7 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 	public void setFreq(double hertz) { this.waveLength = hertz / (double) OutputLine.sampleRate; }
 
 	public Supplier<Runnable> setFreq(Supplier<Evaluable<? extends Scalar>> hertz) {
-		return a(2, data::getWaveLength, scalarsDivide(hertz, v(OutputLine.sampleRate)));
+		return a(1, data::getWaveLength, scalarsDivide(hertz, v(OutputLine.sampleRate)));
 	}
 
 	// TODO  Rename to milli, default should be seconds
@@ -61,7 +61,7 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 
 	// TODO  Rename to milli, default should be seconds
 	public Supplier<Runnable> setNoteLength(Supplier<Evaluable<? extends Scalar>> noteLength) {
-		return a(2, data::getNoteLength, toFramesMilli(noteLength));
+		return a(1, data::getNoteLength, toFramesMilli(noteLength));
 	}
 	
 	public void setPhase(double phase) { this.phase = phase; }
@@ -69,19 +69,19 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 	public void setAmplitude(double amp) { amplitude = amp; }
 
 	public Supplier<Runnable> setAmplitude(Producer<Scalar> amp) {
-		return a(2, data::getAmplitude, amp);
+		return a(1, data::getAmplitude, amp);
 	}
 
 	@Override
 	public Supplier<Runnable> setup() {
 		OperationList defaults = new OperationList();
-		defaults.add(a(2, data::getDepth, v(AudioCellAdapter.depth)));
-		defaults.add(a(2, data::getNotePosition, v(0)));
-		defaults.add(a(2, data::getWavePosition, v(0)));
-		defaults.add(a(2, data::getNoteLength, v(noteLength)));
-		defaults.add(a(2, data::getWaveLength, v(waveLength)));
-		defaults.add(a(2, data::getPhase, v(phase)));
-		defaults.add(a(2, data::getAmplitude, v(amplitude)));
+		defaults.add(a(1, data::getDepth, v(AudioCellAdapter.depth)));
+		defaults.add(a(1, data::getNotePosition, v(0)));
+		defaults.add(a(1, data::getWavePosition, v(0)));
+		defaults.add(a(1, data::getNoteLength, v(noteLength)));
+		defaults.add(a(1, data::getWaveLength, v(waveLength)));
+		defaults.add(a(1, data::getPhase, v(phase)));
+		defaults.add(a(1, data::getAmplitude, v(amplitude)));
 
 		Supplier<Runnable> customization = super.setup();
 

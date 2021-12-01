@@ -215,9 +215,9 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	@Override
 	public void reset() {
+		finals.forEach(Runnable::run);
 		parents.forEach(CellList::reset);
 		forEach(Cell::reset);
 		requirements.reset();
-		finals.forEach(Runnable::run);
 	}
 }
