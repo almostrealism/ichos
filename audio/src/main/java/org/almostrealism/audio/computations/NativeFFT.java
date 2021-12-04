@@ -24,8 +24,7 @@ import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.PairBank;
 import org.almostrealism.hardware.DynamicProducerComputationAdapter;
 import org.almostrealism.hardware.Hardware;
-import org.almostrealism.hardware.jni.NativeComputationEvaluable;
-import org.almostrealism.hardware.jni.NativeSupport;
+import org.almostrealism.hardware.jni.NativeInstructionSet;
 import org.almostrealism.util.Ops;
 
 import java.io.BufferedReader;
@@ -38,7 +37,8 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-public abstract class NativeFFT extends DynamicProducerComputationAdapter<PairBank, PairBank> implements NativeSupport<NativeComputationEvaluable> {
+@Deprecated
+public abstract class NativeFFT extends DynamicProducerComputationAdapter<PairBank, PairBank> implements NativeInstructionSet {
 	public NativeFFT(int count, boolean forward) {
 		super(count, () -> args -> new PairBank(count),
 				i -> { throw new UnsupportedOperationException(); },
@@ -55,8 +55,6 @@ public abstract class NativeFFT extends DynamicProducerComputationAdapter<PairBa
 			// TODO  Support backward
 			throw new UnsupportedOperationException();
 		}
-
-		initNative();
 	}
 
 	@Override
@@ -95,13 +93,6 @@ public abstract class NativeFFT extends DynamicProducerComputationAdapter<PairBa
 		code.accept("Size");
 		code.accept(");");
 		return s;
-	}
-
-	@Override
-	public NativeComputationEvaluable<PairBank> get() {
-		NativeComputationEvaluable<PairBank> ev = new NativeComputationEvaluable<>(this);
-		ev.setHead(getHead());
-		return ev;
 	}
 
 	protected String getHead() {

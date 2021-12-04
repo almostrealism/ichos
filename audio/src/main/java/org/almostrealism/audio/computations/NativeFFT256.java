@@ -16,6 +16,9 @@
 
 package org.almostrealism.audio.computations;
 
+import org.almostrealism.algebra.PairBank;
+import org.almostrealism.hardware.KernelizedEvaluable;
+
 public class NativeFFT256 extends NativeFFT {
 	public NativeFFT256() {
 		super(256, true);
@@ -23,4 +26,7 @@ public class NativeFFT256 extends NativeFFT {
 
 	@Override
 	public native void apply(long commandQueue, long[] arg, int[] offset, int[] size, int count);
+
+	@Override
+	public KernelizedEvaluable<PairBank> get() { throw new UnsupportedOperationException(); }
 }

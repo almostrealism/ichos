@@ -16,9 +16,17 @@
 
 package org.almostrealism.audio.computations;
 
+import org.almostrealism.algebra.PairBank;
+import org.almostrealism.hardware.KernelizedEvaluable;
+
 public class NativeFFT512 extends NativeFFT {
 	public NativeFFT512() {
 		super(512, true);
+	}
+
+	@Override
+	public KernelizedEvaluable<PairBank> get() {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

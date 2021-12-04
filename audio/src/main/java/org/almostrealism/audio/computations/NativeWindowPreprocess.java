@@ -17,23 +17,16 @@
 package org.almostrealism.audio.computations;
 
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.hardware.PassThroughProducer;
-import org.almostrealism.hardware.jni.NativeComputationEvaluable;
-import org.almostrealism.hardware.jni.NativeSupport;
+import org.almostrealism.hardware.jni.NativeInstructionSet;
 
-public abstract class NativeWindowPreprocess extends WindowPreprocess implements NativeSupport<NativeComputationEvaluable> {
+@Deprecated
+public abstract class NativeWindowPreprocess extends WindowPreprocess implements NativeInstructionSet {
 	public NativeWindowPreprocess(int windowSize, int paddedWindowSize) {
 		this(windowSize, paddedWindowSize, "povey", new Scalar(0.42), new Scalar(0.97));
 	}
 
 	public NativeWindowPreprocess(int windowSize, int paddedWindowSize, String windowType, Scalar blackmanCoeff, Scalar preemphCoeff) {
 		super(windowSize, paddedWindowSize, windowType, blackmanCoeff, preemphCoeff, new PassThroughProducer(2 * windowSize, 0));
-		initNative();
-	}
-
-	@Override
-	public NativeComputationEvaluable<ScalarBank> get() {
-		return new NativeComputationEvaluable<>(this);
 	}
 }

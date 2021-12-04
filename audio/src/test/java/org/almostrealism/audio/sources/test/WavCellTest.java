@@ -31,6 +31,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -69,7 +70,7 @@ public class WavCellTest implements CellFeatures, TestFeatures {
 					int tot = total.incrementAndGet();
 
 					if (tot % 10 == 0) {
-						System.out.println("Completed " + tot);
+						System.out.println(Instant.now() + " - Completed " + tot);
 					}
 				}
 			});
