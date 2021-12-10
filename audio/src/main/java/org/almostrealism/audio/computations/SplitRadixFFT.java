@@ -50,7 +50,6 @@ public class SplitRadixFFT implements Evaluable<PairBank>, CodeFeatures {
 		radix4Part2Neg = new Radix4(1, false);
 
 		result = transform(v(2 * bins, 0), bins, forward).get();
-		System.out.println(((DynamicAcceleratedOperation) result).getFunctionDefinition()); // TODO  Remove
 		((OperationAdapter) result).compile();
 	}
 

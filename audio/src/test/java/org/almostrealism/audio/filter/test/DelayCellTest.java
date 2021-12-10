@@ -21,8 +21,6 @@ public class DelayCellTest implements CellFeatures {
 						.d(i -> v(2.0))
 						.o(i -> new File("results/delay-cell-test.wav"))
 						.sec(6);
-//		AcceleratedComputationOperation op = (AcceleratedComputationOperation) ((OperationList) r).get(1).get();
-//		System.out.println(op.getFunctionDefinition());
 		r.get().run();
 	}
 
