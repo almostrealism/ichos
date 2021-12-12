@@ -59,4 +59,29 @@ public class DelayCellTest implements CellFeatures {
 
 		System.out.println(v);
 	}
+
+	@Test
+	public void abortDelay() {
+		OperationList.setAbortFlag(new Scalar(0.0));
+
+		Supplier<Runnable> r =
+				w("Library/Snare Perc DD.wav")
+						.d(i -> v(2.0))
+						.o(i -> new File("results/delay-cell-abort-test.wav"))
+						.sec(120);
+		Runnable op = r.get();
+
+		Runnable abort = a(1, p((Scalar) OperationList.getAbortFlag()), v(1.0)).get();
+
+		new Thread(() -> {
+			try {
+				Thread.sleep(40);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			abort.run(); }).start();
+
+		op.run();
+	}
 }

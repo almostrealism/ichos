@@ -43,6 +43,7 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	private WavFile wav;
 	private CursorPair cursor;
 	private AcceleratedTimeSeries data;
+	private Runnable reset;
 
 	public WaveOutput(File f) {
 		this(f, 24);
@@ -62,6 +63,8 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 		this.sampleRate = sampleRate;
 		this.cursor = new CursorPair();
 		this.data = new AcceleratedTimeSeries(maxFrames);
+
+		this.reset = a(2, p(cursor), pair(0.0, 1.0)).get();
 	}
 
 	@Override
@@ -76,7 +79,13 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 		// TODO  Write frames in larger batches than 1
 		return () -> () -> {
 			int frames = (int) cursor.left() - 1;
-			System.out.println("Writing " + frames + " frames");
+
+			if (frames > 0) {
+				System.out.println("Writing " + frames + " frames");
+			} else {
+				System.out.println("No frames to write");
+				return;
+			}
 
 			try {
 				this.wav = WavFile.newWavFile(file.get(), 2, frames, bits, sampleRate);
@@ -129,6 +138,7 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 		Lifecycle.super.reset();
 		cursor.setCursor(0);
 		cursor.setDelayCursor(1);
+//		reset.run();
 		data.reset();
 	}
 }
