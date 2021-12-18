@@ -36,6 +36,8 @@ import org.almostrealism.time.CursorPair;
 import org.almostrealism.util.CodeFeatures;
 
 public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
+	public static boolean enableVerbose = false;
+
 	private Supplier<File> file;
 	private int bits;
 	private long sampleRate;
@@ -81,11 +83,13 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 			int frames = (int) cursor.left() - 1;
 
 			if (frames > 0) {
-				System.out.println("Writing " + frames + " frames");
+				// System.out.println("Writing " + frames + " frames");
 			} else {
 				System.out.println("No frames to write");
 				return;
 			}
+
+			long start = System.currentTimeMillis();
 
 			try {
 				this.wav = WavFile.newWavFile(file.get(), 2, frames, bits, sampleRate);
@@ -111,6 +115,8 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 				e.printStackTrace();
 				return;
 			}
+
+			if (enableVerbose) System.out.println("Wrote " + frames + " frames in " + (System.currentTimeMillis() - start) + " msec");
 		};
 	}
 
