@@ -20,10 +20,13 @@ import org.almostrealism.space.ShadableSurface;
 import org.almostrealism.space.Animation;
 import org.almostrealism.time.AutomationData;
 import io.almostrealism.uml.ModelEntity;
+import org.almostrealism.time.Frequency;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 @ModelEntity
 public class AudioScene<T extends ShadableSurface, S extends AudioSample> {
@@ -33,17 +36,32 @@ public class AudioScene<T extends ShadableSurface, S extends AudioSample> {
 	private Map<T, S> samples;
 	private Map<T, List<AutomationData>> automation;
 
+	private List<Consumer<Frequency>> tempoListeners;
+
 	public AudioScene(Animation<T> scene) {
 		this.bpm = 120.0;
 		this.scene = scene;
 		this.samples = new HashMap<>();
 		this.automation = new HashMap<>();
+		this.tempoListeners = new ArrayList<>();
 	}
 
-	public void setBPM(double bpm) { this.bpm = bpm; }
+	public void setBPM(double bpm) {
+		this.bpm = bpm;
+		tempoListeners.forEach(l -> l.accept(Frequency.forBPM(bpm)));
+	}
+
 	public double getBPM() { return this.bpm; }
 
 	public Animation<T> getScene() { return scene; }
 	public Map<T, S> getSamples() { return samples; }
 	public Map<T, List<AutomationData>> getAutomation() { return automation; }
+
+	public void addTempoListener(Consumer<Frequency> listener) {
+		this.tempoListeners.add(listener);
+	}
+
+	public void removeTempoListener(Consumer<Frequency> listener) {
+		this.tempoListeners.remove(listener);
+	}
 }
