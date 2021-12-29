@@ -43,6 +43,15 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	private double amplitude;
 	private double waveLength;
 
+	// TODO  This should probably take MemoryBank<Scalar> to be more general
+	public WavCell(ScalarBank wav, int sampleRate) {
+		this(wav, sampleRate, 1.0);
+	}
+
+	public WavCell(ScalarBank wav, int sampleRate, double amplitude) {
+		this(wav, sampleRate, amplitude, null, null);
+	}
+
 	public WavCell(ScalarBank wav, int sampleRate, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) {
 		this(new PolymorphicAudioData(), wav, sampleRate, amplitude, offset, repeat);
 	}
@@ -90,14 +99,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 		setup.add(a(1, data::getWaveLength, v(waveLength)));
 		setup.add(a(1, data::getWaveCount, v(wave.getCount())));
 		setup.add(a(1, data::getAmplitude, v(amplitude)));
-
-//		TODO  Remove
-//		setup.add(() -> () -> {
-//			data.setWaveLength(waveLength);
-//			data.setWaveCount(wave.getCount());
-//			data.setAmplitude(amplitude);
-//		});
-
+		setup.add(super.setup());
 		return setup;
 	}
 

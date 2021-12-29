@@ -83,6 +83,7 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 		Scalar value = new Scalar();
 
 		OperationList push = new OperationList();
+		// push.add(a(2, p(cursors), pair(l(p(cursors)), l(p(cursors)).add(v(OutputLine.sampleRate).multiply(delay)))));
 		push.add(buffer.add(temporal(r(p(cursors)), protein)));
 		push.add(a(1, p(value), buffer.valueAt(p(cursors))));
 		push.add(buffer.purge(p(cursors)));

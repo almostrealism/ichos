@@ -29,6 +29,7 @@ import org.almostrealism.util.CodeFeatures;
 
 import java.util.function.Supplier;
 
+// TODO  Reimplement as a function of org.almostrealism.graph.TimeCell
 public class PolynomialCell extends AudioCellAdapter implements CodeFeatures, HardwareFeatures {
 	private Envelope env;
 	private final PolynomialCellData data;

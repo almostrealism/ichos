@@ -41,10 +41,13 @@ import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 	private List<CellList> parents;
 	private List<Receptor<Scalar>> roots;
+	private List<Setup> setups;
 	private TemporalList requirements;
 	private List<Runnable> finals;
 
@@ -55,9 +58,12 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 	public CellList(List<CellList> parents) {
 		this.parents = parents;
 		this.roots = new ArrayList<>();
+		this.setups = new ArrayList<>();
 		this.requirements = new TemporalList();
 		this.finals = new ArrayList<>();
 	}
+
+	public CellList addSetup(Setup setup) { this.setups.add(setup); return this; }
 
 	public void addRoot(Cell<Scalar> c) {
 		roots.add(c);
@@ -181,6 +187,8 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		List<Setup> all = new ArrayList<>();
 		parents.stream().map(CellList::getAllSetup).flatMap(Collection::stream).forEach(c -> append(all, c));
 
+		setups.stream().forEach(s -> append(all, s));
+
 		stream().map(c -> c instanceof Setup ? (Setup) c : null)
 				.filter(Objects::nonNull).forEach(t -> append(all, t));
 
@@ -219,5 +227,9 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		parents.forEach(CellList::reset);
 		forEach(Cell::reset);
 		requirements.reset();
+	}
+
+	public static Collector<Cell<Scalar>, ?, CellList> collector() {
+		return Collectors.toCollection(CellList::new);
 	}
 }
