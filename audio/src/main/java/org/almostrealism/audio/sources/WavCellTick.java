@@ -43,12 +43,15 @@ public class WavCellTick extends WavCellComputation {
 		exp.accept(";\n");
 
 		if (repeat) {
+			exp.accept("if (" + getDuration().valueAt(0).getExpression() + " > " + stringForDouble(0.0) + ") {\n");
+			exp.accept("\t");
 			exp.accept(getWavePosition().valueAt(0).getExpression());
 			exp.accept(" = fmod(");
 			exp.accept(getWavePosition().valueAt(0).getExpression());
 			exp.accept(", ");
 			exp.accept(getDuration().valueAt(0).getExpression());
 			exp.accept(");\n");
+			exp.accept("}");
 		}
 	}
 }
