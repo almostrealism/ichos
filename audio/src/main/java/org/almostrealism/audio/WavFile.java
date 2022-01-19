@@ -183,7 +183,7 @@ public class WavFile {
 		// System.out.println("WavFile: Allocating " + data[chan].length / OutputLine.sampleRate + " seconds");
 
 		ScalarBank waveform = Optional.ofNullable(heap).map(ContextSpecific::getValue)
-				.map(h -> h.allocate(data[chan].length)).orElse(new ScalarBank(data[chan].length));
+				.map(h -> h.allocate(data[chan].length)).orElseGet(() -> new ScalarBank(data[chan].length));
 
 		for (int i = 0; i < data[chan].length; i++) {
 			waveform.set(i, data[chan][i]);

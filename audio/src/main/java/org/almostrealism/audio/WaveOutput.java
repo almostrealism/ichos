@@ -84,6 +84,10 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 		this(() -> f, 180 * OutputLine.sampleRate, bits);
 	}
 
+	public WaveOutput(Supplier<File> f, int bits) {
+		this(f, -1, bits);
+	}
+
 	public WaveOutput(Supplier<File> f, int maxFrames, int bits) {
 		this(f, maxFrames, bits, OutputLine.sampleRate);
 	}
@@ -93,7 +97,7 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 		this.bits = bits;
 		this.sampleRate = sampleRate;
 		this.cursor = new CursorPair();
-		this.data = new AcceleratedTimeSeries(maxFrames);
+		this.data = maxFrames <= 0 ? new AcceleratedTimeSeries() : new AcceleratedTimeSeries(maxFrames);
 
 		this.reset = a(2, p(cursor), pair(0.0, 1.0)).get();
 	}

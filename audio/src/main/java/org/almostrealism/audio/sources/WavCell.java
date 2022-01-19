@@ -116,7 +116,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	@Override
 	public Supplier<Runnable> tick() {
 		OperationList tick = new OperationList("WavCell Tick");
-		tick.add(new WavCellTick(data, repeat));
+		tick.add(new WavCellTick(data, wave, repeat));
 		tick.add(super.tick());
 		return tick;
 	}

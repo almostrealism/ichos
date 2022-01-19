@@ -22,15 +22,19 @@ import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.algebra.computations.Choice;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.filter.AudioCellAdapter;
 import org.almostrealism.graph.Cell;
+import org.almostrealism.hardware.ContextSpecific;
 import org.almostrealism.hardware.OperationList;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
@@ -39,6 +43,8 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements CellFeatures {
+	private static ContextSpecific<ScalarBankHeap> heap;
+
 	private ProducerComputation<Scalar> decision;
 	private final List<AudioCellAdapter> cells;
 	private final boolean parallel;
@@ -62,10 +68,12 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 		this.parallel = parallel;
 
 		if (parallel) {
-			storage = new ScalarBank(choices.size());
+			storage = Optional.ofNullable(heap).map(ContextSpecific::getValue)
+					.map(h -> h.allocate(choices.size())).orElseGet(() -> new ScalarBank(choices.size()));
 			initParallel();
 		} else {
-			storage = new ScalarBank(1);
+			storage = Optional.ofNullable(heap).map(ContextSpecific::getValue)
+					.map(h -> h.allocate(1)).orElseGet(() -> new ScalarBank(1));
 			cells.forEach(cell -> cell.setReceptor(a(p(storage.get(0)))));
 		}
 	}
@@ -161,5 +169,14 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 	public void reset() {
 		super.reset();
 		getCellSet().forEach(Cell::reset);
+	}
+
+	public static void setHeap(Supplier<ScalarBankHeap> create, Consumer<ScalarBankHeap> destroy) {
+		heap = new ContextSpecific<>(create, destroy);
+		heap.init();
+	}
+
+	public static void dropHeap() {
+		heap = null;
 	}
 }

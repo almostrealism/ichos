@@ -25,8 +25,8 @@ import org.almostrealism.algebra.ScalarBank;
 import java.util.function.Consumer;
 
 public class WavCellTick extends WavCellComputation {
-	public WavCellTick(WavCellData data, boolean repeat) {
-		super(data, new ScalarBank(1), new Scalar(), repeat);
+	public WavCellTick(WavCellData data, ScalarBank wave, boolean repeat) {
+		super(data, wave, new Scalar(), repeat);
 	}
 
 	@Override
