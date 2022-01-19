@@ -18,10 +18,13 @@ package org.almostrealism.audio.sources.test;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
 import org.almostrealism.audio.DynamicAudioCell;
 import org.almostrealism.audio.OutputLine;
+import org.almostrealism.audio.WavFile;
+import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.computations.DefaultEnvelopeComputation;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.sources.SineWaveCell;
@@ -29,6 +32,7 @@ import org.almostrealism.audio.sources.ValueSequenceCell;
 import org.almostrealism.audio.sources.ValueSequencePush;
 import org.almostrealism.audio.sources.ValueSequenceTick;
 import org.almostrealism.graph.Receptor;
+import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.DynamicAcceleratedOperation;
 import org.almostrealism.heredity.ScaleFactor;
 import org.almostrealism.time.Frequency;
@@ -37,6 +41,7 @@ import org.almostrealism.util.TestFeatures;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
@@ -194,6 +199,39 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 				.sum().o(i -> new File("results/mix-test.wav"));
 
 		cells.sec(bpm(128).l(count)).get().run();
+	}
+
+	@Test
+	public void mixExport() throws IOException {
+		WaveOutput.enableVerbose = true;
+
+		int count = 32;
+
+		WaveOutput output = new WaveOutput();
+
+		CellList cells = cells(
+				silence().and(w(v(bpm(128).l(1)), "Library/BD 909 Color 06.wav"))
+						.gr(bpm(128).l(count), count, i -> 1),
+				silence().and(w(v(bpm(128).l(1)), "Library/Snare Perc DD.wav"))
+						.gr(bpm(128).l(count), count, i -> i % 2 == 0 ? 0 : 1),
+				silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
+						.gr(bpm(128).l(count), count * 2, i -> i % 2 == 0 ? 0 : 1))
+				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
+				.sum().map(i -> new ReceptorCell<>(output));
+
+		cells.sec(10).get().run();
+
+		ScalarBank export = new ScalarBank(WaveOutput.defaultTimelineFrames);
+		output.export(export).get().run();
+
+		WavFile f = WavFile.newWavFile(new File("results/mix-export-test.wav"), 1,
+				10 * OutputLine.sampleRate, 24, OutputLine.sampleRate);
+
+		for (int i = 0; i < 10 * OutputLine.sampleRate; i++) {
+			f.writeFrames(new double[] { export.get(i).getValue() }, 1);
+		}
+
+		f.close();
 	}
 
 	protected Receptor<Scalar> loggingReceptor() {

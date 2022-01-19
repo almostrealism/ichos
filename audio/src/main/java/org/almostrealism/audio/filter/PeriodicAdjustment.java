@@ -41,7 +41,7 @@ public class PeriodicAdjustment extends CellAdjustment<SineWaveCell> implements 
 
 	@Override
 	public Supplier<Runnable> setup() {
-		OperationList setup = new OperationList();
+		OperationList setup = new OperationList("PeriodicAdjustment Setup");
 		setup.add(getGenerator().setFreq(freq));
 		setup.add(super.setup());
 		return setup;

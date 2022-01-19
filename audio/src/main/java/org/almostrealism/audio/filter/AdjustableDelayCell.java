@@ -67,12 +67,12 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 	@Override
 	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
 		// return a(2, p(scale), value);
-		return new OperationList();
+		return new OperationList("AdjustableDelayCell Adjustment Update");
 	}
 
 	@Override
 	public Supplier<Runnable> setup() {
-		OperationList setup = new OperationList();
+		OperationList setup = new OperationList("AdjustableDelayCell Setup");
 		setup.add(super.setup());
 		setup.add(a(2, p(cursors), pair(v(0.0), v(OutputLine.sampleRate).multiply(delay))));
 		return setup;
@@ -82,7 +82,7 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
 
-		OperationList push = new OperationList();
+		OperationList push = new OperationList("AdjustableDelayCell Push");
 		// push.add(a(2, p(cursors), pair(l(p(cursors)), l(p(cursors)).add(v(OutputLine.sampleRate).multiply(delay)))));
 		push.add(buffer.add(temporal(r(p(cursors)), protein)));
 		push.add(a(1, p(value), buffer.valueAt(p(cursors))));

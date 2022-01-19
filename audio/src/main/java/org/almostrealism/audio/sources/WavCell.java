@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.OutputLine;
-import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.feature.Resampler;
 import org.almostrealism.audio.filter.AudioCellAdapter;
 import org.almostrealism.hardware.HardwareFeatures;
@@ -89,7 +89,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 
 	@Override
 	public Supplier<Runnable> setup() {
-		OperationList setup = new OperationList();
+		OperationList setup = new OperationList("WavCell Setup");
 		if (offset == null) {
 			setup.add(a(1, data::getWavePosition, v(0.0)));
 		} else {
@@ -106,7 +106,7 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
-		OperationList push = new OperationList();
+		OperationList push = new OperationList("WavCell Push");
 		if (duration != null) push.add(a(1, data::getDuration, duration));
 		push.add(new WavCellPush(data, wave, value, repeat));
 		push.add(super.push(p(value)));
@@ -115,25 +115,19 @@ public class WavCell extends AudioCellAdapter implements CodeFeatures, HardwareF
 
 	@Override
 	public Supplier<Runnable> tick() {
-		OperationList tick = new OperationList();
+		OperationList tick = new OperationList("WavCell Tick");
 		tick.add(new WavCellTick(data, repeat));
 		tick.add(super.tick());
 		return tick;
 	}
 
 	public static Function<WavCellData, WavCell> load(File f, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) throws IOException {
-		WavFile w = WavFile.openWavFile(f);
+		WaveData waveform = WaveData.load(f);
+		return data -> new WavCell(data, waveform.getWave(), waveform.getSampleRate(), amplitude, offset, repeat);
+	}
 
-		double[][] wave = new double[w.getNumChannels()][(int) w.getFramesRemaining()];
-		w.readFrames(wave, 0, (int) w.getFramesRemaining());
-
-		int channelCount = w.getNumChannels();
-
-		assert channelCount > 0;
-		int channel = 0;
-
-		ScalarBank waveform = WavFile.channel(wave, channel);
-		return data -> new WavCell(data, waveform, (int) w.getSampleRate(), amplitude, offset, repeat);
+	public static Function<WavCellData, WavCell> load(WaveData w, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) throws IOException {
+		return data -> new WavCell(data, w.getWave(), w.getSampleRate(), amplitude, offset, repeat);
 	}
 }
 

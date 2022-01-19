@@ -92,7 +92,7 @@ public class BasicDelayCell extends SummationCell implements Adjustable<Scalar>,
 	@Override
 	public void reset() {
 		super.reset();
-		throw new UnsupportedOperationException();
+		// TODO throw new UnsupportedOperationException();
 	}
 
 	public static class Position {

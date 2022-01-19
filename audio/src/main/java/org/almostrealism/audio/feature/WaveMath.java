@@ -3,14 +3,15 @@ package org.almostrealism.audio.feature;
 import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
-import org.almostrealism.algebra.computations.jni.NativeScalarBankDotProduct;
+import org.almostrealism.algebra.computations.ScalarBankDotProduct;
+import org.almostrealism.util.CodeFeatures;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-public class WaveMath {
+public class WaveMath implements CodeFeatures {
 	private final Map<Integer, Evaluable<? extends Scalar>> dotEvals = new HashMap<>();
 
 	public WaveMath() {
@@ -53,7 +54,7 @@ public class WaveMath {
 		if (!dotEvals.containsKey(count)) {
 			Scalar output = new Scalar();
 			ScalarBank temp = new ScalarBank(count);
-			dotEvals.put(count, NativeScalarBankDotProduct.create(count, () -> output, new Object[] { (Supplier<ScalarBank>) () -> temp }).get());
+			dotEvals.put(count, new ScalarBankDotProduct(count, v(ScalarBank.class, 0), v(ScalarBank.class, 1)).get());
 		}
 
 		return dotEvals.get(count);

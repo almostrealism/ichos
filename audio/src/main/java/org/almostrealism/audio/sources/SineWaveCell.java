@@ -75,7 +75,7 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 
 	@Override
 	public Supplier<Runnable> setup() {
-		OperationList defaults = new OperationList();
+		OperationList defaults = new OperationList("SineWaveCell Default Value Assignment");
 		defaults.add(a(1, data::getDepth, v(AudioCellAdapter.depth)));
 		defaults.add(a(1, data::getNotePosition, v(0)));
 		defaults.add(a(1, data::getWavePosition, v(0)));
@@ -86,7 +86,7 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 
 		Supplier<Runnable> customization = super.setup();
 
-		OperationList setup = new OperationList();
+		OperationList setup = new OperationList("SineWaveCell Setup");
 		setup.add(defaults);
 		setup.add(customization);
 		return setup;
@@ -95,7 +95,7 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
-		OperationList push = new OperationList();
+		OperationList push = new OperationList("SineWaveCell Push");
 		push.add(new SineWavePush(data, env == null ? v(1.0) :
 					env.getScale(data::getNotePosition), value));
 		push.add(super.push(p(value)));
@@ -104,7 +104,7 @@ public class SineWaveCell extends AudioCellAdapter implements CodeFeatures, Hard
 
 	@Override
 	public Supplier<Runnable> tick() {
-		OperationList tick = new OperationList();
+		OperationList tick = new OperationList("SineWaveCell Tick");
 		tick.add(new SineWaveTick(data, env == null ? v(1.0) :
 				env.getScale(data::getNotePosition)));
 		tick.add(super.tick());

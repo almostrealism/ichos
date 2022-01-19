@@ -71,7 +71,7 @@ public class AudioMeter implements Receptor<Scalar>, Lifecycle, ScalarFeatures, 
 
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
-		OperationList push = new OperationList();
+		OperationList push = new OperationList("AudioMeter Push");
 		push.add(new ClipCounter(() -> new Provider<>(clipCount), v(clipSettings), protein));
 		push.add(new SilenceDurationComputation(() -> new Provider<>(silenceDuration), v(silenceValue), protein));
 		if (forwarding != null) push.add(forwarding.push(protein));

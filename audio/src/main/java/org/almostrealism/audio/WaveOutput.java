@@ -24,12 +24,22 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.algebra.computations.PairFromPairBank;
+import org.almostrealism.algebra.computations.ScalarFromPair;
 import org.almostrealism.graph.Receptor;
 import io.almostrealism.relation.Producer;
+import org.almostrealism.hardware.ContextSpecific;
+import org.almostrealism.hardware.KernelizedEvaluable;
+import org.almostrealism.hardware.MemoryBank;
+import org.almostrealism.hardware.MemoryData;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.time.CursorPair;
@@ -37,6 +47,23 @@ import org.almostrealism.util.CodeFeatures;
 
 public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	public static boolean enableVerbose = false;
+	public static boolean enableKernelExport = true;
+
+	public static int defaultTimelineFrames = (int) (OutputLine.sampleRate * 180);
+
+	public static ContextSpecific<ScalarBank> timeline;
+
+	static {
+		timeline = new ContextSpecific<>(
+				() -> {
+					ScalarBank data = new ScalarBank(defaultTimelineFrames);
+					List<Double> values = IntStream.range(0, defaultTimelineFrames)
+							.mapToObj(i -> i / (double) OutputLine.sampleRate).collect(Collectors.toList());
+					for (int i = 0; i < values.size(); i++) data.set(i, values.get(i));
+					return data;
+				}, ScalarBank::destroy);
+		timeline.init();
+	}
 
 	private Supplier<File> file;
 	private int bits;
@@ -46,6 +73,8 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	private CursorPair cursor;
 	private AcceleratedTimeSeries data;
 	private Runnable reset;
+
+	public WaveOutput() { this(null); }
 
 	public WaveOutput(File f) {
 		this(f, 24);
@@ -69,12 +98,49 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 		this.reset = a(2, p(cursor), pair(0.0, 1.0)).get();
 	}
 
+	public CursorPair getCursor() { return cursor; }
+
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
-		OperationList push = new OperationList();
+		OperationList push = new OperationList("WaveOutput Push");
 		push.add(data.add(temporal(l(p(cursor)), protein)));
 		push.add(cursor.increment(v(1)));
 		return push;
+	}
+
+	public Supplier<Runnable> export(ScalarBank destination) {
+		if (enableKernelExport) {
+			return () -> () -> {
+				long start = System.currentTimeMillis();
+				PairFromPairBank pairAt = new PairFromPairBank((Producer) p(data),
+						v(OutputLine.sampleRate).multiply(v(Scalar.class, 0)).add(v(1.0)));
+				pairAt.r().get().kernelEvaluate(destination, new MemoryBank[]{timeline.getValue()});
+				if (enableVerbose)
+					System.out.println("WaveOutput: Wrote " + defaultTimelineFrames + " frames in " + (System.currentTimeMillis() - start) + " msec");
+			};
+		} else {
+			return () -> () -> {
+				int frames = (int) cursor.left() - 1;
+
+				if (frames > 0) {
+					// System.out.println("Writing " + frames + " frames");
+				} else {
+					System.out.println("WaveOutput: No frames to write");
+					return;
+				}
+
+				long start = System.currentTimeMillis();
+
+				for (int i = 0; i < frames; i++) {
+					// double value = data.valueAt(i).getValue();
+					double value = data.get(i + 1).getValue();
+					destination.set(i, value);
+				}
+
+				if (enableVerbose)
+					System.out.println("WaveOutput: Wrote " + frames + " frames in " + (System.currentTimeMillis() - start) + " msec");
+			};
+		}
 	}
 
 	public Supplier<Runnable> write() {
@@ -85,7 +151,7 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 			if (frames > 0) {
 				// System.out.println("Writing " + frames + " frames");
 			} else {
-				System.out.println("No frames to write");
+				System.out.println("WaveOutput: No frames to write");
 				return;
 			}
 
@@ -116,7 +182,7 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 				return;
 			}
 
-			if (enableVerbose) System.out.println("Wrote " + frames + " frames in " + (System.currentTimeMillis() - start) + " msec");
+			if (enableVerbose) System.out.println("WaveOutput: Wrote " + frames + " frames in " + (System.currentTimeMillis() - start) + " msec");
 		};
 	}
 

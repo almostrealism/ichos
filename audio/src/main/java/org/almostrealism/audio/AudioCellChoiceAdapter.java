@@ -129,7 +129,7 @@ public abstract class AudioCellChoiceAdapter extends AudioCellAdapter implements
 
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
-		OperationList push = new OperationList();
+		OperationList push = new OperationList("AudioCellChoiceAdapter Push");
 
 		if (parallel) {
 			getCellSet().stream().map(cell -> cell.push(protein)).forEach(push::add);

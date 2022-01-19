@@ -55,7 +55,7 @@ public class CellAdjustment<T extends Cell<Scalar>> implements Adjustment<Scalar
 
 	@Override
 	public Supplier<Runnable> adjust(Adjustable<Scalar> toAdjust) {
-		OperationList adjust = new OperationList();
+		OperationList adjust = new OperationList("CellAdjustment Perform Adjustment");
 		adjust.add(generator.push(null));
 		adjust.add(toAdjust.updateAdjustment(r(bounds).subtract(l(bounds)).multiply(p(factor)).add(l(bounds))));
 		return adjust;

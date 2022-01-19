@@ -39,7 +39,7 @@ public abstract class AudioCellAdapter extends ScalarCachedStateCell implements 
 	private final OperationList setup;
 
 	public AudioCellAdapter() {
-		setup = new OperationList();
+		setup = new OperationList("AudioCellAdapter Setup");
 	}
 
 	public void addSetup(Supplier<Runnable> setup) {
@@ -60,12 +60,12 @@ public abstract class AudioCellAdapter extends ScalarCachedStateCell implements 
 
 	@Override
 	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
-		return new OperationList();
+		return new OperationList("AudioCellAdapter Adjustment Update");
 	}
 
 	@Override
 	public Supplier<Runnable> setup() {
-		OperationList setup = new OperationList();
+		OperationList setup = new OperationList("AudioCellAdapter Setup");
 		setup.add(super.setup());
 		setup.add(this.setup);
 		return setup;

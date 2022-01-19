@@ -46,7 +46,7 @@ public class Mixer extends ArrayList<Source<Scalar>> implements Temporal {
 	
 	@Override
 	public Supplier<Runnable> tick() {
-		OperationList tick = new OperationList();
+		OperationList tick = new OperationList("Mixer Tick");
 		stream().map(s -> sum.push(s.next())).forEach(tick::add);
 
 		tick.add(() -> () -> {

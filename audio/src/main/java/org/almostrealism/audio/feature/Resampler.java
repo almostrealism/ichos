@@ -2,7 +2,6 @@ package org.almostrealism.audio.feature;
 
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
-import org.almostrealism.algebra.computations.jni.NativeScalarBankDotProduct;
 import org.almostrealism.hardware.HardwareException;
 
 import java.util.ArrayList;

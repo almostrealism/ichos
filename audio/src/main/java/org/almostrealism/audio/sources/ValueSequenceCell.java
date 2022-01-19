@@ -48,7 +48,7 @@ public class ValueSequenceCell extends AudioCellAdapter {
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
-		OperationList push = new OperationList();
+		OperationList push = new OperationList("ValueSequenceCell Push");
 		push.add(new ValueSequencePush(data, durationFrames, value, values.toArray(Producer[]::new)));
 		push.add(super.push(p(value)));
 		return push;
@@ -56,7 +56,7 @@ public class ValueSequenceCell extends AudioCellAdapter {
 
 	@Override
 	public Supplier<Runnable> tick() {
-		OperationList tick = new OperationList();
+		OperationList tick = new OperationList("ValueSequenceCell Tick");
 		tick.add(new ValueSequenceTick(data, durationFrames, values.toArray(Producer[]::new)));
 		tick.add(super.tick());
 		return tick;

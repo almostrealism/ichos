@@ -21,8 +21,10 @@ import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import io.almostrealism.uml.Plural;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.algebra.ScalarTable;
 import org.almostrealism.audio.computations.DefaultEnvelopeComputation;
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.filter.AdjustableDelayCell;
 import org.almostrealism.audio.filter.AudioCellAdapter;
 import org.almostrealism.audio.filter.AudioPassFilter;
@@ -180,6 +182,10 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return w(PolymorphicAudioData::new, offset, repeat, files);
 	}
 
+	default CellList w(Producer<Scalar> offset, Producer<Scalar> repeat, WaveData... data) {
+		return w(PolymorphicAudioData::new, offset, repeat, data);
+	}
+
 	default CellList w(Supplier<PolymorphicAudioData> data, File... files) {
 		return w(data, null, null, files);
 	}
@@ -187,6 +193,19 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 	default CellList w(Supplier<PolymorphicAudioData> data, Producer<Scalar> offset, Producer<Scalar> repeat, File... files) {
 		CellList cells = new CellList();
 		Stream.of(files).map(f -> {
+			try {
+				return WavCell.load(f, 1.0, offset, repeat).apply(data.get());
+			} catch (IOException e) {
+				e.printStackTrace();
+				return silence().get(0);
+			}
+		}).forEach(cells::addRoot);
+		return cells;
+	}
+
+	default CellList w(Supplier<PolymorphicAudioData> data, Producer<Scalar> offset, Producer<Scalar> repeat, WaveData... waves) {
+		CellList cells = new CellList();
+		Stream.of(waves).map(f -> {
 			try {
 				return WavCell.load(f, 1.0, offset, repeat).apply(data.get());
 			} catch (IOException e) {
@@ -482,6 +501,33 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		// result.getFinals().add(csv.writeCsv(new File("value-sequence-debug.csv")).get());
 
 		return result;
+	}
+
+	default CellList mixdown(CellList cells, double seconds) {
+		cells = map(cells, i -> new ReceptorCell<>(new WaveOutput()));
+
+		OperationList export = new OperationList("Mixdown export");
+
+		ScalarTable wavs = new ScalarTable(WaveOutput.defaultTimelineFrames, cells.size());
+		for (int i = 0; i < cells.size(); i++) {
+			export.add(((WaveOutput) ((ReceptorCell) cells.get(i)).getReceptor()).export(wavs.get(i)));
+		}
+
+		OperationList setup = new OperationList(seconds + " second mixdown");
+		setup.add(iter(cells, (int) (seconds * OutputLine.sampleRate), false));
+		setup.add(export);
+
+		CellList newCells = new CellList();
+		newCells.addSetup(() -> setup);
+
+		IntStream.range(0, wavs.getCount())
+				.mapToObj(wavs::get)
+				.map(wav -> new WavCell(wav, OutputLine.sampleRate))
+				.forEach(newCells::addRoot);
+		CellList fc = cells;
+		newCells.getFinals().add(() -> fc.reset());
+
+		return newCells;
 	}
 
 	default Supplier<Runnable> min(Temporal t, double minutes) {

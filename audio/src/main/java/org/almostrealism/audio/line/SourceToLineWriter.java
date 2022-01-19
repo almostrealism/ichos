@@ -45,7 +45,7 @@ public class SourceToLineWriter implements Temporal {
 
 	@Override
 	public Supplier<Runnable> tick() {
-		OperationList tick = new OperationList();
+		OperationList tick = new OperationList("SourceToLineWriter Tick");
 
 		dependencies.stream().map(Temporal::tick).forEach(tick::add);
 

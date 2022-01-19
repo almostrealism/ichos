@@ -145,6 +145,8 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList sum() { return sum(this); }
 
+	public CellList mixdown(double seconds) { return mixdown(this, seconds); }
+
 	public CellList csv(IntFunction<File> f) {
 		return csv(this, f);
 	}
@@ -187,13 +189,13 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		List<Setup> all = new ArrayList<>();
 		parents.stream().map(CellList::getAllSetup).flatMap(Collection::stream).forEach(c -> append(all, c));
 
-		setups.stream().forEach(s -> append(all, s));
-
 		stream().map(c -> c instanceof Setup ? (Setup) c : null)
 				.filter(Objects::nonNull).forEach(t -> append(all, t));
 
 		requirements.stream().map(c -> c instanceof Setup ? (Setup) c : null)
 				.filter(Objects::nonNull).forEach(c -> append(all, c));
+
+		setups.stream().forEach(s -> append(all, s));
 
 		return all;
 	}
@@ -208,14 +210,14 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	@Override
 	public Supplier<Runnable> setup() {
-		OperationList setup = new OperationList();
+		OperationList setup = new OperationList("CellList Setup");
 		getAllSetup().stream().map(Setup::setup).forEach(setup::add);
 		return setup;
 	}
 
 	@Override
 	public Supplier<Runnable> tick() {
-		OperationList tick = new OperationList();
+		OperationList tick = new OperationList("CellList Tick");
 		getAllRoots().stream().map(r -> r.push(v(0.0))).forEach(tick::add);
 		tick.add(getAllTemporals().tick());
 		return tick;

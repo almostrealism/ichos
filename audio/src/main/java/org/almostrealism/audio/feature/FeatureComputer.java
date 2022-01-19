@@ -2,19 +2,7 @@ package org.almostrealism.audio.feature;
 
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.ScalarTable;
-import org.almostrealism.algebra.computations.jni.NativePowerSpectrum;
-import org.almostrealism.algebra.computations.jni.NativePowerSpectrum256;
-import org.almostrealism.algebra.computations.jni.NativePowerSpectrum512;
 import org.almostrealism.audio.computations.ComplexFFT;
-import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset160;
-import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset320;
-import org.almostrealism.audio.computations.NativeDitherAndRemoveDcOffset400;
-import org.almostrealism.audio.computations.NativeFFT256;
-import org.almostrealism.audio.computations.NativeFFT512;
-import org.almostrealism.audio.computations.NativeWindowPreprocess;
-import org.almostrealism.audio.computations.NativeWindowPreprocess160;
-import org.almostrealism.audio.computations.NativeWindowPreprocess320;
-import org.almostrealism.audio.computations.NativeWindowPreprocess400;
 import org.almostrealism.audio.computations.WindowPreprocess;
 import org.almostrealism.audio.util.TensorRow;
 import io.almostrealism.relation.Evaluable;
@@ -109,40 +97,10 @@ public class FeatureComputer implements CodeFeatures {
 
 		PairBank fftOutput = new PairBank(paddedWindowSize);
 
-		if (Hardware.getLocalHardware().isNativeSupported() && paddedWindowSize == 512) {
-			NativeFFT512 nfft = new NativeFFT512();
-			nfft.setDestination(() -> fftOutput);
-			fft = nfft.get();
-			if (enableVerbose) System.out.println("Loaded native support for FFT");
-		} else if (Hardware.getLocalHardware().isNativeSupported() && paddedWindowSize == 256) {
-			NativeFFT256 nfft = new NativeFFT256();
-			nfft.setDestination(() -> fftOutput);
-			fft = nfft.get();
-			if (enableVerbose) System.out.println("Loaded native support for FFT");
-		} else {
-			fft = new ComplexFFT(paddedWindowSize, true, v(2 * paddedWindowSize, 0));
-		}
+		fft = new ComplexFFT(paddedWindowSize, true, v(2 * paddedWindowSize, 0));
 
 		int count = settings.getFrameExtractionSettings().getWindowSize();
 		Supplier<Evaluable<? extends ScalarBank>> processWindow = null;
-
-
-		if (settings.getFrameExtractionSettings().isRemoveDcOffset() && Hardware.getLocalHardware().isNativeSupported()) {
-			Pair randDestination = new Pair();
-			if (settings.getFrameExtractionSettings().getWindowSize() == 160) {
-				processWindow = new NativeDitherAndRemoveDcOffset160(() -> randDestination);
-			} else if (settings.getFrameExtractionSettings().getWindowSize() == 320) {
-				processWindow = new NativeDitherAndRemoveDcOffset320(() -> randDestination);
-			} else if (settings.getFrameExtractionSettings().getWindowSize() == 400) {
-				processWindow = new NativeDitherAndRemoveDcOffset400(() -> randDestination);
-			}
-
-			if (processWindow != null) {
-				ScalarBank processWindowOutput = new ScalarBank(settings.getFrameExtractionSettings().getWindowSize());
-				((DestinationSupport) processWindow).setDestination(() -> processWindowOutput);
-				if (enableVerbose) System.out.println("Loaded native support for DitherAndRemoveDcOffset");
-			}
-		}
 
 		if (processWindow == null) {
 			processWindow = v(2 * count, 0);
@@ -155,45 +113,12 @@ public class FeatureComputer implements CodeFeatures {
 
 		this.processWindow = processWindow.get();
 
-		if (Hardware.getLocalHardware().isNativeSupported()) {
-			NativeWindowPreprocess npp = null;
-
-			if (settings.getFrameExtractionSettings().getWindowSize() == 160) {
-				npp = new NativeWindowPreprocess160();
-			} else if (settings.getFrameExtractionSettings().getWindowSize() == 320) {
-				npp = new NativeWindowPreprocess320();
-			} else if (settings.getFrameExtractionSettings().getWindowSize() == 400) {
-				npp = new NativeWindowPreprocess400();
-			}
-
-			if (npp != null) {
-				ScalarBank windowFunctionOutput = new ScalarBank(settings.getFrameExtractionSettings().getWindowSize());
-				npp.setDestination(() -> windowFunctionOutput);
-				this.preemphasizeAndWindowFunctionAndPad = npp.get();
-				if (enableVerbose) System.out.println("Loaded native support for WindowPreprocess");
-			}
-		}
-
 		if (preemphasizeAndWindowFunctionAndPad == null) {
 			this.preemphasizeAndWindowFunctionAndPad = new WindowPreprocess(settings.getFrameExtractionSettings(),
 																		v(2 * count, 0)).get();
 		}
 
-		ScalarBank powerSpectrumOutput = new ScalarBank(paddedWindowSize);
-
-		if (paddedWindowSize == 512 && Hardware.getLocalHardware().isNativeSupported()) {
-			NativePowerSpectrum nps = new NativePowerSpectrum512();
-			nps.setDestination(() -> powerSpectrumOutput);
-			this.powerSpectrum = nps.get();
-		} else if (paddedWindowSize == 256 && Hardware.getLocalHardware().isNativeSupported()) {
-			NativePowerSpectrum nps = new NativePowerSpectrum256();
-			nps.setDestination(() -> powerSpectrumOutput);
-			this.powerSpectrum = nps.get();
-		} else {
-			if (Hardware.getLocalHardware().isNativeSupported())
-				System.out.println("WARN: Unable to use NativePowerSpectrum with window " + paddedWindowSize);
-			this.powerSpectrum = new PowerSpectrum(paddedWindowSize, v(2 * paddedWindowSize, 0)).get();
-		}
+		this.powerSpectrum = new PowerSpectrum(paddedWindowSize, v(2 * paddedWindowSize, 0)).get();
 
 		// We'll definitely need the filterbanks info for VTLN warping factor 1.0.
 		// [note: this call caches it.]

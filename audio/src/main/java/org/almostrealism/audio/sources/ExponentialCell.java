@@ -57,7 +57,7 @@ public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, H
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
-		OperationList push = new OperationList();
+		OperationList push = new OperationList("ExponentialCell Push");
 		push.add(new ExponentialCellPush(data, env == null ? v(1.0) :
 				env.getScale(data::getNotePosition), value));
 		push.add(super.push(p(value)));
@@ -67,7 +67,7 @@ public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, H
 
 	@Override
 	public Supplier<Runnable> tick() {
-		OperationList tick = new OperationList();
+		OperationList tick = new OperationList("ExponentialCell Tick");
 		tick.add(new ExponentialCellTick(data, env == null ? v(1.0) :
 				env.getScale(data::getNotePosition)));
 		tick.add(super.tick());

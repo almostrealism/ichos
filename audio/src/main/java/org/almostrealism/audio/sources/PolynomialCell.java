@@ -57,7 +57,7 @@ public class PolynomialCell extends AudioCellAdapter implements CodeFeatures, Ha
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		Scalar value = new Scalar();
-		OperationList push = new OperationList();
+		OperationList push = new OperationList("PolynomialCell Push");
 		push.add(new PolynomialCellPush(data, env == null ? v(1.0) :
 				env.getScale(data::getWavePosition), value));
 		push.add(super.push(p(value)));
@@ -67,7 +67,7 @@ public class PolynomialCell extends AudioCellAdapter implements CodeFeatures, Ha
 
 	@Override
 	public Supplier<Runnable> tick() {
-		OperationList tick = new OperationList();
+		OperationList tick = new OperationList("PolynomialCell Tick");
 		tick.add(new PolynomialCellTick(data, env == null ? v(1.0) :
 				env.getScale(data::getWavePosition)));
 		tick.add(super.tick());

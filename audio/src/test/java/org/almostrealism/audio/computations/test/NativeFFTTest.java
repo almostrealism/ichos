@@ -20,7 +20,8 @@ import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.PairTable;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.PairBank;
-import org.almostrealism.audio.computations.NativeFFT512;
+import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.audio.computations.ComplexFFT;
 import org.almostrealism.hardware.HardwareException;
 import org.almostrealism.util.TestFeatures;
 import org.junit.Assert;
@@ -77,7 +78,7 @@ public class NativeFFTTest implements TestFeatures {
 		Evaluable<? extends PairBank> fft = NativeFFTTest.fft.get();
 
 		if (fft == null) {
-			fft = new NativeFFT512().get();
+			fft = new ComplexFFT(512, true, v(PairBank.class, 0));
 			NativeFFTTest.fft.set(fft);
 		}
 

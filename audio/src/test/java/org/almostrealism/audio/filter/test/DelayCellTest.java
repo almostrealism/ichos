@@ -27,10 +27,10 @@ public class DelayCellTest implements CellFeatures {
 	@Test
 	public void filter() throws IOException {
 		Supplier<Runnable> r =
-				w("src/test/resources/Snare Perc DD.wav")
+				w("Library/Snare Perc DD.wav")
 						.f(i -> hp(2000, 0.1))
 						.d(i -> v(2.0))
-						.o(i -> new File("filter-delay-cell-test.wav"))
+						.o(i -> new File("results/filter-delay-cell-test.wav"))
 						.sec(6);
 		r.get().run();
 	}
