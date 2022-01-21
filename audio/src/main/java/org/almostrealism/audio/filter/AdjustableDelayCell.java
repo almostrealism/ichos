@@ -24,8 +24,8 @@ import org.almostrealism.graph.Adjustable;
 import org.almostrealism.graph.SummationCell;
 import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.hardware.OperationList;
-import org.almostrealism.util.CodeFeatures;
-import org.almostrealism.util.Ops;
+import org.almostrealism.CodeFeatures;
+import org.almostrealism.Ops;
 
 import java.util.function.Supplier;
 

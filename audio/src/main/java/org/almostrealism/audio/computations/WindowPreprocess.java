@@ -23,7 +23,7 @@ import org.almostrealism.algebra.computations.Preemphasize;
 import org.almostrealism.algebra.computations.ScalarBankPad;
 import org.almostrealism.audio.feature.FeatureWindowFunction;
 import org.almostrealism.audio.feature.FrameExtractionSettings;
-import org.almostrealism.util.Ops;
+import org.almostrealism.Ops;
 
 import java.util.function.Supplier;
 

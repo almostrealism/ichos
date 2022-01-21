@@ -16,5 +16,7 @@
 
 package org.almostrealism.audio.data;
 
+import org.almostrealism.graph.temporal.BaseAudioData;
+
 public interface ValueSequenceData extends BaseAudioData {
 }

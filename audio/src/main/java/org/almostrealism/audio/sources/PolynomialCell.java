@@ -20,17 +20,18 @@ import io.almostrealism.relation.Evaluable;
 import org.almostrealism.audio.Envelope;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.data.PolymorphicAudioData;
-import org.almostrealism.audio.filter.AudioCellAdapter;
+import org.almostrealism.graph.temporal.DefaultWaveCellData;
+import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.HardwareFeatures;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.hardware.OperationList;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 import java.util.function.Supplier;
 
 // TODO  Reimplement as a function of org.almostrealism.graph.TimeCell
-public class PolynomialCell extends AudioCellAdapter implements CodeFeatures, HardwareFeatures {
+public class PolynomialCell extends ScalarTemporalCellAdapter implements CodeFeatures, HardwareFeatures {
 	private Envelope env;
 	private final PolynomialCellData data;
 

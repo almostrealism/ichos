@@ -16,17 +16,18 @@
 
 package org.almostrealism.audio.data;
 
+import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.hardware.ContextSpecific;
 import org.almostrealism.hardware.Hardware;
 import org.almostrealism.hardware.mem.MemoryPool;
 
 import java.util.Optional;
 
-public class PolymorphicAudioDataPool extends MemoryPool<PolymorphicAudioData> {
+public class PolymorphicAudioDataPool extends MemoryPool<DefaultWaveCellData> {
 	private static ContextSpecific<PolymorphicAudioDataPool> local;
 
 	public PolymorphicAudioDataPool(int size) {
-		super(PolymorphicAudioData.SIZE * 2, size);
+		super(DefaultWaveCellData.SIZE * 2, size);
 	}
 
 	public static PolymorphicAudioDataPool getLocal() {

@@ -19,20 +19,21 @@ package org.almostrealism.audio;
 import io.almostrealism.code.ProducerComputation;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.audio.data.PolymorphicAudioDataBank;
-import org.almostrealism.audio.filter.AudioCellAdapter;
+import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 
 import java.util.List;
 import java.util.function.Function;
 
 public class DynamicAudioCell extends AudioCellChoiceAdapter {
 	public DynamicAudioCell(ProducerComputation<Scalar> decision,
-								List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> choices) {
+								List<Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>> choices) {
 		this(new PolymorphicAudioDataBank(choices.size()), decision, choices);
 	}
 
 	public DynamicAudioCell(PolymorphicAudioDataBank data, ProducerComputation<Scalar> decision,
-							List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> choices) {
+							List<Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>> choices) {
 		super(decision, data::get, choices, true);
 	}
 }

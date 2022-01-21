@@ -1,12 +1,11 @@
 package org.almostrealism.audio.feature;
 
-import io.almostrealism.code.OperationAdapter;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.ScalarBankProduct;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;

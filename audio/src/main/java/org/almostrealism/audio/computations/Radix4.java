@@ -24,7 +24,7 @@ import org.almostrealism.algebra.ScalarProducer;
 import org.almostrealism.algebra.computations.ComplexFromAngle;
 import org.almostrealism.algebra.computations.PairFromPairBank;
 import org.almostrealism.algebra.computations.PairFromScalars;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 public class Radix4 implements RadixComputationFactory, CodeFeatures {
 	private int part;

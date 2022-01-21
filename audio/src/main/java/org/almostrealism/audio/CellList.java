@@ -19,10 +19,9 @@ package org.almostrealism.audio;
 import io.almostrealism.code.ProducerComputation;
 import io.almostrealism.code.Setup;
 import io.almostrealism.relation.Producer;
-import io.almostrealism.uml.Plural;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.audio.data.PolymorphicAudioData;
-import org.almostrealism.audio.filter.AudioCellAdapter;
+import org.almostrealism.graph.temporal.DefaultWaveCellData;
+import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.hardware.OperationList;
@@ -94,7 +93,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList poly(IntFunction<ProducerComputation<Scalar>> decision) {
 		CellList l = poly(1, () -> null, decision,
-				stream().map(c -> (Function<PolymorphicAudioData, AudioCellAdapter>) data -> (AudioCellAdapter) c).toArray(Function[]::new));
+				stream().map(c -> (Function<DefaultWaveCellData, ScalarTemporalCellAdapter>) data -> (ScalarTemporalCellAdapter) c).toArray(Function[]::new));
 		// TODO  By dropping the parent, we may be losing necessary dependencies
 		// TODO  However, if it is included, operations will be invoked multiple times
 		// TODO  Since the new polymorphic cells delegate to the operations of the

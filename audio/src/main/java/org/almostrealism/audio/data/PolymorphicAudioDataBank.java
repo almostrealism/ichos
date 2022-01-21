@@ -16,26 +16,27 @@
 
 package org.almostrealism.audio.data;
 
+import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.hardware.MemoryData;
 import org.almostrealism.hardware.mem.MemoryBankAdapter;
 import io.almostrealism.relation.Evaluable;
 
 /**
- * A collection of {@link PolymorphicAudioData}s of a fixed length, that is contiguous in
+ * A collection of {@link DefaultWaveCellData}s of a fixed length, that is contiguous in
  * RAM and usable for kernel methods.
  *
  * @author  Michael Murray
  */
 public class PolymorphicAudioDataBank extends MemoryBankAdapter<PolymorphicAudioData> {
 	public PolymorphicAudioDataBank(int count) {
-		super(PolymorphicAudioData.SIZE, count, delegateSpec ->
+		super(DefaultWaveCellData.SIZE, count, delegateSpec ->
 				new PolymorphicAudioData(delegateSpec.getDelegate(), delegateSpec.getOffset()));
 	}
 
 	// TODO  Need to respect CacheLevel, but the parent constructor that does
 	//       respect cache level does this init stuff that we don't want
 	public PolymorphicAudioDataBank(int count, MemoryData delegate, int delegateOffset, CacheLevel cacheLevel) {
-		super(PolymorphicAudioData.SIZE, count, delegateSpec ->
+		super(DefaultWaveCellData.SIZE, count, delegateSpec ->
 						new PolymorphicAudioData(delegateSpec.getDelegate(), delegateSpec.getOffset()),
 				delegate, delegateOffset);
 	}

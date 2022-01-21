@@ -22,8 +22,7 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.PairBank;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.computations.PairBankFromPairsBuilder;
-import org.almostrealism.hardware.DynamicAcceleratedOperation;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 public class SplitRadixFFT implements Evaluable<PairBank>, CodeFeatures {
 	public static final double SQRT_2 = Math.sqrt(2.0);

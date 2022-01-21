@@ -21,8 +21,9 @@ import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
-import org.almostrealism.audio.data.PolymorphicAudioData;
-import org.almostrealism.audio.sources.WavCell;
+import org.almostrealism.audio.WavFile;
+import org.almostrealism.graph.temporal.DefaultWaveCellData;
+import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.hardware.AcceleratedComputationOperation;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.ScaleFactor;
@@ -35,14 +36,14 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
-public class WavCellTest implements CellFeatures, TestFeatures {
-	protected WavCell cell() throws IOException {
-		return WavCell.load(new File("src/main/resources/test.wav"), 1000, null, v(10)).apply(new PolymorphicAudioData());
+public class WaveCellTest implements CellFeatures, TestFeatures {
+	protected WaveCell cell() throws IOException {
+		return WavFile.load(new File("src/main/resources/test.wav"), 1000, null, v(10)).apply(new DefaultWaveCellData());
 	}
 
 	@Test
 	public void push() throws IOException {
-		WavCell cell = cell();
+		WaveCell cell = cell();
 		cell.setReceptor(protein -> {
 			Evaluable<? extends Scalar> ev = protein.get();
 			return () -> () -> System.out.println(ev.evaluate());

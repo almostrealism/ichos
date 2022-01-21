@@ -1,7 +1,7 @@
 package org.almostrealism.audio.feature;
 
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 public class MelBanksSettings implements CodeFeatures {
 	private int numBins;  // e.g. 25; number of triangular bins

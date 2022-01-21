@@ -22,7 +22,7 @@ import org.almostrealism.graph.Adjustable;
 import org.almostrealism.graph.SummationCell;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.time.Updatable;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 import java.util.function.Supplier;
 

@@ -20,9 +20,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.function.Supplier;
@@ -33,17 +31,14 @@ import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.PairFromPairBank;
-import org.almostrealism.algebra.computations.ScalarFromPair;
 import org.almostrealism.graph.Receptor;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.hardware.ContextSpecific;
-import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.MemoryBank;
-import org.almostrealism.hardware.MemoryData;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.time.CursorPair;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	public static boolean enableVerbose = false;

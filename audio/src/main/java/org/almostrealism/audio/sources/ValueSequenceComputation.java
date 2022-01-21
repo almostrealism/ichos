@@ -17,22 +17,17 @@
 package org.almostrealism.audio.sources;
 
 import io.almostrealism.code.ArrayVariable;
-import io.almostrealism.code.Computation;
 import io.almostrealism.code.HybridScope;
 import io.almostrealism.code.Scope;
-import io.almostrealism.code.ScopeInputManager;
-import io.almostrealism.code.expressions.Sum;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.data.ValueSequenceData;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;

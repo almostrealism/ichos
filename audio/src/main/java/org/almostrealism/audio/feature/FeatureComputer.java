@@ -1,6 +1,5 @@
 package org.almostrealism.audio.feature;
 
-import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.ScalarTable;
 import org.almostrealism.audio.computations.ComplexFFT;
 import org.almostrealism.audio.computations.WindowPreprocess;
@@ -15,9 +14,7 @@ import org.almostrealism.algebra.computations.PowerSpectrum;
 import org.almostrealism.algebra.computations.ScalarBankAdd;
 import org.almostrealism.algebra.computations.ScalarBankSum;
 import org.almostrealism.audio.computations.SplitRadixFFT;
-import org.almostrealism.hardware.DestinationSupport;
-import org.almostrealism.hardware.Hardware;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 import java.util.HashMap;
 import java.util.Map;

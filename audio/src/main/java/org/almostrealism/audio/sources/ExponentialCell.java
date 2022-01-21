@@ -17,16 +17,17 @@
 package org.almostrealism.audio.sources;
 
 import org.almostrealism.audio.Envelope;
-import org.almostrealism.audio.filter.AudioCellAdapter;
+import org.almostrealism.audio.SamplingFeatures;
+import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.HardwareFeatures;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.hardware.OperationList;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 import java.util.function.Supplier;
 
-public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, HardwareFeatures {
+public class ExponentialCell extends ScalarTemporalCellAdapter implements SamplingFeatures {
 	private Envelope env;
 	private final ExponentialCellData data;
 
@@ -50,7 +51,7 @@ public class ExponentialCell extends AudioCellAdapter implements CodeFeatures, H
 	public Supplier<Runnable> setup() {
 		return () -> () -> {
 			data.setNoteLength(toFramesMilli(1000));
-			data.setDepth(AudioCellAdapter.depth);
+			data.setDepth(ScalarTemporalCellAdapter.depth);
 		};
 	}
 

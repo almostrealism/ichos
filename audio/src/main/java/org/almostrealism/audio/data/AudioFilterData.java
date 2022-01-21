@@ -2,6 +2,7 @@ package org.almostrealism.audio.data;
 
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.graph.temporal.BaseAudioData;
 
 public interface AudioFilterData extends BaseAudioData {
 	Scalar get(int index);

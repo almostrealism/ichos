@@ -20,13 +20,9 @@ import io.almostrealism.code.HybridScope;
 import io.almostrealism.code.ScopeInputManager;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.Choice;
 import org.almostrealism.audio.data.ValueSequenceData;
-import org.almostrealism.util.CodeFeatures;
-
-import java.util.function.Consumer;
-import java.util.function.Supplier;
+import org.almostrealism.CodeFeatures;
 
 public class ValueSequencePush extends ValueSequenceComputation implements CodeFeatures {
 	private Choice choice;

@@ -18,13 +18,11 @@ package org.almostrealism.audio.filter;
 
 import io.almostrealism.code.ArrayVariable;
 import io.almostrealism.code.ScopeInputManager;
-import io.almostrealism.code.expressions.Expression;
-import io.almostrealism.code.expressions.Sum;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.AudioFilterData;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 import java.util.function.Supplier;
 

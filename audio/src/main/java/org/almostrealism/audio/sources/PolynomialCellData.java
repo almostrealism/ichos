@@ -18,7 +18,7 @@ package org.almostrealism.audio.sources;
 
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.audio.data.BaseAudioData;
+import org.almostrealism.graph.temporal.BaseAudioData;
 
 public interface PolynomialCellData extends BaseAudioData {
 	Scalar get(int pos);

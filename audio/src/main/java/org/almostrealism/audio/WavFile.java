@@ -10,13 +10,19 @@
 
 package org.almostrealism.audio;
 
+import io.almostrealism.relation.Producer;
+import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarBankHeap;
+import org.almostrealism.audio.data.WaveData;
+import org.almostrealism.graph.temporal.WaveCell;
+import org.almostrealism.graph.temporal.WaveCellData;
 import org.almostrealism.hardware.ContextSpecific;
 
 import java.io.*;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class WavFile {
@@ -668,5 +674,15 @@ public class WavFile {
 		out.printf("IO State: %s\n", readerState);
 		out.printf("Sample Rate: %d, Block Align: %d\n", sampleRate, blockAlign);
 		out.printf("Valid Bits: %d, Bytes per sample: %d\n", validBits, bytesPerSample);
+	}
+
+
+	public static Function<WaveCellData, WaveCell> load(File f, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) throws IOException {
+		WaveData waveform = WaveData.load(f);
+		return data -> new WaveCell(data, waveform.getWave(), waveform.getSampleRate(), amplitude, offset, repeat);
+	}
+
+	public static Function<WaveCellData, WaveCell> load(WaveData w, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) throws IOException {
+		return data -> new WaveCell(data, w.getWave(), w.getSampleRate(), amplitude, offset, repeat);
 	}
 }

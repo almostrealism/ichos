@@ -18,9 +18,11 @@ package org.almostrealism.audio.sources;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.audio.SamplingFeatures;
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.audio.data.ValueSequenceData;
-import org.almostrealism.audio.filter.AudioCellAdapter;
+import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.hardware.OperationList;
 
 import java.util.List;
@@ -29,7 +31,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class ValueSequenceCell extends AudioCellAdapter {
+public class ValueSequenceCell extends ScalarTemporalCellAdapter implements SamplingFeatures {
 	private ValueSequenceData data;
 	private List<Producer<Scalar>> values;
 	private Producer<Scalar> durationFrames;

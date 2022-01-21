@@ -19,21 +19,19 @@ package org.almostrealism.audio;
 import io.almostrealism.code.ProducerComputation;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
-import io.almostrealism.uml.Plural;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarTable;
 import org.almostrealism.audio.computations.DefaultEnvelopeComputation;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.filter.AdjustableDelayCell;
-import org.almostrealism.audio.filter.AudioCellAdapter;
+import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.audio.filter.AudioPassFilter;
 import org.almostrealism.audio.sources.SineWaveCell;
 import org.almostrealism.audio.sources.ValueSequenceCell;
-import org.almostrealism.audio.sources.WavCell;
+import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.CellAdapter;
-import org.almostrealism.graph.CellPair;
 import org.almostrealism.graph.FilteredCell;
 import org.almostrealism.graph.MultiCell;
 import org.almostrealism.graph.Receptor;
@@ -48,7 +46,7 @@ import org.almostrealism.heredity.ScaleFactor;
 import org.almostrealism.time.Frequency;
 import org.almostrealism.time.Temporal;
 import org.almostrealism.time.TemporalFeatures;
-import org.almostrealism.util.CodeFeatures;
+import org.almostrealism.CodeFeatures;
 
 import java.io.File;
 import java.io.IOException;
@@ -77,7 +75,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 
 	default CellList silence() {
 		CellList cells = new CellList();
-		cells.addRoot(AudioCellAdapter.from(v(0.0)));
+		cells.addRoot(ScalarTemporalCellAdapter.from(v(0.0)));
 		return cells;
 	}
 
@@ -194,7 +192,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		CellList cells = new CellList();
 		Stream.of(files).map(f -> {
 			try {
-				return WavCell.load(f, 1.0, offset, repeat).apply(data.get());
+				return WavFile.load(f, 1.0, offset, repeat).apply(data.get());
 			} catch (IOException e) {
 				e.printStackTrace();
 				return silence().get(0);
@@ -207,7 +205,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		CellList cells = new CellList();
 		Stream.of(waves).map(f -> {
 			try {
-				return WavCell.load(f, 1.0, offset, repeat).apply(data.get());
+				return WavFile.load(f, 1.0, offset, repeat).apply(data.get());
 			} catch (IOException e) {
 				e.printStackTrace();
 				return silence().get(0);
@@ -222,23 +220,23 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 
 	default CellList poly(int count, Supplier<PolymorphicAudioData> data, IntFunction<ProducerComputation<Scalar>> decision, File... choices) {
 		return poly(count, data, decision, Stream.of(choices)
-				.map(f -> (Function<PolymorphicAudioData, AudioCellAdapter>) d -> (AudioCellAdapter) w(data, f).get(0)).
+				.map(f -> (Function<PolymorphicAudioData, ScalarTemporalCellAdapter>) d -> (ScalarTemporalCellAdapter) w(data, f).get(0)).
 				toArray(Function[]::new));
 	}
 
 	default CellList poly(int count, Supplier<PolymorphicAudioData> data, IntFunction<ProducerComputation<Scalar>> decision, Frequency... choices) {
 		return poly(count, data, decision, Stream.of(choices)
-				.map(f -> (Function<PolymorphicAudioData, AudioCellAdapter>) d -> (AudioCellAdapter) w(data, f).get(0)).
+				.map(f -> (Function<PolymorphicAudioData, ScalarTemporalCellAdapter>) d -> (ScalarTemporalCellAdapter) w(data, f).get(0)).
 				toArray(Function[]::new));
 	}
 
 	default CellList poly(int count, Supplier<PolymorphicAudioData> data, IntFunction<ProducerComputation<Scalar>> decision,
-						  Function<PolymorphicAudioData, AudioCellAdapter>... choices) {
+						  Function<PolymorphicAudioData, ScalarTemporalCellAdapter>... choices) {
 		return poly(count, i -> data.get(), decision, choices);
 	}
 
 	default CellList poly(int count, IntFunction<PolymorphicAudioData> data, IntFunction<ProducerComputation<Scalar>> decision,
-						  Function<PolymorphicAudioData, AudioCellAdapter>... choices) {
+						  Function<PolymorphicAudioData, ScalarTemporalCellAdapter>... choices) {
 		CellList cells = new CellList();
 		IntStream.range(0, count).mapToObj(i -> new PolymorphicAudioCell(data.apply(i), decision.apply(i), choices)).forEach(cells::addRoot);
 		return cells;
@@ -479,9 +477,9 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 //		List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> cellChoices =
 //				IntStream.range(0, segments).map(choices).mapToObj(cells::get)
 //						.map(c -> (Function<PolymorphicAudioData, ? extends AudioCellAdapter>) data -> (AudioCellAdapter) c).collect(Collectors.toList());
-		List<Function<PolymorphicAudioData, ? extends AudioCellAdapter>> cellChoices =
+		List<Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>> cellChoices =
 				cells.stream()
-						.map(c -> (Function<PolymorphicAudioData, ? extends AudioCellAdapter>) data -> (AudioCellAdapter) c).collect(Collectors.toList());
+						.map(c -> (Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>) data -> (ScalarTemporalCellAdapter) c).collect(Collectors.toList());
 		DynamicAudioCell cell = new DynamicAudioCell(v(1).multiply(p(out)), cellChoices);
 		ValueSequenceCell c = (ValueSequenceCell) seq(i -> v((2.0 * choices.applyAsInt(i) + 1) / (2.0 * cells.size())), v(duration), segments).get(0);
 		c.setReceptor(a(p(out)));
@@ -522,7 +520,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 
 		IntStream.range(0, wavs.getCount())
 				.mapToObj(wavs::get)
-				.map(wav -> new WavCell(wav, OutputLine.sampleRate))
+				.map(wav -> new WaveCell(wav, OutputLine.sampleRate))
 				.forEach(newCells::addRoot);
 		CellList fc = cells;
 		newCells.getFinals().add(() -> fc.reset());

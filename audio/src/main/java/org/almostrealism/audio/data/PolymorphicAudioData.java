@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,19 @@
 
 package org.almostrealism.audio.data;
 
-import org.almostrealism.algebra.PairPool;
-import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.sources.PolynomialCellData;
 import org.almostrealism.audio.sources.SineWaveCellData;
-import org.almostrealism.audio.sources.WavCellData;
+import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.hardware.MemoryData;
 import org.almostrealism.hardware.PooledMem;
 
-public class PolymorphicAudioData extends ScalarBank implements SineWaveCellData, WavCellData, AudioFilterData, ValueSequenceData, PolynomialCellData {
-	public static final int SIZE = 15;
-
+public class PolymorphicAudioData extends DefaultWaveCellData implements SineWaveCellData, AudioFilterData, ValueSequenceData, PolynomialCellData {
 	public PolymorphicAudioData() {
-		super(SIZE);
+		super();
 	}
 
 	public PolymorphicAudioData(MemoryData delegate, int delegateOffset) {
-		super(SIZE, delegate, delegateOffset, null);
+		super(delegate, delegateOffset);
 	}
 
 	@Override

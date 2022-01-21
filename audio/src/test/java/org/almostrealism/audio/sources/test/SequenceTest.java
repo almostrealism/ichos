@@ -27,6 +27,7 @@ import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.computations.DefaultEnvelopeComputation;
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.audio.sources.SineWaveCell;
 import org.almostrealism.audio.sources.ValueSequenceCell;
 import org.almostrealism.audio.sources.ValueSequencePush;

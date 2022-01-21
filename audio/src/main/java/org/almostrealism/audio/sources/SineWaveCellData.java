@@ -18,8 +18,7 @@ package org.almostrealism.audio.sources;
 
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.ScalarBank;
-import org.almostrealism.audio.data.BaseAudioData;
+import org.almostrealism.graph.temporal.BaseAudioData;
 
 public interface SineWaveCellData extends BaseAudioData {
 	default Scalar notePosition() { return get(3); }
