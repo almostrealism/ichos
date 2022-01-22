@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,8 @@
 package org.almostrealism.audio.computations;
 
 import io.almostrealism.code.HybridScope;
-import io.almostrealism.code.Scope;
+import io.almostrealism.code.OperationMetadata;
+import io.almostrealism.scope.Scope;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
@@ -34,11 +35,12 @@ public class ClipCounter extends DynamicOperationComputationAdapter {
 	@Override
 	public Scope<Void> getScope() {
 		HybridScope<Void> scope = new HybridScope<>(this);
+		scope.setMetadata(new OperationMetadata(getFunctionName(), "ClipCounter"));
 
-		String value = getArgument(2).valueAt(0).getExpression();
-		String min = getArgument(1).valueAt(0).getExpression();
-		String max = getArgument(1).valueAt(1).getExpression();
-		String count = getArgument(0).valueAt(0).getExpression();
+		String value = getArgument(2, 2).valueAt(0).getExpression();
+		String min = getArgument(1, 2).valueAt(0).getExpression();
+		String max = getArgument(1, 2).valueAt(1).getExpression();
+		String count = getArgument(0, 2).valueAt(0).getExpression();
 
 		Consumer<String> code = scope.code();
 		code.accept("if (" + value + " >= " + max + " || " + value

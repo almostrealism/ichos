@@ -17,7 +17,7 @@
 package org.almostrealism.audio;
 
 import io.almostrealism.code.ProducerComputation;
-import io.almostrealism.code.Setup;
+import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.graph.temporal.DefaultWaveCellData;

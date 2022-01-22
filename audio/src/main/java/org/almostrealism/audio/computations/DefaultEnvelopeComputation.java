@@ -16,10 +16,10 @@
 
 package org.almostrealism.audio.computations;
 
-import io.almostrealism.code.ArrayVariable;
+import io.almostrealism.scope.ArrayVariable;
 import io.almostrealism.code.HybridScope;
-import io.almostrealism.code.Scope;
-import io.almostrealism.code.expressions.Expression;
+import io.almostrealism.scope.Scope;
+import io.almostrealism.expression.Expression;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;

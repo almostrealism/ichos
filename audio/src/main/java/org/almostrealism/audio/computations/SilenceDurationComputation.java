@@ -18,7 +18,7 @@
 package org.almostrealism.audio.computations;
 
 import io.almostrealism.code.HybridScope;
-import io.almostrealism.code.Scope;
+import io.almostrealism.scope.Scope;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
 import io.almostrealism.relation.Producer;

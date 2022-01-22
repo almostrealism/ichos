@@ -17,7 +17,7 @@
 package org.almostrealism.audio.sources;
 
 import io.almostrealism.code.ScopeInputManager;
-import io.almostrealism.code.expressions.Expression;
+import io.almostrealism.expression.Expression;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 

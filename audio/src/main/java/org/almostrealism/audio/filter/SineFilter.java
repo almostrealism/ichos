@@ -1,8 +1,7 @@
 package org.almostrealism.audio.filter;
 
-import io.almostrealism.code.Scope;
+import io.almostrealism.scope.Scope;
 import org.almostrealism.graph.ByteFunction;
-import io.almostrealism.code.NameProvider;
 
 public class SineFilter implements ByteFunction<byte[]> {
 	private int x = 0, len = 100;

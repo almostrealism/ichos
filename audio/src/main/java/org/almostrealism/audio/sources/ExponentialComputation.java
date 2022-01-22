@@ -16,13 +16,11 @@
 
 package org.almostrealism.audio.sources;
 
-import io.almostrealism.code.ArrayVariable;
-import io.almostrealism.code.expressions.Expression;
+import io.almostrealism.scope.ArrayVariable;
 import io.almostrealism.relation.Producer;
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
-import io.almostrealism.code.ScopeInputManager;
 
 import java.util.function.Supplier;
 

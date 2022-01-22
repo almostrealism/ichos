@@ -16,7 +16,7 @@
 
 package org.almostrealism.audio.filter;
 
-import io.almostrealism.code.ArrayVariable;
+import io.almostrealism.scope.ArrayVariable;
 import io.almostrealism.code.ScopeInputManager;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;

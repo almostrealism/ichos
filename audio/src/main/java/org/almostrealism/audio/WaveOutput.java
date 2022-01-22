@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import io.almostrealism.code.ComputeRequirement;
 import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
@@ -34,6 +35,7 @@ import org.almostrealism.algebra.computations.PairFromPairBank;
 import org.almostrealism.graph.Receptor;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.hardware.ContextSpecific;
+import org.almostrealism.hardware.Hardware;
 import org.almostrealism.hardware.MemoryBank;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.AcceleratedTimeSeries;
@@ -109,13 +111,21 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 
 	public Supplier<Runnable> export(ScalarBank destination) {
 		if (enableKernelExport) {
-			return () -> () -> {
+			Runnable export = () -> {
 				long start = System.currentTimeMillis();
 				PairFromPairBank pairAt = new PairFromPairBank((Producer) p(data),
 						v(OutputLine.sampleRate).multiply(v(Scalar.class, 0)).add(v(1.0)));
 				pairAt.r().get().kernelEvaluate(destination, new MemoryBank[]{timeline.getValue()});
 				if (enableVerbose)
 					System.out.println("WaveOutput: Wrote " + defaultTimelineFrames + " frames in " + (System.currentTimeMillis() - start) + " msec");
+			};
+
+			return () -> () -> {
+				if (Hardware.getLocalHardware().getComputeContext().isKernelSupported()) {
+					export.run();
+				} else {
+					cc(export, ComputeRequirement.CL);
+				}
 			};
 		} else {
 			return () -> () -> {
