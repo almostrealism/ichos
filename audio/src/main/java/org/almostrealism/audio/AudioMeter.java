@@ -74,7 +74,8 @@ public class AudioMeter implements Receptor<Scalar>, Lifecycle, ScalarFeatures, 
 		OperationList push = new OperationList("AudioMeter Push");
 		push.add(new ClipCounter(() -> new Provider<>(clipCount), v(clipSettings), protein));
 		push.add(new SilenceDurationComputation(() -> new Provider<>(silenceDuration), v(silenceValue), protein));
-		if (forwarding != null) push.add(forwarding.push(protein));
+		if (forwarding != null)  push.add(forwarding.push(protein));
+
 		if (!listeners.isEmpty()) {
 			// push.add(() -> () -> listeners.forEach(listener -> listener.accept(p)));
 			throw new UnsupportedOperationException();

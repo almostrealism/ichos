@@ -31,6 +31,7 @@ import io.almostrealism.code.ComputeRequirement;
 import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.algebra.ScalarProducer;
 import org.almostrealism.algebra.computations.PairFromPairBank;
 import org.almostrealism.graph.Receptor;
 import io.almostrealism.relation.Producer;
@@ -38,6 +39,7 @@ import org.almostrealism.hardware.ContextSpecific;
 import org.almostrealism.hardware.Hardware;
 import org.almostrealism.hardware.MemoryBank;
 import org.almostrealism.hardware.OperationList;
+import org.almostrealism.hardware.computations.MetricComputation;
 import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.time.CursorPair;
 import org.almostrealism.CodeFeatures;
@@ -105,7 +107,11 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		OperationList push = new OperationList("WaveOutput Push");
 		push.add(data.add(temporal(l(p(cursor)), protein)));
-		push.add(cursor.increment(v(1)));
+
+		// push.add(new MetricComputation<>("Incrementing cursor", 100000, p(cursor), 0, 2));
+		push.add(cursor.increment(v(1.0)));
+		// push.add(new MetricComputation<>("Incremented cursor", 100000, p(cursor), 0, 2));
+
 		return push;
 	}
 
@@ -124,6 +130,7 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 				if (Hardware.getLocalHardware().getComputeContext().isKernelSupported()) {
 					export.run();
 				} else {
+					System.out.println("Kernels not supported by " + Hardware.getLocalHardware().getComputeContext() + " - enabling new context");
 					cc(export, ComputeRequirement.CL);
 				}
 			};

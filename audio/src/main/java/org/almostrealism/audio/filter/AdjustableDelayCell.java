@@ -30,6 +30,7 @@ import org.almostrealism.Ops;
 import java.util.function.Supplier;
 
 public class AdjustableDelayCell extends SummationCell implements Adjustable<Scalar>, CodeFeatures {
+	public static double defaultPurgeFrequency = 1.0;
 
 	private final AcceleratedTimeSeries buffer;
 	private CursorPair cursors;
@@ -64,9 +65,9 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 
 	public Producer<Scalar> getScale() { return scale; }
 
+	@Deprecated
 	@Override
 	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
-		// return a(2, p(scale), value);
 		return new OperationList("AdjustableDelayCell Adjustment Update");
 	}
 
@@ -83,10 +84,9 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 		Scalar value = new Scalar();
 
 		OperationList push = new OperationList("AdjustableDelayCell Push");
-		// push.add(a(2, p(cursors), pair(l(p(cursors)), l(p(cursors)).add(v(OutputLine.sampleRate).multiply(delay)))));
 		push.add(buffer.add(temporal(r(p(cursors)), protein)));
 		push.add(a(1, p(value), buffer.valueAt(p(cursors))));
-		push.add(buffer.purge(p(cursors)));
+		push.add(buffer.purge(p(cursors), defaultPurgeFrequency));
 		push.add(cursors.increment(scale));
 		push.add(super.push(p(value)));
 		return push;
