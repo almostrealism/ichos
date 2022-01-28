@@ -18,7 +18,6 @@ package org.almostrealism.audio.filter;
 
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
-import org.almostrealism.graph.Adjustable;
 import org.almostrealism.graph.SummationCell;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.time.Updatable;
@@ -26,7 +25,7 @@ import org.almostrealism.CodeFeatures;
 
 import java.util.function.Supplier;
 
-public class BasicDelayCell extends SummationCell implements Adjustable<Scalar>, CodeFeatures {
+public class BasicDelayCell extends SummationCell implements CodeFeatures {
 	public static int bufferDuration = 10;
 	
 	private double buffer[] = new double[bufferDuration * OutputLine.sampleRate];
@@ -62,11 +61,6 @@ public class BasicDelayCell extends SummationCell implements Adjustable<Scalar>,
 	}
 	
 	public void setUpdatable(Updatable ui) { this.updatable = ui; }
-
-	@Override
-	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
-		return () -> () -> { };
-	}
 
 	@Override
 	public synchronized Supplier<Runnable> push(Producer<Scalar> protein) {

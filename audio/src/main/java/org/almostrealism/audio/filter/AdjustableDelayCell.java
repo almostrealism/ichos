@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.time.CursorPair;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
-import org.almostrealism.graph.Adjustable;
 import org.almostrealism.graph.SummationCell;
 import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.hardware.OperationList;
@@ -29,7 +28,7 @@ import org.almostrealism.Ops;
 
 import java.util.function.Supplier;
 
-public class AdjustableDelayCell extends SummationCell implements Adjustable<Scalar>, CodeFeatures {
+public class AdjustableDelayCell extends SummationCell implements CodeFeatures {
 	public static double defaultPurgeFrequency = 1.0;
 
 	private final AcceleratedTimeSeries buffer;
@@ -64,12 +63,6 @@ public class AdjustableDelayCell extends SummationCell implements Adjustable<Sca
 	public Producer<Scalar> getDelay() { return delay; }
 
 	public Producer<Scalar> getScale() { return scale; }
-
-	@Deprecated
-	@Override
-	public Supplier<Runnable> updateAdjustment(Producer<Scalar> value) {
-		return new OperationList("AdjustableDelayCell Adjustment Update");
-	}
 
 	@Override
 	public Supplier<Runnable> setup() {
