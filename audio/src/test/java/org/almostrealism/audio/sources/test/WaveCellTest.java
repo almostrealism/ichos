@@ -50,7 +50,6 @@ public class WaveCellTest implements CellFeatures, TestFeatures {
 		});
 
 		OperationList l = (OperationList) cell.push(v(0.0));
-		System.out.println(((AcceleratedComputationOperation) l.get(0).get()).getFunctionDefinition());
 
 		Runnable r = l.get();
 		IntStream.range(0, 100).forEach(i -> r.run());

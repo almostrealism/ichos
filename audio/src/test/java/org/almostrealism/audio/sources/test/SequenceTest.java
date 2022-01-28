@@ -68,7 +68,6 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		data.setWaveLength(1.0);
 
 		DynamicAcceleratedOperation op = (DynamicAcceleratedOperation) tick.get();
-		System.out.println(op.getFunctionDefinition());
 		op.run();
 		assertEquals(1.0, data.wavePosition());
 	}
