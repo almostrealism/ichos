@@ -22,9 +22,8 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarBankHeap;
-import org.almostrealism.algebra.computations.Choice;
+import org.almostrealism.algebra.computations.Switch;
 import org.almostrealism.audio.data.PolymorphicAudioData;
-import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.hardware.ContextSpecific;
@@ -128,7 +127,7 @@ public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter i
 		if (parallel) {
 			return getCellSet().stream().map(Cell::setup).collect(OperationList.collector());
 		} else {
-			return new Choice(decision,
+			return new Switch(decision,
 					cells.stream().map(cell -> (Computation) cell.setup())
 							.collect(Collectors.toList()));
 		}
@@ -140,11 +139,11 @@ public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter i
 
 		if (parallel) {
 			getCellSet().stream().map(cell -> cell.push(protein)).forEach(push::add);
-			push.add(new Choice(decision, storage.stream()
+			push.add(new Switch(decision, storage.stream()
 					.map(v -> (Computation) getReceptor().push(p(v)))
 					.collect(Collectors.toList())));
 		} else {
-			push.add(new Choice(decision,
+			push.add(new Switch(decision,
 					cells.stream().map(cell -> (Computation) cell.push(protein))
 							.collect(Collectors.toList())));
 			push.add(getReceptor().push(p(storage.get(0))));
@@ -158,7 +157,7 @@ public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter i
 		if (parallel) {
 			return getCellSet().stream().map(ScalarTemporalCellAdapter::tick).collect(OperationList.collector());
 		} else {
-			return new Choice(decision,
+			return new Switch(decision,
 					cells.stream().map(ScalarTemporalCellAdapter::tick).map(v -> (Computation) v)
 							.collect(Collectors.toList()));
 		}

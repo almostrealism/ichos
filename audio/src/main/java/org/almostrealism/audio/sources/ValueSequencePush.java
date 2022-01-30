@@ -20,12 +20,12 @@ import io.almostrealism.code.HybridScope;
 import io.almostrealism.code.ScopeInputManager;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.computations.Choice;
+import org.almostrealism.algebra.computations.Switch;
 import org.almostrealism.audio.data.ValueSequenceData;
 import org.almostrealism.CodeFeatures;
 
 public class ValueSequencePush extends ValueSequenceComputation implements CodeFeatures {
-	private Choice choice;
+	private Switch choice;
 
 	public ValueSequencePush(ValueSequenceData data, Producer<Scalar> durationFrames, Scalar output, Producer<Scalar>... choices) {
 		this(data, durationFrames, output, true, choices);
@@ -33,7 +33,7 @@ public class ValueSequencePush extends ValueSequenceComputation implements CodeF
 
 	public ValueSequencePush(ValueSequenceData data, Producer<Scalar> durationFrames, Scalar output, boolean repeat, Producer<Scalar>... choices) {
 		super(data, durationFrames, output, repeat, choices);
-		choice = new Choice(scalarsDivide(wavePosition(), durationFrames()),
+		choice = new Switch(scalarsDivide(wavePosition(), durationFrames()),
 						choices(in -> a(1, output(), in)));
 	}
 
