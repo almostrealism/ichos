@@ -11,6 +11,7 @@
 package org.almostrealism.audio;
 
 import io.almostrealism.relation.Producer;
+import org.almostrealism.Ops;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarBankHeap;
@@ -679,10 +680,12 @@ public class WavFile {
 
 	public static Function<WaveCellData, WaveCell> load(File f, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) throws IOException {
 		WaveData waveform = WaveData.load(f);
-		return data -> new WaveCell(data, waveform.getWave(), waveform.getSampleRate(), amplitude, offset, repeat);
+		return data -> new WaveCell(data, waveform.getWave(), waveform.getSampleRate(), amplitude, offset,
+				repeat, Ops.ops().v(0.0), Ops.ops().v(waveform.getWave().getCount()));
 	}
 
 	public static Function<WaveCellData, WaveCell> load(WaveData w, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) throws IOException {
-		return data -> new WaveCell(data, w.getWave(), w.getSampleRate(), amplitude, offset, repeat);
+		return data -> new WaveCell(data, w.getWave(), w.getSampleRate(), amplitude, offset,
+				repeat, Ops.ops().v(0.0), Ops.ops().v(w.getWave().getCount()));
 	}
 }
