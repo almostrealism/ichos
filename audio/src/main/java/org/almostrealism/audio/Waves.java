@@ -39,16 +39,24 @@ import java.util.stream.IntStream;
 public class Waves extends ArrayList<Waves> implements CodeFeatures {
 	private ScalarBank leaf;
 	private int pos, len;
+	private String source;
 
-	public Waves() { }
+	public Waves() { this(null); }
 
-	public Waves(ScalarBank leaf) { this(leaf, 0, leaf.getCount()); }
+	public Waves(String source) { this.source = source; }
 
-	public Waves(ScalarBank leaf, int pos, int len) {
+	public Waves(String source, ScalarBank leaf) {
+		this(source, leaf, 0, leaf.getCount());
+	}
+
+	public Waves(String source, ScalarBank leaf, int pos, int len) {
+		this.source = source;
 		this.leaf = (ScalarBank) leaf.getRootDelegate();
 		this.pos = leaf.getOffset() + pos;
 		this.len = len;
 	}
+
+	public String getSource() { return source; }
 
 	public WaveCell getChoiceCell(Producer<Scalar> decision, Producer<Scalar> offset, Producer<Scalar> duration) {
 		Map<ScalarBank, List<Segment>> segmentsByBank = getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
@@ -74,12 +82,17 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 
 	public Segment getSegment() {
 		if (!isLeaf()) throw new UnsupportedOperationException();
-		return new Segment(leaf, pos, len);
+		return new Segment(source, leaf, pos, len);
 	}
 
 	public List<Segment> getSegments() {
 		if (isLeaf()) return Collections.singletonList(getSegment());
 		return stream().map(Waves::getSegments).flatMap(List::stream).collect(Collectors.toList());
+	}
+
+	public Segment getSegmentChoice(double decision) {
+		List<Segment> segments = getSegments();
+		return segments.get((int) (decision * segments.size()));
 	}
 
 	public boolean isLeaf() { return leaf != null; }
@@ -112,8 +125,8 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 		if (!isLeaf()) throw new UnsupportedOperationException();
 
 		return IntStream.range(0, len / frames)
-				.mapToObj(i -> new Waves(leaf, pos + i * frames, frames))
-				.collect(Collectors.toCollection(Waves::new));
+				.mapToObj(i -> new Waves(source, leaf, pos + i * frames, frames))
+				.collect(Collectors.toCollection(() -> new Waves(source)));
 	}
 
 	public static Waves load(File f) throws IOException {
@@ -128,19 +141,21 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 		double data[][] = new double[w.getNumChannels()][(int) w.getNumFrames()];
 		w.readFrames(data, (int) w.getFramesRemaining());
 
-		return new Waves(WavFile.channel(data, 0));
+		return new Waves(f.getName(), WavFile.channel(data, 0));
 	}
 
 	public static class Segment {
+		private String sourceText;
 		private ScalarBank source;
 		private int pos, len;
 
-		public Segment(ScalarBank source, int pos, int len) {
+		public Segment(String sourceText, ScalarBank source, int pos, int len) {
 			this.source = source;
 			this.pos = pos;
 			this.len = len;
 		}
 
+		public String getSourceText() { return sourceText; }
 		public ScalarBank getSource() { return source; }
 		public int getPosition() { return pos; }
 		public int getLength() { return len; }
