@@ -92,6 +92,7 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 
 	public Segment getSegmentChoice(double decision) {
 		List<Segment> segments = getSegments();
+		if (segments.isEmpty()) return null;
 		return segments.get((int) (decision * segments.size()));
 	}
 
@@ -150,6 +151,7 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 		private int pos, len;
 
 		public Segment(String sourceText, ScalarBank source, int pos, int len) {
+			this.sourceText = sourceText;
 			this.source = source;
 			this.pos = pos;
 			this.len = len;
