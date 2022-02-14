@@ -16,6 +16,9 @@
 
 package org.almostrealism.audio;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.CodeFeatures;
 import org.almostrealism.algebra.Scalar;
@@ -24,11 +27,17 @@ import org.almostrealism.algebra.computations.ScalarChoice;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.time.Frequency;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -36,14 +45,15 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class Waves extends ArrayList<Waves> implements CodeFeatures {
+public class Waves implements CodeFeatures {
+	private List<Waves> children;
 	private ScalarBank leaf;
-	private int pos, len;
+	private int pos = -1, len = -1;
 	private String source;
 
 	public Waves() { this(null); }
 
-	public Waves(String source) { this.source = source; }
+	public Waves(String source) { this.source = source; this.children = new ArrayList<>(); }
 
 	public Waves(String source, ScalarBank leaf) {
 		this(source, leaf, 0, leaf.getCount());
@@ -56,7 +66,17 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 		this.len = len;
 	}
 
+	public List<Waves> getChildren() { return children; }
+	public void setChildren(List<Waves> children) { this.children = children; }
+
+	public int getPos() { return pos; }
+	public void setPos(int pos) { this.pos = pos; }
+
+	public int getLen() { return len; }
+	public void setLen(int len) { this.len = len; }
+
 	public String getSource() { return source; }
+	public void setSource(String source) { this.source = source; }
 
 	public WaveCell getChoiceCell(Producer<Scalar> decision, Producer<Scalar> offset, Producer<Scalar> duration) {
 		Map<ScalarBank, List<Segment>> segmentsByBank = getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
@@ -80,14 +100,16 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 		return new WaveCell(source, OutputLine.sampleRate, 1.0, offset, duration, positionChoice, lengthChoice);
 	}
 
+	@JsonIgnore
 	public Segment getSegment() {
 		if (!isLeaf()) throw new UnsupportedOperationException();
 		return new Segment(source, leaf, pos, len);
 	}
 
+	@JsonIgnore
 	public List<Segment> getSegments() {
 		if (isLeaf()) return Collections.singletonList(getSegment());
-		return stream().map(Waves::getSegments).flatMap(List::stream).collect(Collectors.toList());
+		return getChildren().stream().map(Waves::getSegments).flatMap(List::stream).collect(Collectors.toList());
 	}
 
 	public Segment getSegmentChoice(double decision) {
@@ -96,7 +118,8 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 		return segments.get((int) (decision * segments.size()));
 	}
 
-	public boolean isLeaf() { return leaf != null; }
+	@JsonIgnore
+	public boolean isLeaf() { return leaf != null || (pos > -1 && len > -1); }
 
 	public void addSplits(Collection<File> files, double bpm, Double... splits) {
 		addSplits(files, bpm(bpm), splits);
@@ -109,7 +132,7 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 
 		files.stream().map(file -> {
 					try {
-						return Waves.load(file, w -> w.getSampleRate() == OutputLine.sampleRate);
+						return Waves.loadAudio(file, w -> w.getSampleRate() == OutputLine.sampleRate);
 					} catch (UnsupportedOperationException | IOException e) {
 						return null;
 					}
@@ -119,15 +142,49 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 								.mapToDouble(duration -> duration)
 								.mapToInt(frames -> (int) frames)
 								.mapToObj(wav::split))
-				.forEach(this::add);
+				.forEach(this.getChildren()::add);
 	}
 
 	public Waves split(int frames) {
 		if (!isLeaf()) throw new UnsupportedOperationException();
 
-		return IntStream.range(0, len / frames)
+		Waves waves = new Waves(source);
+		IntStream.range(0, len / frames)
 				.mapToObj(i -> new Waves(source, leaf, pos + i * frames, frames))
-				.collect(Collectors.toCollection(() -> new Waves(source)));
+				.forEach(w -> waves.getChildren().add(w));
+		return waves;
+	}
+
+	public void refreshAudioData() throws IOException {
+		refreshAudioData(v -> true);
+	}
+
+	public void refreshAudioData(Predicate<WavFile> validator) throws IOException {
+		refreshAudioData(new HashMap<>(), validator);
+	}
+
+	private void refreshAudioData(Map<String, ScalarBank> loadedAudio, Predicate<WavFile> validator) throws IOException {
+		if (isLeaf()) {
+			if (loadedAudio.containsKey(source)) {
+				leaf = loadedAudio.get(source);
+			} else {
+				leaf = loadAudio(new File(source), validator).leaf;
+				loadedAudio.put(source, leaf);
+			}
+		} else {
+			for (Waves w : getChildren()) w.refreshAudioData(loadedAudio, validator);
+		}
+	}
+
+	public String asJson() throws JsonProcessingException {
+		return new ObjectMapper().writeValueAsString(this);
+	}
+
+	public void store(File f) throws IOException {
+		try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f)))) {
+			out.write(asJson());
+			out.flush();
+		}
 	}
 
 	public static Waves load(File f) throws IOException {
@@ -135,6 +192,16 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 	}
 
 	public static Waves load(File f, Predicate<WavFile> validator) throws IOException {
+		Waves waves = new ObjectMapper().readValue(f.toURI().toURL(), Waves.class);
+		waves.refreshAudioData(validator);
+		return waves;
+	}
+
+	public static Waves loadAudio(File f) throws IOException {
+		return loadAudio(f, v -> true);
+	}
+
+	public static Waves loadAudio(File f, Predicate<WavFile> validator) throws IOException {
 		WavFile w = WavFile.openWavFile(f);
 		if (w.getNumFrames() >= Integer.MAX_VALUE) throw new UnsupportedOperationException();
 		if (!validator.test(w)) throw new IOException();
@@ -142,7 +209,7 @@ public class Waves extends ArrayList<Waves> implements CodeFeatures {
 		double data[][] = new double[w.getNumChannels()][(int) w.getNumFrames()];
 		w.readFrames(data, (int) w.getFramesRemaining());
 
-		return new Waves(f.getName(), WavFile.channel(data, 0));
+		return new Waves(f.getAbsolutePath(), WavFile.channel(data, 0));
 	}
 
 	public static class Segment {
