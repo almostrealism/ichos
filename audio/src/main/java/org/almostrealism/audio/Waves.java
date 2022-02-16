@@ -60,10 +60,12 @@ public class Waves implements CodeFeatures {
 	}
 
 	public Waves(String source, ScalarBank leaf, int pos, int len) {
+		// TODO  This will only work if the atomic length of the root delegate is 2 (ScalarBank, ScalarTable, etc)
+		// TODO  Other kinds of data structures will have problems
 		this.source = source;
-		this.leaf = (ScalarBank) leaf.getRootDelegate();
-		this.pos = leaf.getOffset() + pos;
+		this.pos = (leaf.getOffset() / 2) + pos;
 		this.len = len;
+		this.leaf = (ScalarBank) leaf.getRootDelegate();
 	}
 
 	public List<Waves> getChildren() { return children; }
@@ -121,11 +123,11 @@ public class Waves implements CodeFeatures {
 	@JsonIgnore
 	public boolean isLeaf() { return leaf != null || (pos > -1 && len > -1); }
 
-	public void addSplits(Collection<File> files, double bpm, Double... splits) {
-		addSplits(files, bpm(bpm), splits);
+	public void addSplits(Collection<File> files, double bpm, double silenceThreshold, Double... splits) {
+		addSplits(files, bpm(bpm), silenceThreshold, splits);
 	}
 
-	public void addSplits(Collection<File> files, Frequency bpm, Double... splits) {
+	public void addSplits(Collection<File> files, Frequency bpm, double silenceThreshold, Double... splits) {
 		if (isLeaf()) throw new UnsupportedOperationException();
 
 		List<Double> sizes = List.of(splits);
@@ -141,16 +143,17 @@ public class Waves implements CodeFeatures {
 								.map(beats -> bpm.l(beats) * OutputLine.sampleRate)
 								.mapToDouble(duration -> duration)
 								.mapToInt(frames -> (int) frames)
-								.mapToObj(wav::split))
+								.mapToObj(f -> wav.split(f, silenceThreshold)))
 				.forEach(this.getChildren()::add);
 	}
 
-	public Waves split(int frames) {
+	public Waves split(int frames, double silenceThreshold) {
 		if (!isLeaf()) throw new UnsupportedOperationException();
 
 		Waves waves = new Waves(source);
 		IntStream.range(0, len / frames)
 				.mapToObj(i -> new Waves(source, leaf, pos + i * frames, frames))
+				.filter(w -> w.getSegment().range().length().getValue() > (silenceThreshold * frames))
 				.forEach(w -> waves.getChildren().add(w));
 		return waves;
 	}
@@ -228,5 +231,6 @@ public class Waves implements CodeFeatures {
 		public ScalarBank getSource() { return source; }
 		public int getPosition() { return pos; }
 		public int getLength() { return len; }
+		public ScalarBank range() { return source.range(pos, len); }
 	}
 }

@@ -26,6 +26,7 @@ import org.almostrealism.util.TestFeatures;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 public class WavesTest implements CellFeatures, TestFeatures {
@@ -36,10 +37,29 @@ public class WavesTest implements CellFeatures, TestFeatures {
 		Waves waves = new Waves();
 		waves.addSplits(
 				List.of(new File("/Users/michael/AlmostRealism/ringsdesktop/Stems/001 Kicks 1.7_1.wav"),
-						new File("/Users/michael/AlmostRealism/ringsdesktop/Stems/002 Percussion 1.6_1.wav")),
-				bpm(116.0), 1.0);
-		CellList cells = cells(1, i -> waves.getChoiceCell(v(0.5), v(0.0), v(bpm(116.0).l(1))));
-		cells = cells.o(i -> new File("results/waves-splits-test.wav"));
+						new File("/Users/michael/AlmostRealism/ringsdesktop/Stems/002 Percussion 1.6_1.wav"),
+						new File("/Users/michael/AlmostRealism/ringsdesktop/Stems/006 Orchestra 1.5_1.wav")),
+				bpm(116.0), Math.pow(10, -6), 1.0);
+		CellList cells = cells(3, i -> waves.getChoiceCell(v(choose(i)), v(0.0), v(bpm(116.0).l(1))));
+		cells = cells.sum().o(i -> new File("results/waves-splits-test-" + i + ".wav"));
 		cells.sec(10).get().run();
+	}
+
+	private double choose(int i) {
+		if (i == 0) {
+			return 0.0;
+		} else if (i == 1) {
+			return 0.5;
+ 		} else if (i == 2) {
+			return 0.99;
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	@Test
+	public void choice() throws IOException {
+		Waves waves = Waves.load(new File("sources.json"));
+		System.out.println(waves.getSegmentChoice(0.4914).getSourceText());
 	}
 }
