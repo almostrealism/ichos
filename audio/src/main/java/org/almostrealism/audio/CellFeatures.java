@@ -367,18 +367,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 	}
 
 	default CellList d(CellList cells, IntFunction<Producer<Scalar>> delay, IntFunction<Producer<Scalar>> scale) {
-		CellList layer = new CellList(cells);
-		Iterator<Cell<Scalar>> itr = cells.iterator();
-
-		for (int i = 0; itr.hasNext(); i++) {
-			AdjustableDelayCell d = new AdjustableDelayCell(delay.apply(i), scale.apply(i));
-			Cell<Scalar> c = itr.next();
-
-			c.setReceptor(d);
-			layer.add(d);
-		}
-
-		return layer;
+		return map(cells, i -> new AdjustableDelayCell(delay.apply(i), scale.apply(i)));
 	}
 
 	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
