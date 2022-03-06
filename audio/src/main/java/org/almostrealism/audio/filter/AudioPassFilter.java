@@ -40,7 +40,7 @@ public class AudioPassFilter implements TemporalFactor<Scalar>, Lifecycle, CodeF
 
 	public AudioPassFilter(int sampleRate, AudioFilterData data, Producer<Scalar> frequency, Producer<Scalar> resonance, boolean high) {
 		this.data = data;
-		this.frequency = frequency;
+		this.frequency = bound(frequency, 0.0, 20000);
 		this.resonance = resonance;
 		this.high = high;
 		setSampleRate(sampleRate);
