@@ -26,8 +26,9 @@ import org.almostrealism.algebra.computations.Switch;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.graph.Cell;
-import org.almostrealism.hardware.ContextSpecific;
+import org.almostrealism.hardware.ctx.ContextSpecific;
 import org.almostrealism.hardware.OperationList;
+import org.almostrealism.hardware.ctx.DefaultContextSpecific;
 
 import java.util.HashSet;
 import java.util.List;
@@ -170,7 +171,7 @@ public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter i
 	}
 
 	public static void setHeap(Supplier<ScalarBankHeap> create, Consumer<ScalarBankHeap> destroy) {
-		heap = new ContextSpecific<>(create, destroy);
+		heap = new DefaultContextSpecific<>(create, destroy);
 		heap.init();
 	}
 

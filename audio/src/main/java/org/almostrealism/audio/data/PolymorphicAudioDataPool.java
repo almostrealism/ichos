@@ -17,8 +17,9 @@
 package org.almostrealism.audio.data;
 
 import org.almostrealism.graph.temporal.DefaultWaveCellData;
-import org.almostrealism.hardware.ContextSpecific;
+import org.almostrealism.hardware.ctx.ContextSpecific;
 import org.almostrealism.hardware.Hardware;
+import org.almostrealism.hardware.ctx.DefaultContextSpecific;
 import org.almostrealism.hardware.mem.MemoryPool;
 
 import java.util.Optional;
@@ -43,7 +44,7 @@ public class PolymorphicAudioDataPool extends MemoryPool<DefaultWaveCellData> {
 	private static synchronized void doInitPool() {
 		int size = Hardware.getLocalHardware().getDefaultPoolSize() / 50;
 		if (size > 0) {
-			local = new ContextSpecific<>(() -> new PolymorphicAudioDataPool(size), pool -> pool.destroy());
+			local = new DefaultContextSpecific<>(() -> new PolymorphicAudioDataPool(size), pool -> pool.destroy());
 			local.init();
 		}
 	}

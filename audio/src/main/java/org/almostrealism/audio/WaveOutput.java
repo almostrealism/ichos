@@ -31,15 +31,14 @@ import io.almostrealism.code.ComputeRequirement;
 import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
-import org.almostrealism.algebra.ScalarProducer;
 import org.almostrealism.algebra.computations.PairFromPairBank;
 import org.almostrealism.graph.Receptor;
 import io.almostrealism.relation.Producer;
-import org.almostrealism.hardware.ContextSpecific;
+import org.almostrealism.hardware.ctx.ContextSpecific;
 import org.almostrealism.hardware.Hardware;
 import org.almostrealism.hardware.MemoryBank;
 import org.almostrealism.hardware.OperationList;
-import org.almostrealism.hardware.computations.MetricComputation;
+import org.almostrealism.hardware.ctx.DefaultContextSpecific;
 import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.time.CursorPair;
 import org.almostrealism.CodeFeatures;
@@ -53,7 +52,7 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	public static ContextSpecific<ScalarBank> timeline;
 
 	static {
-		timeline = new ContextSpecific<>(
+		timeline = new DefaultContextSpecific<>(
 				() -> {
 					ScalarBank data = new ScalarBank(defaultTimelineFrames);
 					List<Double> values = IntStream.range(0, defaultTimelineFrames)

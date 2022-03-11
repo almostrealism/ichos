@@ -18,7 +18,8 @@ import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.graph.temporal.WaveCellData;
-import org.almostrealism.hardware.ContextSpecific;
+import org.almostrealism.hardware.ctx.ContextSpecific;
+import org.almostrealism.hardware.ctx.DefaultContextSpecific;
 
 import java.io.*;
 import java.util.Optional;
@@ -178,7 +179,7 @@ public class WavFile {
 	}
 
 	public static void setHeap(Supplier<ScalarBankHeap> create, Consumer<ScalarBankHeap> destroy) {
-		heap = new ContextSpecific<>(create, destroy);
+		heap = new DefaultContextSpecific<>(create, destroy);
 		heap.init();
 	}
 

@@ -24,20 +24,18 @@ import org.almostrealism.CodeFeatures;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.ScalarChoice;
+import org.almostrealism.audio.data.WaveDataProvider;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.time.Frequency;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,25 +45,23 @@ import java.util.stream.IntStream;
 
 public class Waves implements CodeFeatures {
 	private List<Waves> children;
-	private ScalarBank leaf;
+	private WaveDataProvider source;
 	private int pos = -1, len = -1;
-	private String source;
+	private String sourceName;
 
 	public Waves() { this(null); }
 
-	public Waves(String source) { this.source = source; this.children = new ArrayList<>(); }
+	public Waves(String sourceName) { this.sourceName = sourceName; this.children = new ArrayList<>(); }
 
-	public Waves(String source, ScalarBank leaf) {
-		this(source, leaf, 0, leaf.getCount());
+	public Waves(String sourceName, WaveDataProvider source) {
+		this(sourceName, source, 0, source.getCount());
 	}
 
-	public Waves(String source, ScalarBank leaf, int pos, int len) {
-		// TODO  This will only work if the atomic length of the root delegate is 2 (ScalarBank, ScalarTable, etc)
-		// TODO  Other kinds of data structures will have problems
-		this.source = source;
-		this.pos = (leaf.getOffset() / 2) + pos;
+	public Waves(String sourceName, WaveDataProvider source, int pos, int len) {
+		this.sourceName = sourceName;
+		this.pos = pos;
 		this.len = len;
-		this.leaf = (ScalarBank) leaf.getRootDelegate();
+		this.source = source;
 	}
 
 	public List<Waves> getChildren() { return children; }
@@ -77,8 +73,11 @@ public class Waves implements CodeFeatures {
 	public int getLen() { return len; }
 	public void setLen(int len) { this.len = len; }
 
-	public String getSource() { return source; }
-	public void setSource(String source) { this.source = source; }
+	public String getSourceName() { return sourceName; }
+	public void setSourceName(String sourceName) { this.sourceName = sourceName; }
+
+	public WaveDataProvider getSource() { return source; }
+	public void setSource(WaveDataProvider source) { this.source = source; }
 
 	public WaveCell getChoiceCell(Producer<Scalar> decision, Producer<Scalar> offset, Producer<Scalar> duration) {
 		Map<ScalarBank, List<Segment>> segmentsByBank = getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
@@ -105,7 +104,7 @@ public class Waves implements CodeFeatures {
 	@JsonIgnore
 	public Segment getSegment() {
 		if (!isLeaf()) throw new UnsupportedOperationException();
-		return new Segment(source, leaf, pos, len);
+		return new Segment(sourceName, source.get().getWave(), pos, len);
 	}
 
 	@JsonIgnore
@@ -121,7 +120,7 @@ public class Waves implements CodeFeatures {
 	}
 
 	@JsonIgnore
-	public boolean isLeaf() { return leaf != null || (pos > -1 && len > -1); }
+	public boolean isLeaf() { return source != null || (pos > -1 && len > -1); }
 
 	public void addSplits(Collection<File> files, double bpm, double silenceThreshold, Double... splits) {
 		addSplits(files, bpm(bpm), silenceThreshold, splits);
@@ -150,33 +149,12 @@ public class Waves implements CodeFeatures {
 	public Waves split(int frames, double silenceThreshold) {
 		if (!isLeaf()) throw new UnsupportedOperationException();
 
-		Waves waves = new Waves(source);
+		Waves waves = new Waves(sourceName);
 		IntStream.range(0, len / frames)
-				.mapToObj(i -> new Waves(source, leaf, pos + i * frames, frames))
+				.mapToObj(i -> new Waves(sourceName, source, pos + i * frames, frames))
 				.filter(w -> w.getSegment().range().length().getValue() > (silenceThreshold * frames))
 				.forEach(w -> waves.getChildren().add(w));
 		return waves;
-	}
-
-	public void refreshAudioData() throws IOException {
-		refreshAudioData(v -> true);
-	}
-
-	public void refreshAudioData(Predicate<WavFile> validator) throws IOException {
-		refreshAudioData(new HashMap<>(), validator);
-	}
-
-	private void refreshAudioData(Map<String, ScalarBank> loadedAudio, Predicate<WavFile> validator) throws IOException {
-		if (isLeaf()) {
-			if (loadedAudio.containsKey(source)) {
-				leaf = loadedAudio.get(source);
-			} else {
-				leaf = loadAudio(new File(source), validator).leaf;
-				loadedAudio.put(source, leaf);
-			}
-		} else {
-			for (Waves w : getChildren()) w.refreshAudioData(loadedAudio, validator);
-		}
 	}
 
 	public String asJson() throws JsonProcessingException {
@@ -191,13 +169,7 @@ public class Waves implements CodeFeatures {
 	}
 
 	public static Waves load(File f) throws IOException {
-		return load(f, v -> true);
-	}
-
-	public static Waves load(File f, Predicate<WavFile> validator) throws IOException {
-		Waves waves = new ObjectMapper().readValue(f.toURI().toURL(), Waves.class);
-		waves.refreshAudioData(validator);
-		return waves;
+		return new ObjectMapper().readValue(f.toURI().toURL(), Waves.class);
 	}
 
 	public static Waves loadAudio(File f) throws IOException {
@@ -212,7 +184,7 @@ public class Waves implements CodeFeatures {
 		double data[][] = new double[w.getNumChannels()][(int) w.getNumFrames()];
 		w.readFrames(data, (int) w.getFramesRemaining());
 
-		return new Waves(f.getAbsolutePath(), WavFile.channel(data, 0));
+		return new Waves(f.getCanonicalPath(), new WaveDataProvider(f.getCanonicalPath()));
 	}
 
 	public static class Segment {
@@ -221,9 +193,11 @@ public class Waves implements CodeFeatures {
 		private int pos, len;
 
 		public Segment(String sourceText, ScalarBank source, int pos, int len) {
+			// TODO  This will only work if the atomic length of the root delegate is 2 (ScalarBank, ScalarTable, etc)
+			// TODO  Other kinds of data structures will have problems
 			this.sourceText = sourceText;
-			this.source = source;
-			this.pos = pos;
+			this.source = (ScalarBank) source.getRootDelegate();
+			this.pos = (source.getOffset() / 2) + pos;
 			this.len = len;
 		}
 
