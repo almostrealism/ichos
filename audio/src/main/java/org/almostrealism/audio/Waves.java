@@ -122,6 +122,22 @@ public class Waves implements CodeFeatures {
 	@JsonIgnore
 	public boolean isLeaf() { return source != null || (pos > -1 && len > -1); }
 
+	public void addFiles(Collection<File> files) {
+		if (isLeaf()) throw new UnsupportedOperationException();
+
+		files.stream().map(file -> {
+					try {
+						return Waves.loadAudio(file, w -> w.getSampleRate() == OutputLine.sampleRate);
+					} catch (UnsupportedOperationException | IOException e) {
+						return null;
+					}
+				}).filter(Objects::nonNull).map(wav -> {
+					Waves waves = new Waves(wav.getSourceName());
+					waves.getChildren().add(wav);
+					return waves;
+				}).forEach(this.getChildren()::add);
+	}
+
 	public void addSplits(Collection<File> files, double bpm, double silenceThreshold, Double... splits) {
 		addSplits(files, bpm(bpm), silenceThreshold, splits);
 	}

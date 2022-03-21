@@ -28,12 +28,17 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import io.almostrealism.code.ComputeRequirement;
+import io.almostrealism.relation.Evaluable;
+import io.almostrealism.relation.Provider;
 import io.almostrealism.uml.Lifecycle;
+import org.almostrealism.Ops;
+import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.PairFromPairBank;
 import org.almostrealism.graph.Receptor;
 import io.almostrealism.relation.Producer;
+import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.ctx.ContextSpecific;
 import org.almostrealism.hardware.Hardware;
 import org.almostrealism.hardware.MemoryBank;
@@ -50,6 +55,8 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 	public static int defaultTimelineFrames = (int) (OutputLine.sampleRate * 180);
 
 	public static ContextSpecific<ScalarBank> timeline;
+	private static KernelizedEvaluable<Scalar> exportKernel;
+	private static Provider<ScalarBank> exportSource;
 
 	static {
 		timeline = new DefaultContextSpecific<>(
@@ -61,6 +68,12 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 					return data;
 				}, ScalarBank::destroy);
 		timeline.init();
+
+		PairFromPairBank pairAt = new PairFromPairBank((Producer) Ops.ops().v(ScalarBank.class, 0, -1),
+				Ops.ops().v(OutputLine.sampleRate).multiply(Ops.ops().v(Scalar.class, 1)).add(Ops.ops().v(1.0)));
+//		PairFromPairBank pairAt = new PairFromPairBank((Producer) () -> exportSource,
+//				Ops.ops().v(OutputLine.sampleRate).multiply(Ops.ops().v(Scalar.class, 1)).add(Ops.ops().v(1.0)));
+		exportKernel = pairAt.r().get();
 	}
 
 	private Supplier<File> file;
@@ -118,9 +131,12 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 		if (enableKernelExport) {
 			Runnable export = () -> {
 				long start = System.currentTimeMillis();
-				PairFromPairBank pairAt = new PairFromPairBank((Producer) p(data),
-						v(OutputLine.sampleRate).multiply(v(Scalar.class, 0)).add(v(1.0)));
-				pairAt.r().get().kernelEvaluate(destination, new MemoryBank[]{timeline.getValue()});
+//				PairFromPairBank pairAt = new PairFromPairBank((Producer) p(data),
+//						v(OutputLine.sampleRate).multiply(v(Scalar.class, 0)).add(v(1.0)));
+//				pairAt.r().get().kernelEvaluate(destination, new MemoryBank[]{timeline.getValue()});
+
+				exportSource = new Provider(data);
+				exportKernel.kernelEvaluate(destination, new MemoryBank[] { data, timeline.getValue() });
 				if (enableVerbose)
 					System.out.println("WaveOutput: Wrote " + defaultTimelineFrames + " frames in " + (System.currentTimeMillis() - start) + " msec");
 			};
