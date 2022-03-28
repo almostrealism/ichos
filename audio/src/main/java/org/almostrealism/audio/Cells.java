@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,4 +26,6 @@ public interface Cells extends TemporalCellular, CellFeatures, Iterable<Cell<Sca
 	default Supplier<Runnable> min(double minutes) { return min(this, minutes); }
 
 	default Supplier<Runnable> sec(double seconds) { return sec(this, seconds); }
+
+	default Supplier<Runnable> sec(double seconds, boolean resetAfter) { return sec(this, seconds, resetAfter); }
 }

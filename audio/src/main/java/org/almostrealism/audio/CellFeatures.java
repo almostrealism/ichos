@@ -525,6 +525,10 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return iter(t, (int) (seconds * OutputLine.sampleRate));
 	}
 
+	default Supplier<Runnable> sec(Temporal t, double seconds, boolean resetAfter) {
+		return iter(t, (int) (seconds * OutputLine.sampleRate), resetAfter);
+	}
+
 	default ScaleFactor sf(double scale) {
 		return sf(new Scalar(scale));
 	}

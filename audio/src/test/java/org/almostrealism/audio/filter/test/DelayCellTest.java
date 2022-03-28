@@ -16,11 +16,10 @@ import java.util.function.Supplier;
 public class DelayCellTest implements CellFeatures {
 	@Test
 	public void delay() {
-		Supplier<Runnable> r =
-				w("Library/Snare Perc DD.wav")
-						.d(i -> v(2.0))
-						.o(i -> new File("results/delay-cell-test.wav"))
-						.sec(6);
+		CellList c = w("Library/Snare Perc DD.wav")
+				.d(i -> v(2.0))
+				.o(i -> new File("results/delay-cell-test.wav"));
+		Supplier<Runnable> r = c.sec(6);
 		r.get().run();
 	}
 

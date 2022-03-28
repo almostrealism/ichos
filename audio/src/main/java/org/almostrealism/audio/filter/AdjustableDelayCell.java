@@ -17,6 +17,7 @@
 package org.almostrealism.audio.filter;
 
 import io.almostrealism.relation.Producer;
+import io.almostrealism.relation.Provider;
 import org.almostrealism.time.CursorPair;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
@@ -72,17 +73,29 @@ public class AdjustableDelayCell extends SummationCell implements CodeFeatures {
 		return setup;
 	}
 
-	@Override
-	public Supplier<Runnable> push(Producer<Scalar> protein) {
-		Scalar value = new Scalar();
+//	@Override
+//	public Supplier<Runnable> push(Producer<Scalar> protein) {
+//		Scalar value = new Scalar();
+//
+//		OperationList push = new OperationList("AdjustableDelayCell Push");
+//		push.add(buffer.add(temporal(r(p(cursors)), protein)));
+//		push.add(a(1, p(value), buffer.valueAt(p(cursors))));
+//		push.add(buffer.purge(p(cursors), defaultPurgeFrequency));
+//		push.add(cursors.increment(scale));
+//		push.add(super.push(p(value)));
+//		return push;
+//	}
 
-		OperationList push = new OperationList("AdjustableDelayCell Push");
-		push.add(buffer.add(temporal(r(p(cursors)), protein)));
-		push.add(a(1, p(value), buffer.valueAt(p(cursors))));
-		push.add(buffer.purge(p(cursors), defaultPurgeFrequency));
-		push.add(cursors.increment(scale));
-		push.add(super.push(p(value)));
-		return push;
+	@Override
+	public Supplier<Runnable> tick() {
+		OperationList tick = new OperationList("AdjustableDelayCell Tick");
+		tick.add(buffer.add(temporal(r(p(cursors)), p(getCachedValue()))));
+		tick.add(a(1, p(getOutputValue()), buffer.valueAt(p(cursors))));
+		tick.add(buffer.purge(p(cursors), defaultPurgeFrequency));
+		tick.add(cursors.increment(scale));
+		tick.add(reset(p(getCachedValue())));
+		tick.add(pushValue());
+		return tick;
 	}
 
 	@Override

@@ -122,6 +122,8 @@ public class Waves implements CodeFeatures {
 	@JsonIgnore
 	public boolean isLeaf() { return source != null || (pos > -1 && len > -1); }
 
+	public void addFiles(File... files) { addFiles(List.of(files)); }
+
 	public void addFiles(Collection<File> files) {
 		if (isLeaf()) throw new UnsupportedOperationException();
 
