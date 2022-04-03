@@ -24,7 +24,10 @@ import org.almostrealism.CodeFeatures;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.ScalarChoice;
+import org.almostrealism.audio.data.FileWaveDataProvider;
 import org.almostrealism.audio.data.WaveDataProvider;
+import org.almostrealism.audio.filter.Envelope;
+import org.almostrealism.audio.filter.EnvelopeProvider;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.time.Frequency;
 
@@ -46,6 +49,7 @@ import java.util.stream.IntStream;
 public class Waves implements CodeFeatures {
 	private List<Waves> children;
 	private WaveDataProvider source;
+	private EnvelopeProvider envelope;
 	private int pos = -1, len = -1;
 	private String sourceName;
 
@@ -78,6 +82,9 @@ public class Waves implements CodeFeatures {
 
 	public WaveDataProvider getSource() { return source; }
 	public void setSource(WaveDataProvider source) { this.source = source; }
+
+	public EnvelopeProvider getEnvelope() { return envelope; }
+	public void setEnvelope(EnvelopeProvider envelope) { this.envelope = envelope; }
 
 	public WaveCell getChoiceCell(Producer<Scalar> decision, Producer<Scalar> offset, Producer<Scalar> duration) {
 		Map<ScalarBank, List<Segment>> segmentsByBank = getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
@@ -202,7 +209,7 @@ public class Waves implements CodeFeatures {
 		double data[][] = new double[w.getNumChannels()][(int) w.getNumFrames()];
 		w.readFrames(data, (int) w.getFramesRemaining());
 
-		return new Waves(f.getCanonicalPath(), new WaveDataProvider(f.getCanonicalPath()));
+		return new Waves(f.getCanonicalPath(), new FileWaveDataProvider(f.getCanonicalPath()));
 	}
 
 	public static class Segment {

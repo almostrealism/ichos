@@ -17,10 +17,9 @@
 package org.almostrealism.audio.sources;
 
 import io.almostrealism.relation.Evaluable;
-import org.almostrealism.audio.Envelope;
+import org.almostrealism.audio.filter.Envelope;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.data.PolymorphicAudioData;
-import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.HardwareFeatures;

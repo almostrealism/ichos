@@ -127,6 +127,14 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return c;
 	}
 
+	default CellList w(WaveData... waves) {
+		return w(PolymorphicAudioData::new, waves);
+	}
+
+	default CellList w(Supplier<PolymorphicAudioData> data, WaveData... waves) {
+		return w(data, null, null, waves);
+	}
+
 	default CellList w(Collection<Frequency> frequencies) {
 		return w(PolymorphicAudioData::new, frequencies);
 	}

@@ -14,10 +14,33 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio.data;
+package org.almostrealism.audio.grains;
 
-import java.util.function.Supplier;
+import org.almostrealism.audio.WaveOutput;
+import org.almostrealism.audio.data.WaveData;
+import org.almostrealism.audio.data.WaveDataProviderAdapter;
 
-public interface WaveDataProvider extends Supplier<WaveData> {
-	int getCount();
+import java.util.UUID;
+
+public class GranularSynthesizer extends WaveDataProviderAdapter {
+	private String key;
+
+	public GranularSynthesizer() {
+		key = "synth://" + UUID.randomUUID().toString();
+	}
+
+	@Override
+	public int getCount() {
+		return WaveOutput.defaultTimelineFrames;
+	}
+
+	@Override
+	public String getKey() {
+		return key;
+	}
+
+	@Override
+	protected WaveData load() {
+		return null;
+	}
 }

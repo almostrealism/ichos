@@ -115,6 +115,8 @@ public class WaveOutput implements Receptor<Scalar>, Lifecycle, CodeFeatures {
 
 	public CursorPair getCursor() { return cursor; }
 
+	public AcceleratedTimeSeries getData() { return data; }
+
 	@Override
 	public Supplier<Runnable> push(Producer<Scalar> protein) {
 		OperationList push = new OperationList("WaveOutput Push");

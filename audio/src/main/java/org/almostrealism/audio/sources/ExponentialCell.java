@@ -16,14 +16,12 @@
 
 package org.almostrealism.audio.sources;
 
-import org.almostrealism.audio.Envelope;
+import org.almostrealism.audio.filter.Envelope;
 import org.almostrealism.audio.SamplingFeatures;
 import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.hardware.HardwareFeatures;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.hardware.OperationList;
-import org.almostrealism.CodeFeatures;
 
 import java.util.function.Supplier;
 

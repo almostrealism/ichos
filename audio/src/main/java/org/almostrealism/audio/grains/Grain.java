@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio.data;
+package org.almostrealism.audio.grains;
 
-import java.util.function.Supplier;
+import org.almostrealism.collect.PackedCollection;
 
-public interface WaveDataProvider extends Supplier<WaveData> {
-	int getCount();
+public class Grain extends PackedCollection {
+	public Grain() {
+		super(3);
+	}
+
+	public double getStart() { return toArray(0, 1)[0]; }
+	public void setStart(double start) { setMem(0, start); }
+
+	public double getDuration() { return toArray(1, 1)[0]; }
+	public void setDuration(double duration) { setMem(1, duration); }
+
+	public double getRate() { return toArray(2, 1)[0]; }
+	public void setRate(double rate) { setMem(2, rate); }
 }
