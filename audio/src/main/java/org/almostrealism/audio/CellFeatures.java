@@ -24,7 +24,7 @@ import org.almostrealism.algebra.ScalarTable;
 import org.almostrealism.audio.computations.DefaultEnvelopeComputation;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.data.WaveData;
-import org.almostrealism.audio.filter.AdjustableDelayCell;
+import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.audio.filter.AudioPassFilter;
 import org.almostrealism.audio.sources.SineWaveCell;
@@ -364,7 +364,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		CellList result = new CellList();
 
 		for (int i = 0; i < count; i++) {
-			result.add(new AdjustableDelayCell(d.apply(i), s.apply(i)));
+			result.add(new AdjustableDelayCell(OutputLine.sampleRate, d.apply(i), s.apply(i)));
 		}
 
 		return result;
@@ -375,7 +375,7 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 	}
 
 	default CellList d(CellList cells, IntFunction<Producer<Scalar>> delay, IntFunction<Producer<Scalar>> scale) {
-		return map(cells, i -> new AdjustableDelayCell(delay.apply(i), scale.apply(i)));
+		return map(cells, i -> new AdjustableDelayCell(OutputLine.sampleRate, delay.apply(i), scale.apply(i)));
 	}
 
 	default CellList m(CellList cells, IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {

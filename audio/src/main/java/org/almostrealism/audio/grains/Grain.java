@@ -16,12 +16,38 @@
 
 package org.almostrealism.audio.grains;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.almostrealism.code.Memory;
 import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.hardware.MemoryData;
 
 public class Grain extends PackedCollection {
 	public Grain() {
 		super(3);
 	}
+
+	public Grain(double start, double duration, double rate) {
+		this();
+		setStart(start);
+		setDuration(duration);
+		setRate(rate);
+	}
+
+	@JsonIgnore
+	@Override
+	public int getCount() { return super.getCount(); }
+
+	@JsonIgnore
+	@Override
+	public Memory getMem() { return super.getMem(); }
+
+	@JsonIgnore
+	@Override
+	public MemoryData getDelegate() { return super.getDelegate(); }
+
+	@JsonIgnore
+	@Override
+	public MemoryData getRootDelegate() { return super.getRootDelegate(); }
 
 	public double getStart() { return toArray(0, 1)[0]; }
 	public void setStart(double start) { setMem(0, start); }

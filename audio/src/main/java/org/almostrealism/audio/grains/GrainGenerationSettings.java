@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio.data;
+package org.almostrealism.audio.grains;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-
-import java.util.function.Supplier;
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-public interface WaveDataProvider extends Supplier<WaveData> {
-	int getCount();
-
-	double getDuration();
+public class GrainGenerationSettings {
+	public double grainPositionMin, grainPositionMax;
+	public double grainDurationMin, grainDurationMax;
+	public double playbackRateMin, playbackRateMax;
 }

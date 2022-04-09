@@ -55,7 +55,7 @@ public class Waves implements CodeFeatures {
 
 	public Waves() { this(null); }
 
-	public Waves(String sourceName) { this.sourceName = sourceName; this.children = new ArrayList<>(); }
+	public Waves(String sourceName) { this(sourceName, null, -1, -1); }
 
 	public Waves(String sourceName, WaveDataProvider source) {
 		this(sourceName, source, 0, source.getCount());
@@ -66,6 +66,7 @@ public class Waves implements CodeFeatures {
 		this.pos = pos;
 		this.len = len;
 		this.source = source;
+		this.children = new ArrayList<>();
 	}
 
 	public List<Waves> getChildren() { return children; }

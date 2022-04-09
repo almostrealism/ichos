@@ -17,6 +17,7 @@
 package org.almostrealism.audio.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.hardware.ctx.ContextSpecific;
@@ -51,11 +52,22 @@ public class FileWaveDataProvider extends WaveDataProviderAdapter {
 	}
 
 	@JsonIgnore
+	@Override
 	public int getCount() {
 		try {
 			long count = WavFile.openWavFile(new File(resourcePath)).getNumFrames();
 			if (count > Integer.MAX_VALUE) throw new UnsupportedOperationException();
 			return (int) count;
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@JsonIgnore
+	@Override
+	public double getDuration() {
+		try {
+			return WavFile.openWavFile(new File(resourcePath)).getDuration();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

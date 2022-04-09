@@ -9,6 +9,8 @@ import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.grains.Grain;
+import org.almostrealism.audio.grains.GrainSet;
+import org.almostrealism.audio.grains.GranularSynthesizer;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.graph.ReceptorCell;
@@ -46,5 +48,13 @@ public class GrainTest implements CellFeatures {
 		System.out.println("GrainTest: Rendering grains...");
 		w(new WaveData(result, OutputLine.sampleRate)).o(i -> new File("results/grain-test.wav")).sec(5).get().run();
 		System.out.println("GrainTest: Done");
+	}
+
+	@Test
+	public void granularSynth() {
+		GranularSynthesizer synth = new GranularSynthesizer();
+		GrainSet set = synth.addFile("Library/organ.wav");
+		set.addGrain(new Grain(0.2, 0.015, 2.0));
+		synth.get().save(new File("results/granular-synth-test.wav"));
 	}
 }

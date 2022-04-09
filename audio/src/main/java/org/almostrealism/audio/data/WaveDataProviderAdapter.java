@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio.data;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.almostrealism.hardware.ctx.ContextSpecific;
 import org.almostrealism.hardware.ctx.DefaultContextSpecific;
 
@@ -37,6 +38,7 @@ public abstract class WaveDataProviderAdapter implements WaveDataProvider {
 
 	protected abstract WaveData load();
 
+	@JsonIgnore
 	@Override
 	public WaveData get() {
 		if (loaded.get(getKey()) == null) {
