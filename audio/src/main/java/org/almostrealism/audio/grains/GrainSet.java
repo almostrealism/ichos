@@ -24,12 +24,14 @@ import java.util.List;
 public class GrainSet {
 	private WaveDataProvider source;
 	private List<Grain> grains;
+	private List<GrainParameters> params;
 
 	public GrainSet() { }
 
 	public GrainSet(WaveDataProvider source) {
 		this.source = source;
 		this.grains = new ArrayList<>();
+		this.params = new ArrayList<>();
 	}
 
 	public WaveDataProvider getSource() { return source; }
@@ -38,6 +40,7 @@ public class GrainSet {
 
 	public void addGrain(Grain grain) {
 		grains.add(grain);
+		params.add(GrainParameters.random());
 	}
 
 	public Grain addGrain(GrainGenerationSettings settings) {
@@ -53,7 +56,15 @@ public class GrainSet {
 		return grains.get(index);
 	}
 
+	public GrainParameters getParams(int index) {
+		return params.get(index);
+	}
+
 	public List<Grain> getGrains() { return grains; }
 
 	public void setGrains(List<Grain> grains) { this.grains = grains; }
+
+	public List<GrainParameters> getParams() { return params; }
+
+	public void setParams(List<GrainParameters> params) { this.params = params; }
 }

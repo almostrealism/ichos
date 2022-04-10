@@ -39,6 +39,7 @@ public class FileWaveDataProvider extends WaveDataProviderAdapter {
 		setResourcePath(resourcePath);
 	}
 
+	@JsonIgnore
 	@Override
 	public String getKey() { return getResourcePath(); }
 

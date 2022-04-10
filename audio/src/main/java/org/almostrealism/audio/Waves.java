@@ -25,6 +25,8 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.ScalarChoice;
 import org.almostrealism.audio.data.FileWaveDataProvider;
+import org.almostrealism.audio.data.ParameterSet;
+import org.almostrealism.audio.data.Parameterized;
 import org.almostrealism.audio.data.WaveDataProvider;
 import org.almostrealism.audio.filter.Envelope;
 import org.almostrealism.audio.filter.EnvelopeProvider;
@@ -86,6 +88,12 @@ public class Waves implements CodeFeatures {
 
 	public EnvelopeProvider getEnvelope() { return envelope; }
 	public void setEnvelope(EnvelopeProvider envelope) { this.envelope = envelope; }
+
+	public void setParameters(ParameterSet params) {
+		if (source instanceof Parameterized) {
+			((Parameterized) source).setParameters(params);
+		}
+	}
 
 	public WaveCell getChoiceCell(Producer<Scalar> decision, Producer<Scalar> offset, Producer<Scalar> duration) {
 		Map<ScalarBank, List<Segment>> segmentsByBank = getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));

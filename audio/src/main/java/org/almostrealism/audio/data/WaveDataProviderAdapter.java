@@ -38,6 +38,8 @@ public abstract class WaveDataProviderAdapter implements WaveDataProvider {
 
 	protected abstract WaveData load();
 
+	protected void unload() { clearKey(getKey()); }
+
 	@JsonIgnore
 	@Override
 	public WaveData get() {
