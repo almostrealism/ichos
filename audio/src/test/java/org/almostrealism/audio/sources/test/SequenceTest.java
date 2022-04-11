@@ -26,6 +26,8 @@ import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.computations.DefaultEnvelopeComputation;
+import org.almostrealism.audio.data.ParameterFunctionSequence;
+import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.audio.sources.SineWaveCell;
@@ -197,6 +199,27 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 						.gr(bpm(128).l(count), count * 2, i -> i % 2 == 0 ? 0 : 1))
 				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
 				.sum().o(i -> new File("results/mix-test.wav"));
+
+		cells.sec(bpm(128).l(count)).get().run();
+	}
+
+	@Test
+	public void parameterizedMix() {
+		int count = 32;
+
+		ParameterSet params = new ParameterSet();
+		ParameterFunctionSequence hatSeq = ParameterFunctionSequence.random(64);
+		ParameterFunctionSequence snareSeq = ParameterFunctionSequence.random(32);
+
+		CellList cells = cells(
+				silence().and(w(v(bpm(128).l(1)), "Library/BD 909 Color 06.wav"))
+						.gr(bpm(128).l(count), count, i -> 1),
+				silence().and(w(v(bpm(128).l(1)), "Library/Snare Perc DD.wav"))
+						.gr(bpm(128).l(count), count, i -> (int) (Math.max(0, snareSeq.apply(i).apply(params)) * 2)),
+				silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
+						.gr(bpm(128).l(count), count * 2, i -> (int) (Math.max(0, hatSeq.apply(i).apply(params)) * 2)))
+				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
+				.sum().o(i -> new File("results/param-mix-test.wav"));
 
 		cells.sec(bpm(128).l(count)).get().run();
 	}

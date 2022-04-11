@@ -54,6 +54,12 @@ public class Grain extends PackedCollection {
 
 	@JsonIgnore
 	@Override
+	public int getOffset() {
+		return super.getOffset();
+	}
+
+	@JsonIgnore
+	@Override
 	public int getCount() { return super.getCount(); }
 
 	@JsonIgnore
