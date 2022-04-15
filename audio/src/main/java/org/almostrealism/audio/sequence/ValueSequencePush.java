@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio.sources;
+package org.almostrealism.audio.sequence;
 
 import io.almostrealism.code.HybridScope;
 import io.almostrealism.code.ScopeInputManager;

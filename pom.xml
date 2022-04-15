@@ -22,8 +22,8 @@
 						<arg>-h</arg>
 						<arg>target/headers</arg>
 					</compilerArgs>
-					<source>11</source>
-					<target>11</target>
+					<source>15</source>
+					<target>15</target>
 				</configuration>
 			</plugin>
 		</plugins>

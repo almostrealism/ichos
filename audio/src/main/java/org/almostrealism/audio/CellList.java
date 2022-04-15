@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.IntFunction;
+import java.util.function.IntToDoubleFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
@@ -104,6 +105,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList gr(double duration, int segments, IntUnaryOperator choices) {
 		return gr(this, duration, segments, choices);
+	}
+
+	public CellList grid(double duration, int segments, IntToDoubleFunction choices) {
+		return grid(this, duration, segments, choices);
 	}
 
 	public CellList f(IntFunction<Factor<Scalar>> filter) {

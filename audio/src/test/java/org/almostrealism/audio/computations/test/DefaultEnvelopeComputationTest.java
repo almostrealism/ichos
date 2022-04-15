@@ -33,7 +33,6 @@ public class DefaultEnvelopeComputationTest implements TestFeatures {
 	@Test
 	public void evaluate() {
 		KernelizedEvaluable<Scalar> s = computation().get();
-		((OperationAdapter) s).compile();
 
 		input.setValue(0.5);
 		assertEquals(0.7071067811865, s.evaluate().getValue());
