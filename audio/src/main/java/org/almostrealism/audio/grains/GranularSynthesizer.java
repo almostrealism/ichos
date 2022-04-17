@@ -17,19 +17,20 @@
 package org.almostrealism.audio.grains;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarProducer;
-import org.almostrealism.algebra.computations.ScalarSum;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WaveOutput;
+import org.almostrealism.audio.data.DynamicWaveDataProvider;
 import org.almostrealism.audio.data.FileWaveDataProvider;
 import org.almostrealism.audio.data.ParameterSet;
-import org.almostrealism.audio.data.Parameterized;
+import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
 import org.almostrealism.audio.data.WaveData;
-import org.almostrealism.audio.data.WaveDataProviderAdapter;
+import org.almostrealism.audio.data.WaveDataProvider;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.graph.ReceptorCell;
@@ -40,16 +41,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class GranularSynthesizer extends WaveDataProviderAdapter implements Parameterized, CellFeatures {
+public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory, CellFeatures {
 	public static double ampModWavelengthMin = 0.1;
 	public static double ampModWavelengthMax = 10;
 
-	private String key;
+	private double gain;
 	private List<GrainSet> grains;
-	private ParameterSet params;
 
 	public GranularSynthesizer() {
-		key = "synth://" + UUID.randomUUID().toString();
 		grains = new ArrayList<>();
 	}
 
@@ -61,9 +60,16 @@ public class GranularSynthesizer extends WaveDataProviderAdapter implements Para
 	}
 
 	@JsonIgnore
-	@Override
 	public double getDuration() {
 		return 10;
+	}
+
+	public double getGain() {
+		return gain;
+	}
+
+	public void setGain(double gain) {
+		this.gain = gain;
 	}
 
 	public List<GrainSet> getGrains() {
@@ -72,21 +78,6 @@ public class GranularSynthesizer extends WaveDataProviderAdapter implements Para
 
 	public void setGrains(List<GrainSet> grains) {
 		this.grains = grains;
-	}
-
-	@Override
-	public void setParameters(ParameterSet params) {
-		this.params = params;
-		unload();
-	}
-
-	@Override
-	public String getKey() {
-		return key;
-	}
-
-	public void setKey(String key) {
-		this.key = key;
 	}
 
 	public GrainSet addFile(String file) {
@@ -101,53 +92,60 @@ public class GranularSynthesizer extends WaveDataProviderAdapter implements Para
 	}
 
 	@Override
-	protected WaveData load() {
-		List<ScalarBank> results = new ArrayList<>();
-
-		int count = grains.stream().map(GrainSet::getGrains).mapToInt(List::size).sum();
-
-		for (GrainSet grainSet : grains) {
-			WaveData source = grainSet.getSource().get();
-
-			TraversalPolicy grainShape = new TraversalPolicy(3);
-			Producer<PackedCollection> g = v(PackedCollection.class, 1, -1);
-
-			ScalarProducer pos = scalar(grainShape, g, 0).add(
-							mod(scalar(grainShape, g, 2).multiply(
-									v(Scalar.class, 0)), scalar(grainShape, g, 1)))
-					.multiply(source.getSampleRate());
-			Producer cursor = pair(pos, v(0.0));
-
-			for (int n = 0; n < grainSet.getGrains().size(); n++) {
-				Grain grain = grainSet.getGrain(n);
-				GrainParameters gp = grainSet.getParams(n);
-
-				WaveOutput sourceRec = new WaveOutput();
-				w(source).map(i -> new ReceptorCell<>(sourceRec)).iter(source.getWave().getCount(), false).get().run();
-
-				System.out.println("GranularSynthesizer: Processing grain...");
-
-				ScalarBank raw = new ScalarBank(getCount());
-				sourceRec.getData().valueAt(cursor).get().kernelEvaluate(raw, new MemoryBank[] { WaveOutput.timeline.getValue(), grain });
-
-				ScalarBank result = new ScalarBank(getCount());
-				double amp = gp.getAmp().apply(params);
-				double phase = gp.getPhase().apply(params);
-				double wavelength = ampModWavelengthMin + Math.abs(gp.getWavelength().apply(params)) * (ampModWavelengthMax - ampModWavelengthMin);
-				ScalarProducer mod = sinw(scalarSubtract(v(Scalar.class, 0), v(phase)), v(wavelength), v(amp)).multiply(v(Scalar.class, 1));
-				mod.get().kernelEvaluate(result, WaveOutput.timeline.getValue(), raw);
-
-				results.add(result);
-			}
-		}
-
+	public WaveDataProvider create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
 		ScalarBank output = new ScalarBank(getCount());
-		ScalarProducer sum = scalarAdd(Input.generateArguments(2 * getCount(), 0, results.size())).divide(count);
+		WaveData destination = new WaveData(output, OutputLine.sampleRate);
 
-		System.out.println("GranularSynthesizer: Summing grains...");
-		sum.get().kernelEvaluate(output, results.stream().toArray(MemoryBank[]::new));
-		System.out.println("GranularSynthesizer: Done");
+		Evaluable<Scalar> evX = x.get();
+		Evaluable<Scalar> evY = y.get();
+		Evaluable<Scalar> evZ = z.get();
 
-		return new WaveData(output, OutputLine.sampleRate);
+		return new DynamicWaveDataProvider("synth://" + UUID.randomUUID(), destination, () -> () -> {
+			ParameterSet params = new ParameterSet(evX.evaluate().getValue(), evY.evaluate().getValue(), evZ.evaluate().getValue());
+
+			List<ScalarBank> results = new ArrayList<>();
+			int count = grains.stream().map(GrainSet::getGrains).mapToInt(List::size).sum();
+
+			for (GrainSet grainSet : grains) {
+				WaveData source = grainSet.getSource().get();
+
+				TraversalPolicy grainShape = new TraversalPolicy(3);
+				Producer<PackedCollection> g = v(PackedCollection.class, 1, -1);
+
+				ScalarProducer pos = scalar(grainShape, g, 0).add(
+								mod(scalar(grainShape, g, 2).multiply(
+										v(Scalar.class, 0)), scalar(grainShape, g, 1)))
+						.multiply(source.getSampleRate());
+				Producer cursor = pair(pos, v(0.0));
+
+				for (int n = 0; n < grainSet.getGrains().size(); n++) {
+					Grain grain = grainSet.getGrain(n);
+					GrainParameters gp = grainSet.getParams(n);
+
+					WaveOutput sourceRec = new WaveOutput();
+					w(source).map(i -> new ReceptorCell<>(sourceRec)).iter(source.getWave().getCount(), false).get().run();
+
+					System.out.println("GranularSynthesizer: Processing grain...");
+
+					ScalarBank raw = new ScalarBank(getCount());
+					sourceRec.getData().valueAt(cursor).get().kernelEvaluate(raw, new MemoryBank[] { WaveOutput.timeline.getValue(), grain });
+
+					ScalarBank result = new ScalarBank(getCount());
+					double amp = gp.getAmp().apply(params);
+					double phase = gp.getPhase().apply(params);
+					double wavelength = ampModWavelengthMin + Math.abs(gp.getWavelength().apply(params)) * (ampModWavelengthMax - ampModWavelengthMin);
+					ScalarProducer mod = sinw(scalarSubtract(v(Scalar.class, 0), v(phase)), v(wavelength), v(amp)).multiply(v(Scalar.class, 1));
+					mod.get().kernelEvaluate(result, WaveOutput.timeline.getValue(), raw);
+
+					results.add(result);
+				}
+			}
+
+			ScalarProducer sum = scalarAdd(Input.generateArguments(2 * getCount(), 0, results.size())).multiply(gain / count);
+
+			System.out.println("GranularSynthesizer: Summing grains...");
+			sum.get().kernelEvaluate(output, results.stream().toArray(MemoryBank[]::new));
+			System.out.println("GranularSynthesizer: Done");
+		});
 	}
 }

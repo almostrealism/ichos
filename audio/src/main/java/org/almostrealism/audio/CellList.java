@@ -111,6 +111,10 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return grid(this, duration, segments, choices);
 	}
 
+	public CellList grid(double duration, int segments, IntFunction<Producer<Scalar>> choices) {
+		return grid(this, duration, segments, choices);
+	}
+
 	public CellList f(IntFunction<Factor<Scalar>> filter) {
 		return f(this, filter);
 	}

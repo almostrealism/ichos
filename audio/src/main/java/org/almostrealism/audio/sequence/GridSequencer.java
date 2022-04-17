@@ -16,38 +16,39 @@
 
 package org.almostrealism.audio.sequence;
 
+import io.almostrealism.relation.Evaluable;
+import io.almostrealism.relation.Producer;
+import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WaveOutput;
+import org.almostrealism.audio.data.DynamicWaveDataProvider;
 import org.almostrealism.audio.data.ParameterFunctionSequence;
 import org.almostrealism.audio.data.ParameterSet;
-import org.almostrealism.audio.data.Parameterized;
+import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.data.WaveDataProvider;
-import org.almostrealism.audio.data.WaveDataProviderAdapter;
 import org.almostrealism.graph.ReceptorCell;
+import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.Frequency;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
+import java.util.function.IntFunction;
 
-public class GridSequencer extends WaveDataProviderAdapter implements Parameterized, CellFeatures {
-	private String key;
+public class GridSequencer implements ParameterizedWaveDataProviderFactory, CellFeatures {
 	private Frequency bpm;
 	private double stepSize;
 	private int stepCount;
-	private List<WaveDataProvider> samples;
+	private List<ParameterizedWaveDataProviderFactory> samples;
 
 	private ParameterFunctionSequence sequence;
-	private ParameterSet params;
 
 	public GridSequencer() {
-		key = "seq://" + UUID.randomUUID().toString();
-		setBpm(bpm(120));
+		setBpm(120);
 		setStepSize(1.0);
 		setStepCount(16);
 		setSamples(new ArrayList<>());
@@ -57,67 +58,58 @@ public class GridSequencer extends WaveDataProviderAdapter implements Parameteri
 		sequence = ParameterFunctionSequence.random(getStepCount());
 	}
 
-	@Override
-	public String getKey() { return key; }
-
-	public void setKey(String key) { this.key = key; }
-
-	public Frequency getBpm() { return bpm; }
-	public void setBpm(Frequency bpm) {
-		this.bpm = bpm;
-		unload();
-	}
+	public double getBpm() { return bpm.asBPM(); }
+	public void setBpm(double bpm) { this.bpm = bpm(bpm); }
 
 	public double getStepSize() { return stepSize; }
-	public void setStepSize(double stepSize) {
-		this.stepSize = stepSize;
-		unload();
-	}
+	public void setStepSize(double stepSize) { this.stepSize = stepSize; }
 
 	public int getStepCount() { return stepCount; }
 	public void setStepCount(int stepCount) {
 		this.stepCount = stepCount;
 		initParamSequence();
-		unload();
 	}
 
-	public List<WaveDataProvider> getSamples() { return samples; }
-	public void setSamples(List<WaveDataProvider> samples) { this.samples = samples; }
+	public List<ParameterizedWaveDataProviderFactory> getSamples() { return samples; }
+	public void setSamples(List<ParameterizedWaveDataProviderFactory> samples) { this.samples = samples; }
 
-	@Override
 	public double getDuration() { return bpm.l(getStepCount() * getStepSize()); }
 
 	@Override
 	public int getCount() { return (int) (getDuration() * OutputLine.sampleRate); }
 
 	@Override
-	public void setParameters(ParameterSet params) {
-		this.params = params;
-		samples.stream()
-				.map(s -> s instanceof Parameterized ? (Parameterized) s : null)
-				.filter(Objects::nonNull)
-				.forEach(p -> p.setParameters(params));
-		unload();
-	}
+	public WaveDataProvider create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
+		ScalarBank export = new ScalarBank(getCount());
+		WaveData destination = new WaveData(export, OutputLine.sampleRate);
 
-	@Override
-	protected WaveData load() {
+		Evaluable<Scalar> evX = x.get();
+		Evaluable<Scalar> evY = y.get();
+		Evaluable<Scalar> evZ = z.get();
+
 		WaveOutput output = new WaveOutput();
-
 		CellList cells = silence();
 
-		for (WaveDataProvider s : samples) {
-			cells = cells.and(w(v(bpm(128).l(1)), s.get()));
+		OperationList setup = new OperationList();
+
+		for (ParameterizedWaveDataProviderFactory s : samples) {
+			WaveDataProvider provider = s.create(x, y, z);
+			setup.add(provider.setup());
+			cells = cells.and(w(v(bpm.l(1)), provider.get()));
 		}
 
 		cells = cells
-				.grid(getDuration(), getStepCount(), i -> sequence.apply(i).apply(params))
+				.grid(getDuration(), getStepCount(),
+						(IntFunction<Producer<Scalar>>) i -> () -> args -> {
+							ParameterSet params = new ParameterSet(evX.evaluate().getValue(), evY.evaluate().getValue(), evZ.evaluate().getValue());
+							Scalar s = new Scalar(sequence.apply(i).apply(params));
+							// System.out.println("GridSequencer: Computed step - " + s.getValue());
+							return s;
+						})
 				.sum().map(i -> new ReceptorCell<>(output));
 
-		cells.iter(getCount()).get().run();
-
-		ScalarBank export = new ScalarBank(getCount());
-		output.export(export).get().run();
-		return new WaveData(export, OutputLine.sampleRate);
+		setup.add(cells.iter(getCount()));
+		setup.add(output.export(export));
+		return new DynamicWaveDataProvider("seq://" + UUID.randomUUID(), destination, setup);
 	}
 }

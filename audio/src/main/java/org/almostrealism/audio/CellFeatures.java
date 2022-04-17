@@ -475,16 +475,20 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 	}
 
 	default CellList gr(CellList cells, double duration, int segments, IntUnaryOperator choices) {
-		return grid(cells, duration, segments, i -> (2.0 * choices.applyAsInt(i) + 1) / (2.0 * cells.size()));
+		return grid(cells, duration, segments, (IntToDoubleFunction) i -> (2.0 * choices.applyAsInt(i) + 1) / (2.0 * cells.size()));
 	}
 
 	default CellList grid(CellList cells, double duration, int segments, IntToDoubleFunction choices) {
+		return grid(cells, duration, segments, (IntFunction<Producer<Scalar>>) i -> v(choices.applyAsDouble(i)));
+	}
+
+	default CellList grid(CellList cells, double duration, int segments, IntFunction<Producer<Scalar>> choices) {
 		Scalar out = new Scalar();
 		List<Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>> cellChoices =
 				cells.stream()
 						.map(c -> (Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>) data -> (ScalarTemporalCellAdapter) c).collect(Collectors.toList());
 		DynamicAudioCell cell = new DynamicAudioCell(v(1).multiply(p(out)), cellChoices);
-		ValueSequenceCell c = (ValueSequenceCell) seq(i -> v(choices.applyAsDouble(i)), v(duration), segments).get(0);
+		ValueSequenceCell c = (ValueSequenceCell) seq(choices, v(duration), segments).get(0);
 		c.setReceptor(a(p(out)));
 
 		WaveOutput csv = new WaveOutput(new File("value-sequence-debug.wav"));

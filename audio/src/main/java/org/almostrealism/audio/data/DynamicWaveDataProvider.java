@@ -16,17 +16,37 @@
 
 package org.almostrealism.audio.data;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.almostrealism.cycle.Setup;
-import org.almostrealism.hardware.OperationList;
 
 import java.util.function.Supplier;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@type")
-public interface WaveDataProvider extends Supplier<WaveData>, Setup {
-	int getCount();
+public class DynamicWaveDataProvider extends WaveDataProviderAdapter implements Setup {
+	private String key;
+	private WaveData destination;
+	private Supplier<Runnable> setup;
 
-	double getDuration();
+	public DynamicWaveDataProvider(String key, WaveData destination, Supplier<Runnable> setup) {
+		this.key = key;
+		this.destination = destination;
+		this.setup = setup;
+	}
 
-	default Supplier<Runnable> setup() { return new OperationList(); }
+	@Override
+	public String getKey() { return key; }
+
+	@Override
+	public int getCount() {
+		return destination.getWave().getCount();
+	}
+
+	@Override
+	public double getDuration() {
+		return getCount() / (double) destination.getSampleRate();
+	}
+
+	@Override
+	public Supplier<Runnable> setup() { return setup; }
+
+	@Override
+	protected WaveData load() { return destination; }
 }

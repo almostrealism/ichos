@@ -16,6 +16,11 @@
 
 package org.almostrealism.audio.data;
 
-public interface Parameterized {
-	void setParameters(ParameterSet params);
+import io.almostrealism.relation.Producer;
+import org.almostrealism.algebra.Scalar;
+
+public interface ParameterizedWaveDataProviderFactory {
+	WaveDataProvider create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z);
+
+	int getCount();
 }

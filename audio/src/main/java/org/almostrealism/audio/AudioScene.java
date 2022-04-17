@@ -112,10 +112,12 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 			if (sourceOverride == null) {
 				return getWaves().getChoiceCell(
 						g.valueAt(0).getResultant(Ops.ops().v(1.0)),
+						v(0.0), v(0.0), v(0.0),
 						g.valueAt(1).getResultant(duration),
 						enableRepeat ? duration : null);
 			} else {
-				return sourceOverride.getChoiceCell(g.valueAt(0).getResultant(Ops.ops().v(1.0)), v(0.0), null);
+				return sourceOverride.getChoiceCell(g.valueAt(0).getResultant(Ops.ops().v(1.0)),
+						v(0.0), v(0.0), v(0.0), v(0.0), null);
 			}
 		};
 

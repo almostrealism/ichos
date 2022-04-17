@@ -24,6 +24,8 @@ import java.util.stream.IntStream;
 
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.DesirablesProvider;
+import org.almostrealism.audio.grains.GrainGenerationSettings;
+import org.almostrealism.audio.grains.GranularSynthesizer;
 import org.almostrealism.audio.health.AudioHealthComputation;
 import org.almostrealism.audio.health.SilenceDurationHealthComputation;
 import org.almostrealism.audio.health.StableDurationHealthComputation;
@@ -36,6 +38,7 @@ import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.Waves;
+import org.almostrealism.audio.sequence.GridSequencer;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.heredity.Breeders;
 import org.almostrealism.hardware.Hardware;
@@ -51,7 +54,7 @@ import org.almostrealism.heredity.ScaleFactor;
 import org.almostrealism.optimize.PopulationOptimizer;
 
 public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
-	public static final int verbosity = 2;
+	public static final int verbosity = 0;
 
 	public static String LIBRARY = "Library";
 	public static String STEMS = "Stems";
@@ -308,13 +311,24 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 		WavFile.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
 
-		AudioScene<?> scene = new AudioScene<>(null, 116, 6, 3, OutputLine.sampleRate);
+		AudioScene<?> scene = new AudioScene<>(null, 116, 1, 3, OutputLine.sampleRate);
 
 		File sources = new File("sources.json");
 		if (sources.exists()) {
 			scene.setWaves(Waves.load(sources));
 		} else {
-			scene.getWaves().addSplits(Arrays.asList(new File(STEMS).listFiles()), 116.0, Math.pow(10, -6), 1.0, 2.0, 4.0);
+//			scene.getWaves().addSplits(Arrays.asList(new File(STEMS).listFiles()), 116.0, Math.pow(10, -6), 1.0, 2.0, 4.0);
+
+			GranularSynthesizer synth = new GranularSynthesizer();
+			synth.setGain(3.0);
+			synth.addFile("Library/organ.wav");
+			synth.addGrain(new GrainGenerationSettings());
+
+			GridSequencer sequencer = new GridSequencer();
+			sequencer.setBpm(116);
+			sequencer.getSamples().add(synth);
+
+			scene.getWaves().getChildren().add(new Waves("Sequencer", sequencer));
 		}
 
 		// GeneticTemporalFactoryFromDesirables.sourceOverride = new Waves();

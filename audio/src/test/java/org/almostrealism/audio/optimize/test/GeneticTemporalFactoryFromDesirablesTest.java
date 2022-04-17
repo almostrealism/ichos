@@ -248,6 +248,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 
 			return scene.getWaves().getChoiceCell(
 					g.valueAt(0).getResultant(Ops.ops().v(1.0)),
+					v(0.0), v(0.0), v(0.0),
 					g.valueAt(1).getResultant(duration), duration);
 		};
 

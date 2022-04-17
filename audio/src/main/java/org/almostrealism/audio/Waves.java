@@ -19,6 +19,7 @@ package org.almostrealism.audio;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.CodeFeatures;
 import org.almostrealism.algebra.Scalar;
@@ -26,11 +27,12 @@ import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.ScalarChoice;
 import org.almostrealism.audio.data.FileWaveDataProvider;
 import org.almostrealism.audio.data.ParameterSet;
-import org.almostrealism.audio.data.Parameterized;
+import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
+import org.almostrealism.audio.data.StaticWaveDataProviderFactory;
 import org.almostrealism.audio.data.WaveDataProvider;
-import org.almostrealism.audio.filter.Envelope;
 import org.almostrealism.audio.filter.EnvelopeProvider;
 import org.almostrealism.graph.temporal.WaveCell;
+import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.Frequency;
 
 import java.io.BufferedWriter;
@@ -45,12 +47,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Waves implements CodeFeatures {
 	private List<Waves> children;
-	private WaveDataProvider source;
+	private ParameterizedWaveDataProviderFactory source;
 	private EnvelopeProvider envelope;
 	private int pos = -1, len = -1;
 	private String sourceName;
@@ -59,11 +62,11 @@ public class Waves implements CodeFeatures {
 
 	public Waves(String sourceName) { this(sourceName, null, -1, -1); }
 
-	public Waves(String sourceName, WaveDataProvider source) {
+	public Waves(String sourceName, ParameterizedWaveDataProviderFactory source) {
 		this(sourceName, source, 0, source.getCount());
 	}
 
-	public Waves(String sourceName, WaveDataProvider source, int pos, int len) {
+	public Waves(String sourceName, ParameterizedWaveDataProviderFactory source, int pos, int len) {
 		this.sourceName = sourceName;
 		this.pos = pos;
 		this.len = len;
@@ -83,20 +86,15 @@ public class Waves implements CodeFeatures {
 	public String getSourceName() { return sourceName; }
 	public void setSourceName(String sourceName) { this.sourceName = sourceName; }
 
-	public WaveDataProvider getSource() { return source; }
-	public void setSource(WaveDataProvider source) { this.source = source; }
+	public ParameterizedWaveDataProviderFactory getSource() { return source; }
+	public void setSource(ParameterizedWaveDataProviderFactory source) { this.source = source; }
 
 	public EnvelopeProvider getEnvelope() { return envelope; }
 	public void setEnvelope(EnvelopeProvider envelope) { this.envelope = envelope; }
 
-	public void setParameters(ParameterSet params) {
-		if (source instanceof Parameterized) {
-			((Parameterized) source).setParameters(params);
-		}
-	}
-
-	public WaveCell getChoiceCell(Producer<Scalar> decision, Producer<Scalar> offset, Producer<Scalar> duration) {
-		Map<ScalarBank, List<Segment>> segmentsByBank = getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
+	public WaveCell getChoiceCell(Producer<Scalar> decision, Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z,
+								  Producer<Scalar> offset, Producer<Scalar> duration) {
+		Map<ScalarBank, List<Segment>> segmentsByBank = getSegments(x, y, z).stream().collect(Collectors.groupingBy(Segment::getSource));
 		if (segmentsByBank.size() > 1) {
 			throw new UnsupportedOperationException("More than one root ScalarBank for Waves instance");
 		}
@@ -114,23 +112,26 @@ public class Waves implements CodeFeatures {
 		ScalarChoice positionChoice = new ScalarChoice(count, decision, v(positions));
 		ScalarChoice lengthChoice = new ScalarChoice(count, decision, v(lengths));
 
-		return new WaveCell(source, OutputLine.sampleRate, 1.0, offset, duration, positionChoice, lengthChoice);
+		WaveCell cell = new WaveCell(source, OutputLine.sampleRate, 1.0, offset, duration, positionChoice, lengthChoice);
+		cell.addSetup(segments.stream().map(Segment::setup).collect(OperationList.collector()));
+		return cell;
 	}
 
 	@JsonIgnore
-	public Segment getSegment() {
+	public Segment getSegment(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
 		if (!isLeaf()) throw new UnsupportedOperationException();
-		return new Segment(sourceName, source.get().getWave(), pos, len);
+		WaveDataProvider provider = source.create(x, y, z);
+		return new Segment(sourceName, provider.get().getWave(), pos, len, provider.setup());
 	}
 
 	@JsonIgnore
-	public List<Segment> getSegments() {
-		if (isLeaf()) return Collections.singletonList(getSegment());
-		return getChildren().stream().map(Waves::getSegments).flatMap(List::stream).collect(Collectors.toList());
+	public List<Segment> getSegments(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
+		if (isLeaf()) return Collections.singletonList(getSegment(x, y, z));
+		return getChildren().stream().map(c -> c.getSegments(x, y, z)).flatMap(List::stream).collect(Collectors.toList());
 	}
 
-	public Segment getSegmentChoice(double decision) {
-		List<Segment> segments = getSegments();
+	public Segment getSegmentChoice(double decision, double x, double y, double z) {
+		List<Segment> segments = getSegments(v(x), v(y), v(z));
 		if (segments.isEmpty()) return null;
 		return segments.get((int) (decision * segments.size()));
 	}
@@ -186,7 +187,7 @@ public class Waves implements CodeFeatures {
 		Waves waves = new Waves(sourceName);
 		IntStream.range(0, len / frames)
 				.mapToObj(i -> new Waves(sourceName, source, pos + i * frames, frames))
-				.filter(w -> w.getSegment().range().length().getValue() > (silenceThreshold * frames))
+				.filter(w -> w.getSegment(null, null, null).range().length().getValue() > (silenceThreshold * frames))
 				.forEach(w -> waves.getChildren().add(w));
 		return waves;
 	}
@@ -218,21 +219,24 @@ public class Waves implements CodeFeatures {
 		double data[][] = new double[w.getNumChannels()][(int) w.getNumFrames()];
 		w.readFrames(data, (int) w.getFramesRemaining());
 
-		return new Waves(f.getCanonicalPath(), new FileWaveDataProvider(f.getCanonicalPath()));
+		return new Waves(f.getCanonicalPath(), new StaticWaveDataProviderFactory(new FileWaveDataProvider(f.getCanonicalPath())));
 	}
 
-	public static class Segment {
+	public static class Segment implements Setup {
 		private String sourceText;
 		private ScalarBank source;
 		private int pos, len;
 
-		public Segment(String sourceText, ScalarBank source, int pos, int len) {
+		private Supplier<Runnable> setup;
+
+		public Segment(String sourceText, ScalarBank source, int pos, int len, Supplier<Runnable> setup) {
 			// TODO  This will only work if the atomic length of the root delegate is 2 (ScalarBank, ScalarTable, etc)
 			// TODO  Other kinds of data structures will have problems
 			this.sourceText = sourceText;
 			this.source = (ScalarBank) source.getRootDelegate();
 			this.pos = (source.getOffset() / 2) + pos;
 			this.len = len;
+			this.setup = setup;
 		}
 
 		public String getSourceText() { return sourceText; }
@@ -240,5 +244,7 @@ public class Waves implements CodeFeatures {
 		public int getPosition() { return pos; }
 		public int getLength() { return len; }
 		public ScalarBank range() { return source.range(pos, len); }
+
+		public Supplier<Runnable> setup() { return setup; }
 	}
 }
