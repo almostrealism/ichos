@@ -17,41 +17,35 @@
 package org.almostrealism.audio.data;
 
 import io.almostrealism.cycle.Setup;
+import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.hardware.OperationList;
 
 import java.util.function.Supplier;
 
-public class DynamicWaveDataProvider extends WaveDataProviderAdapter implements Setup {
-	private String key;
-	private WaveData destination;
+public class Segment implements Setup {
+	private String sourceText;
+	private ScalarBank source;
+	private int pos, len;
+
 	private Supplier<Runnable> setup;
 
-	public DynamicWaveDataProvider(String key, WaveData destination) {
-		this(key, destination, new OperationList());
+	public Segment(String sourceText, ScalarBank source, int pos, int len) {
+		this(sourceText, source, pos, len, new OperationList());
 	}
 
-	public DynamicWaveDataProvider(String key, WaveData destination, Supplier<Runnable> setup) {
-		this.key = key;
-		this.destination = destination;
+	public Segment(String sourceText, ScalarBank source, int pos, int len, Supplier<Runnable> setup) {
+		this.sourceText = sourceText;
+		this.source = (ScalarBank) source.getRootDelegate();
+		this.pos = (source.getOffset() / 2) + pos;
+		this.len = len;
 		this.setup = setup;
 	}
 
-	@Override
-	public String getKey() { return key; }
+	public String getSourceText() { return sourceText; }
+	public ScalarBank getSource() { return source; }
+	public int getPosition() { return pos; }
+	public int getLength() { return len; }
+	public ScalarBank range() { return source.range(pos, len); }
 
-	@Override
-	public int getCount() {
-		return destination.getWave().getCount();
-	}
-
-	@Override
-	public double getDuration() {
-		return getCount() / (double) destination.getSampleRate();
-	}
-
-	@Override
 	public Supplier<Runnable> setup() { return setup; }
-
-	@Override
-	protected WaveData load() { return destination; }
 }

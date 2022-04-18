@@ -24,6 +24,7 @@ import java.util.stream.IntStream;
 
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.DesirablesProvider;
+import org.almostrealism.audio.WaveSet;
 import org.almostrealism.audio.grains.GrainGenerationSettings;
 import org.almostrealism.audio.grains.GranularSynthesizer;
 import org.almostrealism.audio.health.AudioHealthComputation;
@@ -326,9 +327,9 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 			GridSequencer sequencer = new GridSequencer();
 			sequencer.setBpm(116);
-			sequencer.getSamples().add(synth);
+			sequencer.getSamples().add(new WaveSet(synth));
 
-			scene.getWaves().getChildren().add(new Waves("Sequencer", sequencer));
+			scene.getWaves().getChildren().add(new Waves("Sequencer", new WaveSet(sequencer)));
 		}
 
 		// GeneticTemporalFactoryFromDesirables.sourceOverride = new Waves();

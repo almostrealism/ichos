@@ -18,6 +18,9 @@ package org.almostrealism.audio.data;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.time.Frequency;
+
+import java.util.List;
 
 public class StaticWaveDataProviderFactory implements ParameterizedWaveDataProviderFactory {
 	private WaveDataProvider provider;
@@ -36,7 +39,8 @@ public class StaticWaveDataProviderFactory implements ParameterizedWaveDataProvi
 	public int getCount() { return getProvider().getCount(); }
 
 	@Override
-	public WaveDataProvider create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
-		return getProvider();
+	public WaveDataProviderList create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z, List<Frequency> playbackRates) {
+		// TODO  This should respect the playback rates
+		return new WaveDataProviderList(List.of(getProvider()));
 	}
 }

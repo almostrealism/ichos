@@ -18,9 +18,12 @@ package org.almostrealism.audio.data;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.time.Frequency;
+
+import java.util.List;
 
 public interface ParameterizedWaveDataProviderFactory {
-	WaveDataProvider create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z);
+	WaveDataProviderList create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z, List<Frequency> playbackRates);
 
 	int getCount();
 }

@@ -24,12 +24,14 @@ import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WaveOutput;
+import org.almostrealism.audio.WaveSet;
 import org.almostrealism.audio.data.DynamicWaveDataProvider;
 import org.almostrealism.audio.data.ParameterFunctionSequence;
 import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.data.WaveDataProvider;
+import org.almostrealism.audio.data.WaveDataProviderList;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.Frequency;
@@ -43,7 +45,7 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Cell
 	private Frequency bpm;
 	private double stepSize;
 	private int stepCount;
-	private List<ParameterizedWaveDataProviderFactory> samples;
+	private List<WaveSet> samples;
 
 	private ParameterFunctionSequence sequence;
 
@@ -70,8 +72,8 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Cell
 		initParamSequence();
 	}
 
-	public List<ParameterizedWaveDataProviderFactory> getSamples() { return samples; }
-	public void setSamples(List<ParameterizedWaveDataProviderFactory> samples) { this.samples = samples; }
+	public List<WaveSet> getSamples() { return samples; }
+	public void setSamples(List<WaveSet> samples) { this.samples = samples; }
 
 	public double getDuration() { return bpm.l(getStepCount() * getStepSize()); }
 
@@ -79,7 +81,7 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Cell
 	public int getCount() { return (int) (getDuration() * OutputLine.sampleRate); }
 
 	@Override
-	public WaveDataProvider create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
+	public WaveDataProviderList create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z, List<Frequency> playbackRates) {
 		ScalarBank export = new ScalarBank(getCount());
 		WaveData destination = new WaveData(export, OutputLine.sampleRate);
 
@@ -92,10 +94,13 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Cell
 
 		OperationList setup = new OperationList();
 
-		for (ParameterizedWaveDataProviderFactory s : samples) {
-			WaveDataProvider provider = s.create(x, y, z);
+		for (WaveSet s : samples) {
+			WaveDataProviderList provider = s.create(x, y, z);
 			setup.add(provider.setup());
-			cells = cells.and(w(v(bpm.l(1)), provider.get()));
+
+			for (WaveDataProvider p : provider.getProviders()) {
+				cells = cells.and(w(v(bpm.l(1)), p.get()));
+			}
 		}
 
 		cells = cells
@@ -110,6 +115,8 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Cell
 
 		setup.add(cells.iter(getCount()));
 		setup.add(output.export(export));
-		return new DynamicWaveDataProvider("seq://" + UUID.randomUUID(), destination, setup);
+
+		// TODO  Should respect playbackRates
+		return new WaveDataProviderList(List.of(new DynamicWaveDataProvider("seq://" + UUID.randomUUID(), destination)), setup);
 	}
 }

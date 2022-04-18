@@ -19,39 +19,31 @@ package org.almostrealism.audio.data;
 import io.almostrealism.cycle.Setup;
 import org.almostrealism.hardware.OperationList;
 
+import java.util.List;
 import java.util.function.Supplier;
 
-public class DynamicWaveDataProvider extends WaveDataProviderAdapter implements Setup {
-	private String key;
-	private WaveData destination;
+public class SegmentList implements Setup {
 	private Supplier<Runnable> setup;
+	private List<Segment> segments;
 
-	public DynamicWaveDataProvider(String key, WaveData destination) {
-		this(key, destination, new OperationList());
+	public SegmentList(List<Segment> segments) {
+		this(segments, new OperationList());
 	}
 
-	public DynamicWaveDataProvider(String key, WaveData destination, Supplier<Runnable> setup) {
-		this.key = key;
-		this.destination = destination;
+	public SegmentList(List<Segment> segments, Supplier<Runnable> setup) {
 		this.setup = setup;
+		this.segments = segments;
 	}
 
 	@Override
-	public String getKey() { return key; }
-
-	@Override
-	public int getCount() {
-		return destination.getWave().getCount();
+	public Supplier<Runnable> setup() {
+		OperationList setup = new OperationList();
+		setup.add(this.setup);
+		segments.forEach(s -> setup.add(s.setup()));
+		return setup;
 	}
 
-	@Override
-	public double getDuration() {
-		return getCount() / (double) destination.getSampleRate();
-	}
+	public List<Segment> getSegments() { return segments; }
 
-	@Override
-	public Supplier<Runnable> setup() { return setup; }
-
-	@Override
-	protected WaveData load() { return destination; }
+	public boolean isEmpty() { return getSegments() == null || getSegments().isEmpty(); }
 }

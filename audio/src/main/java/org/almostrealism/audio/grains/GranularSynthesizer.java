@@ -31,11 +31,13 @@ import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.data.WaveDataProvider;
+import org.almostrealism.audio.data.WaveDataProviderList;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.Input;
 import org.almostrealism.hardware.MemoryBank;
+import org.almostrealism.time.Frequency;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,60 +94,70 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 	}
 
 	@Override
-	public WaveDataProvider create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
-		ScalarBank output = new ScalarBank(getCount());
-		WaveData destination = new WaveData(output, OutputLine.sampleRate);
-
+	public WaveDataProviderList create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z, List<Frequency> playbackRates) {
 		Evaluable<Scalar> evX = x.get();
 		Evaluable<Scalar> evY = y.get();
 		Evaluable<Scalar> evZ = z.get();
 
-		return new DynamicWaveDataProvider("synth://" + UUID.randomUUID(), destination, () -> () -> {
+		List<WaveDataProvider> providers = new ArrayList<>();
+		playbackRates.forEach(rate -> {
+			ScalarBank output = new ScalarBank(getCount());
+			WaveData destination = new WaveData(output, OutputLine.sampleRate);
+			providers.add(new DynamicWaveDataProvider("synth://" + UUID.randomUUID(), destination));
+		});
+
+		return new WaveDataProviderList(providers, () -> () -> {
 			ParameterSet params = new ParameterSet(evX.evaluate().getValue(), evY.evaluate().getValue(), evZ.evaluate().getValue());
 
-			List<ScalarBank> results = new ArrayList<>();
-			int count = grains.stream().map(GrainSet::getGrains).mapToInt(List::size).sum();
+			ScalarBank playbackRate = new ScalarBank(1);
 
-			for (GrainSet grainSet : grains) {
-				WaveData source = grainSet.getSource().get();
+			for (int i = 0; i < playbackRates.size(); i++) {
+				playbackRate.get(0).setValue(playbackRates.get(i).asHertz());
+				System.out.println("GranularSynthesizer: Rendering grains for playback rate " + playbackRates.get(i) + "...");
 
-				TraversalPolicy grainShape = new TraversalPolicy(3);
-				Producer<PackedCollection> g = v(PackedCollection.class, 1, -1);
+				List<ScalarBank> results = new ArrayList<>();
+				int count = grains.stream().map(GrainSet::getGrains).mapToInt(List::size).sum();
 
-				ScalarProducer pos = scalar(grainShape, g, 0).add(
-								mod(scalar(grainShape, g, 2).multiply(
-										v(Scalar.class, 0)), scalar(grainShape, g, 1)))
-						.multiply(source.getSampleRate());
-				Producer cursor = pair(pos, v(0.0));
+				for (GrainSet grainSet : grains) {
+					WaveData source = grainSet.getSource().get();
 
-				for (int n = 0; n < grainSet.getGrains().size(); n++) {
-					Grain grain = grainSet.getGrain(n);
-					GrainParameters gp = grainSet.getParams(n);
+					TraversalPolicy grainShape = new TraversalPolicy(3);
+					Producer<PackedCollection> g = v(PackedCollection.class, 1, -1);
 
-					WaveOutput sourceRec = new WaveOutput();
-					w(source).map(i -> new ReceptorCell<>(sourceRec)).iter(source.getWave().getCount(), false).get().run();
+					ScalarProducer pos = scalar(grainShape, g, 0).add(
+									mod(scalar(grainShape, g, 2).multiply(v(Scalar.class, 2, -1))
+											.multiply(v(Scalar.class, 0)), scalar(grainShape, g, 1)))
+							.multiply(source.getSampleRate());
+					Producer cursor = pair(pos, v(0.0));
 
-					System.out.println("GranularSynthesizer: Processing grain...");
+					for (int n = 0; n < grainSet.getGrains().size(); n++) {
+						Grain grain = grainSet.getGrain(n);
+						GrainParameters gp = grainSet.getParams(n);
 
-					ScalarBank raw = new ScalarBank(getCount());
-					sourceRec.getData().valueAt(cursor).get().kernelEvaluate(raw, new MemoryBank[] { WaveOutput.timeline.getValue(), grain });
+						WaveOutput sourceRec = new WaveOutput();
+						w(source).map(k -> new ReceptorCell<>(sourceRec)).iter(source.getWave().getCount(), false).get().run();
 
-					ScalarBank result = new ScalarBank(getCount());
-					double amp = gp.getAmp().apply(params);
-					double phase = gp.getPhase().apply(params);
-					double wavelength = ampModWavelengthMin + Math.abs(gp.getWavelength().apply(params)) * (ampModWavelengthMax - ampModWavelengthMin);
-					ScalarProducer mod = sinw(scalarSubtract(v(Scalar.class, 0), v(phase)), v(wavelength), v(amp)).multiply(v(Scalar.class, 1));
-					mod.get().kernelEvaluate(result, WaveOutput.timeline.getValue(), raw);
+						ScalarBank raw = new ScalarBank(getCount());
+						sourceRec.getData().valueAt(cursor).get()
+								.kernelEvaluate(raw, WaveOutput.timeline.getValue(), grain, playbackRate);
 
-					results.add(result);
+						ScalarBank result = new ScalarBank(getCount());
+						double amp = gp.getAmp().apply(params);
+						double phase = gp.getPhase().apply(params);
+						double wavelength = ampModWavelengthMin + Math.abs(gp.getWavelength().apply(params)) * (ampModWavelengthMax - ampModWavelengthMin);
+						ScalarProducer mod = sinw(scalarSubtract(v(Scalar.class, 0), v(phase)), v(wavelength), v(amp)).multiply(v(Scalar.class, 1));
+						mod.get().kernelEvaluate(result, WaveOutput.timeline.getValue(), raw);
+
+						results.add(result);
+					}
 				}
+
+				ScalarProducer sum = scalarAdd(Input.generateArguments(2 * getCount(), 0, results.size())).multiply(gain / count);
+
+				System.out.println("GranularSynthesizer: Summing grains...");
+				sum.get().kernelEvaluate(providers.get(i).get().getWave(), results.stream().toArray(MemoryBank[]::new));
+				System.out.println("GranularSynthesizer: Done");
 			}
-
-			ScalarProducer sum = scalarAdd(Input.generateArguments(2 * getCount(), 0, results.size())).multiply(gain / count);
-
-			System.out.println("GranularSynthesizer: Summing grains...");
-			sum.get().kernelEvaluate(output, results.stream().toArray(MemoryBank[]::new));
-			System.out.println("GranularSynthesizer: Done");
 		});
 	}
 }
