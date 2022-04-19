@@ -24,6 +24,6 @@ public class WesternScales {
 	}
 
 	public static Scale<WesternChromatic> minor(WesternChromatic root, int octaves) {
-		return new SetIntervalScale<>(root, octaves, 2, 2, 1, 2, 2, 2, 1);
+		return new SetIntervalScale<>(root, octaves, 2, 1, 2, 2, 1, 2, 2);
 	}
 }

@@ -40,6 +40,8 @@ import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.Waves;
 import org.almostrealism.audio.sequence.GridSequencer;
+import org.almostrealism.audio.tone.WesternChromatic;
+import org.almostrealism.audio.tone.WesternScales;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.heredity.Breeders;
 import org.almostrealism.hardware.Hardware;
@@ -325,9 +327,13 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			synth.addFile("Library/organ.wav");
 			synth.addGrain(new GrainGenerationSettings());
 
+			WaveSet synthNotes = new WaveSet(synth);
+			synthNotes.setRoot(WesternChromatic.C3);
+			synthNotes.setNotes(WesternScales.major(WesternChromatic.C3, 1));
+
 			GridSequencer sequencer = new GridSequencer();
 			sequencer.setBpm(116);
-			sequencer.getSamples().add(new WaveSet(synth));
+			sequencer.getSamples().add(synthNotes);
 
 			scene.getWaves().getChildren().add(new Waves("Sequencer", new WaveSet(sequencer)));
 		}
@@ -464,8 +470,10 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			repeatChoices = IntStream.range(0, 9)
 					.map(i -> i - 2)
 					.mapToDouble(i -> Math.pow(2, i))
-					.map(DefaultAudioGenome::factorForRepeat)
+//					.map(DefaultAudioGenome::factorForRepeat)
 					.toArray();
+
+			repeatChoices = new double[] { 16 };
 		}
 	}
 }

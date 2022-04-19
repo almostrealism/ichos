@@ -22,12 +22,23 @@ import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
 import org.almostrealism.audio.data.StaticWaveDataProviderFactory;
 import org.almostrealism.audio.data.WaveDataProvider;
 import org.almostrealism.audio.data.WaveDataProviderList;
+import org.almostrealism.audio.tone.DefaultKeyboardTuning;
+import org.almostrealism.audio.tone.KeyPosition;
+import org.almostrealism.audio.tone.KeyboardTuning;
+import org.almostrealism.audio.tone.Scale;
+import org.almostrealism.audio.tone.WesternChromatic;
 import org.almostrealism.time.Frequency;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class WaveSet {
 	private ParameterizedWaveDataProviderFactory source;
+
+	private KeyboardTuning tuning;
+	private KeyPosition<?> root;
+	private Scale<?> notes;
 
 	public WaveSet() { }
 
@@ -37,6 +48,9 @@ public class WaveSet {
 
 	public WaveSet(ParameterizedWaveDataProviderFactory source) {
 		setSource(source);
+		setTuning(new DefaultKeyboardTuning());
+		setRoot(WesternChromatic.C3);
+		setNotes(Scale.of(WesternChromatic.C3));
 	}
 
 	public ParameterizedWaveDataProviderFactory getSource() { return source; }
@@ -45,7 +59,32 @@ public class WaveSet {
 
 	public int getCount() { return source.getCount(); }
 
+	public KeyboardTuning getTuning() { return tuning; }
+
+	public void setTuning(KeyboardTuning tuning) { this.tuning = tuning; }
+
+	// TODO  Maybe this should be called sourceNote, so
+	// TODO  as to avoid confusion with the root of the scale
+	public KeyPosition<?> getRoot() { return root; }
+
+	public void setRoot(KeyPosition<?> root) { this.root = root; }
+
+	public Scale<?> getNotes() { return notes; }
+
+	public void setNotes(Scale<?> notes) { this.notes = notes; }
+
+	public List<Frequency> getFrequencies() {
+		double r = tuning.getTone(root).asHertz();
+		return IntStream.range(0, notes.length())
+				.mapToObj(notes::valueAt)
+				.map(tuning::getTone)
+				.map(Frequency::asHertz)
+				.map(t -> t / r)
+				.map(Frequency::new)
+				.collect(Collectors.toList());
+	}
+
 	public WaveDataProviderList create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
-		return source.create(x, y, z, List.of(new Frequency(1.0)));
+		return source.create(x, y, z, getFrequencies());
 	}
 }
