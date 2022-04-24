@@ -25,6 +25,7 @@ import org.almostrealism.time.Frequency;
 import java.util.HashSet;
 import java.util.Set;
 
+@Deprecated
 public class DefaultDesirablesProvider<T extends KeyPosition<T>> implements DesirablesProvider {
 	private final double bpm;
 	private final Set<Frequency> frequencies;

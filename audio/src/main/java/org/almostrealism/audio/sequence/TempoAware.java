@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio;
+package org.almostrealism.audio.sequence;
 
-@Deprecated
-public interface DesirablesProvider {
-	double getBeatPerMinute();
-
-	Waves getWaves();
+public interface TempoAware {
+	void setBpm(double bpm);
 }

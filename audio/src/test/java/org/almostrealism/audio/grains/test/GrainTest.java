@@ -16,9 +16,11 @@ import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.MemoryBank;
 import org.almostrealism.time.CursorPair;
+import org.almostrealism.time.Frequency;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.List;
 
 public class GrainTest implements CellFeatures {
 	@Test
@@ -55,6 +57,7 @@ public class GrainTest implements CellFeatures {
 		GranularSynthesizer synth = new GranularSynthesizer();
 		GrainSet set = synth.addFile("Library/organ.wav");
 		set.addGrain(new Grain(0.2, 0.015, 2.0));
-		synth.get().save(new File("results/granular-synth-test.wav"));
+		synth.create(v(0.0), v(0.0), v(0.0), List.of(new Frequency(1.0)))
+				.getProviders().get(0).get().save(new File("results/granular-synth-test.wav"));
 	}
 }

@@ -16,7 +16,6 @@
 
 package org.almostrealism.audio;
 
-import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.algebra.Scalar;
@@ -75,7 +74,12 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 		this.scene = scene;
 		this.tempoListeners = new ArrayList<>();
 		this.genome = new DefaultAudioGenome(sources, delayLayers, sampleRate);
-		this.sources = new Waves();
+		initSources();
+	}
+
+	protected void initSources() {
+		sources = new Waves();
+		IntStream.range(0, sourceCount).forEach(sources.getChoices().getChoices()::add);
 	}
 
 	public void setBPM(double bpm) {
@@ -89,9 +93,9 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 
 	public DefaultAudioGenome getGenome() {return genome;}
 
-	public void addTempoListener(Consumer<Frequency> listener) {this.tempoListeners.add(listener);}
+	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
 
-	public void removeTempoListener(Consumer<Frequency> listener) {this.tempoListeners.remove(listener);}
+	public void removeTempoListener(Consumer<Frequency> listener) { this.tempoListeners.remove(listener); }
 
 	@Override
 	public double getBeatPerMinute() {return bpm;}
@@ -106,6 +110,8 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	public Waves getWaves() {return sources;}
 
 	public Cells getCells(List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output) {
+		sources.setBpm(getBPM());
+
 		Function<Gene<Scalar>, WaveCell> generator = g -> {
 			Producer<Scalar> duration = g.valueAt(2).getResultant(v(bpm(getBeatPerMinute()).l(1)));
 
@@ -121,7 +127,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 			}
 		};
 
-		Supplier<Runnable> genomeSetup = genome instanceof Setup ? ((Setup) genome).setup() : () -> () -> {};
+		Supplier<Runnable> genomeSetup = genome.setup();
 
 		// Generators
 		CellList cells = cells(genome.valueAt(DefaultAudioGenome.GENERATORS).length(),
@@ -138,7 +144,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 		}
 
 		cells = cells
-				.addRequirements(((DefaultAudioGenome) genome).getTemporals().toArray(TemporalFactor[]::new));
+				.addRequirements(genome.getTemporals().toArray(TemporalFactor[]::new));
 
 		if (enableSourcesOnly) {
 			return cells.map(fc(i -> factor(genome.valueAt(DefaultAudioGenome.VOLUME, i, 0))))

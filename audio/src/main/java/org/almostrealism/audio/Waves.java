@@ -25,12 +25,11 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.ScalarChoice;
 import org.almostrealism.audio.data.FileWaveDataProvider;
-import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
 import org.almostrealism.audio.data.Segment;
 import org.almostrealism.audio.data.SegmentList;
-import org.almostrealism.audio.data.StaticWaveDataProviderFactory;
 import org.almostrealism.audio.data.WaveDataProviderList;
 import org.almostrealism.audio.filter.EnvelopeProvider;
+import org.almostrealism.audio.sequence.TempoAware;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.Frequency;
@@ -42,7 +41,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,12 +48,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class Waves implements CodeFeatures {
-	private List<Waves> children;
+public class Waves implements TempoAware, CodeFeatures {
 	private WaveSet source;
 	private EnvelopeProvider envelope;
 	private int pos = -1, len = -1;
 	private String sourceName;
+
+	private RoutingChoices choices;
+	private List<Waves> children;
 
 	public Waves() { this(null); }
 
@@ -70,6 +70,8 @@ public class Waves implements CodeFeatures {
 		this.pos = pos;
 		this.len = len;
 		this.source = source;
+
+		this.choices = new RoutingChoices();
 		this.children = new ArrayList<>();
 	}
 
@@ -90,6 +92,15 @@ public class Waves implements CodeFeatures {
 
 	public EnvelopeProvider getEnvelope() { return envelope; }
 	public void setEnvelope(EnvelopeProvider envelope) { this.envelope = envelope; }
+
+	public RoutingChoices getChoices() { return choices; }
+	public void setChoices(RoutingChoices choices) { this.choices = choices; }
+
+	@Override
+	public void setBpm(double bpm) {
+		if (source != null) source.setBpm(bpm);
+		getChildren().forEach(c -> c.setBpm(bpm));
+	}
 
 	public WaveCell getChoiceCell(Producer<Scalar> decision, Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z,
 								  Producer<Scalar> offset, Producer<Scalar> duration) {

@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.IntFunction;
 
-public class GridSequencer implements ParameterizedWaveDataProviderFactory, CellFeatures {
+public class GridSequencer implements ParameterizedWaveDataProviderFactory, TempoAware, CellFeatures {
 	private Frequency bpm;
 	private double stepSize;
 	private int stepCount;
@@ -61,6 +61,8 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Cell
 	}
 
 	public double getBpm() { return bpm.asBPM(); }
+
+	@Override
 	public void setBpm(double bpm) { this.bpm = bpm(bpm); }
 
 	public double getStepSize() { return stepSize; }
@@ -68,8 +70,9 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Cell
 
 	public int getStepCount() { return stepCount; }
 	public void setStepCount(int stepCount) {
+		boolean reset = this.stepCount != stepCount;
 		this.stepCount = stepCount;
-		initParamSequence();
+		if (reset) initParamSequence();
 	}
 
 	public List<WaveSet> getSamples() { return samples; }

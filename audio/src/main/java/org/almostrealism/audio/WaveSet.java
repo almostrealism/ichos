@@ -22,6 +22,7 @@ import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
 import org.almostrealism.audio.data.StaticWaveDataProviderFactory;
 import org.almostrealism.audio.data.WaveDataProvider;
 import org.almostrealism.audio.data.WaveDataProviderList;
+import org.almostrealism.audio.sequence.TempoAware;
 import org.almostrealism.audio.tone.DefaultKeyboardTuning;
 import org.almostrealism.audio.tone.KeyPosition;
 import org.almostrealism.audio.tone.KeyboardTuning;
@@ -33,7 +34,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class WaveSet {
+public class WaveSet implements TempoAware {
 	private ParameterizedWaveDataProviderFactory source;
 
 	private KeyboardTuning tuning;
@@ -58,6 +59,11 @@ public class WaveSet {
 	public void setSource(ParameterizedWaveDataProviderFactory source) { this.source = source; }
 
 	public int getCount() { return source.getCount(); }
+
+	@Override
+	public void setBpm(double bpm) {
+		if (source instanceof TempoAware) ((TempoAware) source).setBpm(bpm);
+	}
 
 	public KeyboardTuning getTuning() { return tuning; }
 
