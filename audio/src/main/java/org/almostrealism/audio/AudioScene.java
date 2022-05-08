@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -112,17 +113,17 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	public Cells getCells(List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output) {
 		sources.setBpm(getBPM());
 
-		Function<Gene<Scalar>, WaveCell> generator = g -> {
+		Function<Gene<Scalar>, IntFunction<WaveCell>> generator = g -> channel -> {
 			Producer<Scalar> duration = g.valueAt(2).getResultant(v(bpm(getBeatPerMinute()).l(1)));
 
 			if (sourceOverride == null) {
-				return getWaves().getChoiceCell(
+				return getWaves().getChoiceCell(channel,
 						g.valueAt(0).getResultant(Ops.ops().v(1.0)),
 						v(0.0), v(0.0), v(0.0),
 						g.valueAt(1).getResultant(duration),
 						enableRepeat ? duration : null);
 			} else {
-				return sourceOverride.getChoiceCell(g.valueAt(0).getResultant(Ops.ops().v(1.0)),
+				return sourceOverride.getChoiceCell(channel, g.valueAt(0).getResultant(Ops.ops().v(1.0)),
 						v(0.0), v(0.0), v(0.0), v(0.0), null);
 			}
 		};
@@ -131,7 +132,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 
 		// Generators
 		CellList cells = cells(genome.valueAt(DefaultAudioGenome.GENERATORS).length(),
-				i -> generator.apply(genome.valueAt(DefaultAudioGenome.GENERATORS, i)));
+				i -> generator.apply(genome.valueAt(DefaultAudioGenome.GENERATORS, i)).apply(i));
 
 		cells.addSetup(() -> genomeSetup);
 

@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
@@ -58,6 +59,7 @@ public class WaveSet implements TempoAware {
 
 	public void setSource(ParameterizedWaveDataProviderFactory source) { this.source = source; }
 
+	@JsonIgnore
 	public int getCount() { return source.getCount(); }
 
 	@Override
@@ -79,6 +81,7 @@ public class WaveSet implements TempoAware {
 
 	public void setNotes(Scale<?> notes) { this.notes = notes; }
 
+	@JsonIgnore
 	public List<Frequency> getFrequencies() {
 		double r = tuning.getTone(root).asHertz();
 		return IntStream.range(0, notes.length())

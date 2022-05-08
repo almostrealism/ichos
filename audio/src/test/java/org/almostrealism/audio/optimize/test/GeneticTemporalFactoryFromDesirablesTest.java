@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -240,13 +241,13 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 
 		List<TemporalFactor<Scalar>> temporals = new ArrayList<>();
 
-		Function<Gene<Scalar>, WaveCell> generator = g -> {
+		Function<Gene<Scalar>, IntFunction<WaveCell>> generator = g -> channel -> {
 			TemporalFactor<Scalar> tf = (TemporalFactor<Scalar>) g.valueAt(2);
 			temporals.add(tf);
 
 			Producer<Scalar> duration = tf.getResultant(v(bpm(scene.getBeatPerMinute()).l(1)));
 
-			return scene.getWaves().getChoiceCell(
+			return scene.getWaves().getChoiceCell(channel,
 					g.valueAt(0).getResultant(Ops.ops().v(1.0)),
 					v(0.0), v(0.0), v(0.0),
 					g.valueAt(1).getResultant(duration), duration);
@@ -258,7 +259,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 
 		// Generators
 		CellList cells = cells(genome.valueAt(DefaultAudioGenome.GENERATORS).length(),
-				i -> generator.apply(genome.valueAt(DefaultAudioGenome.GENERATORS, i)));
+				i -> generator.apply(genome.valueAt(DefaultAudioGenome.GENERATORS, i)).apply(i));
 
 //		if (enableMainFilterUp) {
 //			// Apply dynamic high pass filters

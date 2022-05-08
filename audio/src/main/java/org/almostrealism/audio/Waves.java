@@ -102,9 +102,10 @@ public class Waves implements TempoAware, CodeFeatures {
 		getChildren().forEach(c -> c.setBpm(bpm));
 	}
 
-	public WaveCell getChoiceCell(Producer<Scalar> decision, Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z,
+	public WaveCell getChoiceCell(int src, Producer<Scalar> decision,
+								  Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z,
 								  Producer<Scalar> offset, Producer<Scalar> duration) {
-		SegmentList segments = getSegments(x, y, z);
+		SegmentList segments = getSegments(src, x, y, z);
 
 		Map<ScalarBank, List<Segment>> segmentsByBank = segments.getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
 		if (segmentsByBank.size() > 1) {
@@ -129,22 +130,24 @@ public class Waves implements TempoAware, CodeFeatures {
 	}
 
 	@JsonIgnore
-	public SegmentList getSegments(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
+	public SegmentList getSegments(int src, Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z) {
+		if (!choices.getChoices().contains(src)) return new SegmentList(new ArrayList<>());
+
 		if (isLeaf()) {
 			WaveDataProviderList provider = source.create(x, y, z);
 			return new SegmentList(provider.getProviders()
 					.stream().map(p -> new Segment(sourceName, p.get().getWave(), pos, len))
 					.collect(Collectors.toList()), provider.setup());
 		} else {
-			List<SegmentList> lists = getChildren().stream().map(c -> c.getSegments(x, y, z)).collect(Collectors.toList());
+			List<SegmentList> lists = getChildren().stream().map(c -> c.getSegments(src, x, y, z)).collect(Collectors.toList());
 			List<Segment> segments = lists.stream().map(SegmentList::getSegments).flatMap(List::stream).collect(Collectors.toList());
 			OperationList setup = lists.stream().map(SegmentList::setup).collect(OperationList.collector());
 			return new SegmentList(segments, setup);
 		}
 	}
 
-	public Segment getSegmentChoice(double decision, double x, double y, double z) {
-		SegmentList segments = getSegments(v(x), v(y), v(z));
+	public Segment getSegmentChoice(int src, double decision, double x, double y, double z) {
+		SegmentList segments = getSegments(src, v(x), v(y), v(z));
 		if (segments.isEmpty()) return null;
 
 		return segments.getSegments().get((int) (decision * segments.getSegments().size()));
@@ -153,19 +156,22 @@ public class Waves implements TempoAware, CodeFeatures {
 	@JsonIgnore
 	public boolean isLeaf() { return source != null || (pos > -1 && len > -1); }
 
-	public void addFiles(File... files) { addFiles(List.of(files)); }
+	public void addFiles(RoutingChoices choices, File... files) { addFiles(choices, List.of(files)); }
 
-	public void addFiles(Collection<File> files) {
+	public void addFiles(RoutingChoices choices, Collection<File> files) {
 		if (isLeaf()) throw new UnsupportedOperationException();
 
 		files.stream().map(file -> {
 					try {
-						return Waves.loadAudio(file, w -> w.getSampleRate() == OutputLine.sampleRate);
+						Waves waves = Waves.loadAudio(file, w -> w.getSampleRate() == OutputLine.sampleRate);
+						waves.setChoices(choices);
+						return waves;
 					} catch (UnsupportedOperationException | IOException e) {
 						return null;
 					}
 				}).filter(Objects::nonNull).map(wav -> {
 					Waves waves = new Waves(wav.getSourceName());
+					waves.getChoices().getChoices().addAll(choices.getChoices());
 					waves.getChildren().add(wav);
 					return waves;
 				}).forEach(this.getChildren()::add);
@@ -200,8 +206,12 @@ public class Waves implements TempoAware, CodeFeatures {
 
 		Waves waves = new Waves(sourceName);
 		IntStream.range(0, len / frames)
-				.mapToObj(i -> new Waves(sourceName, source, pos + i * frames, frames))
-				.filter(w -> w.getSegments(null, null, null).getSegments().get(0).range().length().getValue() > (silenceThreshold * frames))
+				.mapToObj(i -> {
+					Waves w = new Waves(sourceName, source, pos + i * frames, frames);
+					w.getChoices().getChoices().add(0);
+					return w;
+				})
+				.filter(w -> w.getSegments(0, null, null, null).getSegments().get(0).range().length().getValue() > (silenceThreshold * frames))
 				.forEach(w -> waves.getChildren().add(w));
 		return waves;
 	}

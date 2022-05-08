@@ -19,7 +19,9 @@ package org.almostrealism.audio.optimize;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.almostrealism.audio.AudioScene;
@@ -58,6 +60,7 @@ import org.almostrealism.optimize.PopulationOptimizer;
 
 public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	public static final int verbosity = 0;
+	public static final boolean enableSourcesJson = false;
 
 	public static String LIBRARY = "Library";
 	public static String STEMS = "Stems";
@@ -314,10 +317,15 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 		WavFile.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
 
-		AudioScene<?> scene = new AudioScene<>(null, 116, 1, 3, OutputLine.sampleRate);
+		int sourceCount = 6;
+		AudioScene<?> scene = new AudioScene<>(null, 116, sourceCount, 3, OutputLine.sampleRate);
+
+		List<Integer> choices = IntStream.range(0, sourceCount).mapToObj(i -> i).collect(Collectors.toList());
 
 		File sources = new File("sources.json");
-		if (sources.exists()) {
+		Waves waves = scene.getWaves();
+
+		if (enableSourcesJson && sources.exists()) {
 			scene.setWaves(Waves.load(sources));
 		} else {
 //			scene.getWaves().addSplits(Arrays.asList(new File(STEMS).listFiles()), 116.0, Math.pow(10, -6), 1.0, 2.0, 4.0);
@@ -335,7 +343,11 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			sequencer.setBpm(116);
 			sequencer.getSamples().add(synthNotes);
 
-			scene.getWaves().getChildren().add(new Waves("Sequencer", new WaveSet(sequencer)));
+			Waves seqWaves = new Waves("Sequencer", new WaveSet(sequencer));
+			seqWaves.getChoices().setChoices(choices);
+
+			waves.getChildren().add(seqWaves);
+			waves.getChoices().setChoices(choices);
 		}
 
 		// GeneticTemporalFactoryFromDesirables.sourceOverride = new Waves();

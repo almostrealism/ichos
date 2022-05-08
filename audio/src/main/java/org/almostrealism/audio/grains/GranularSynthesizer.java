@@ -51,6 +51,7 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 	private List<GrainSet> grains;
 
 	public GranularSynthesizer() {
+		gain = 1.0;
 		grains = new ArrayList<>();
 	}
 

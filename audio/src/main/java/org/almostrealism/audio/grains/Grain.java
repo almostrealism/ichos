@@ -21,6 +21,7 @@ import io.almostrealism.code.Memory;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.hardware.MemoryData;
+import org.almostrealism.hardware.PooledMem;
 
 public class Grain extends PackedCollection {
 	public Grain() {
@@ -60,6 +61,10 @@ public class Grain extends PackedCollection {
 
 	@JsonIgnore
 	@Override
+	public int getDelegateOffset() { return super.getDelegateOffset(); }
+
+	@JsonIgnore
+	@Override
 	public int getCount() { return super.getCount(); }
 
 	@JsonIgnore
@@ -73,6 +78,10 @@ public class Grain extends PackedCollection {
 	@JsonIgnore
 	@Override
 	public MemoryData getRootDelegate() { return super.getRootDelegate(); }
+
+	@JsonIgnore
+	@Override
+	public PooledMem getDefaultDelegate() { return super.getDefaultDelegate(); }
 
 	public double getStart() { return toArray(0, 1)[0]; }
 	public void setStart(double start) { setMem(0, start); }

@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio.sequence;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
@@ -78,6 +79,7 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 	public List<WaveSet> getSamples() { return samples; }
 	public void setSamples(List<WaveSet> samples) { this.samples = samples; }
 
+	@JsonIgnore
 	public double getDuration() { return bpm.l(getStepCount() * getStepSize()); }
 
 	@Override

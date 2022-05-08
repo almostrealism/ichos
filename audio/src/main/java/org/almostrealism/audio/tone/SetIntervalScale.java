@@ -17,15 +17,28 @@
 package org.almostrealism.audio.tone;
 
 public class SetIntervalScale<T extends KeyPosition<T>> implements Scale<T> {
-	private final T root;
-	private final int repetitions;
-	private final int[] intervals;
+	private T root;
+	private int repetitions;
+	private int[] intervals;
+
+	public SetIntervalScale() { }
 
 	public SetIntervalScale(T root, int repetitions, int... intervals) {
 		this.root = root;
 		this.repetitions = repetitions;
 		this.intervals = intervals;
 	}
+
+	public T getRoot() { return root; }
+	public void setRoot(T root) { this.root = root; }
+
+	public void setRoot(String root) { setRoot((T) WesternChromatic.valueOf(root)); }
+
+	public int getRepetitions() { return repetitions; }
+	public void setRepetitions(int repetitions) { this.repetitions = repetitions; }
+
+	public int[] getIntervals() { return intervals; }
+	public void setIntervals(int[] intervals) { this.intervals = intervals; }
 
 	@Override
 	public T valueAt(int position) {
