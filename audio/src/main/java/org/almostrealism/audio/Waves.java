@@ -169,12 +169,14 @@ public class Waves implements TempoAware, CodeFeatures {
 					} catch (UnsupportedOperationException | IOException e) {
 						return null;
 					}
-				}).filter(Objects::nonNull).map(wav -> {
-					Waves waves = new Waves(wav.getSourceName());
-					waves.getChoices().getChoices().addAll(choices.getChoices());
-					waves.getChildren().add(wav);
-					return waves;
-				}).forEach(this.getChildren()::add);
+				}).filter(Objects::nonNull)
+//				.map(wav -> {
+//					Waves waves = new Waves(wav.getSourceName());
+//					waves.getChoices().getChoices().addAll(choices.getChoices());
+//					waves.getChildren().add(wav);
+//					return waves;
+//				})
+				.forEach(this.getChildren()::add);
 	}
 
 	public void addSplits(Collection<File> files, double bpm, double silenceThreshold, Double... splits) {

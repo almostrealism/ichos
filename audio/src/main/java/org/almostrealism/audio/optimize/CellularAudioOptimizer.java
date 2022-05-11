@@ -60,7 +60,7 @@ import org.almostrealism.optimize.PopulationOptimizer;
 
 public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	public static final int verbosity = 0;
-	public static final boolean enableSourcesJson = false;
+	public static final boolean enableSourcesJson = true;
 
 	public static String LIBRARY = "Library";
 	public static String STEMS = "Stems";
@@ -289,9 +289,9 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	public static void main(String args[]) throws IOException {
 		CLComputeContext.enableFastQueue = true;
 		StableDurationHealthComputation.enableTimeout = true;
-		AudioScene.enableMainFilterUp = true;
+		AudioScene.enableMainFilterUp = false; // true;
 		AudioScene.enableEfxFilters = true;
-		AudioScene.enableEfx = true;
+		AudioScene.enableEfx = false; // true;
 		AudioScene.enableWetInAdjustment = true;
 		AudioScene.enableMasterFilterDown = false;
 		AudioScene.disableClean = false;
@@ -326,7 +326,8 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		Waves waves = scene.getWaves();
 
 		if (enableSourcesJson && sources.exists()) {
-			scene.setWaves(Waves.load(sources));
+			waves = Waves.load(sources);
+			scene.setWaves(waves);
 		} else {
 //			scene.getWaves().addSplits(Arrays.asList(new File(STEMS).listFiles()), 116.0, Math.pow(10, -6), 1.0, 2.0, 4.0);
 

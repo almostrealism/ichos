@@ -107,6 +107,8 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 			providers.add(new DynamicWaveDataProvider("synth://" + UUID.randomUUID(), destination));
 		});
 
+		WaveOutput sourceRec = new WaveOutput();
+
 		return new WaveDataProviderList(providers, () -> () -> {
 			ParameterSet params = new ParameterSet(evX.evaluate().getValue(), evY.evaluate().getValue(), evZ.evaluate().getValue());
 
@@ -114,7 +116,8 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 
 			for (int i = 0; i < playbackRates.size(); i++) {
 				playbackRate.get(0).setValue(playbackRates.get(i).asHertz());
-				System.out.println("GranularSynthesizer: Rendering grains for playback rate " + playbackRates.get(i) + "...");
+				if (WaveOutput.enableVerbose)
+					System.out.println("GranularSynthesizer: Rendering grains for playback rate " + playbackRates.get(i) + "...");
 
 				List<ScalarBank> results = new ArrayList<>();
 				int count = grains.stream().map(GrainSet::getGrains).mapToInt(List::size).sum();
@@ -135,7 +138,6 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 						Grain grain = grainSet.getGrain(n);
 						GrainParameters gp = grainSet.getParams(n);
 
-						WaveOutput sourceRec = new WaveOutput();
 						w(source).map(k -> new ReceptorCell<>(sourceRec)).iter(source.getWave().getCount(), false).get().run();
 
 						ScalarBank raw = new ScalarBank(getCount());
@@ -150,14 +152,16 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 						mod.get().kernelEvaluate(result, WaveOutput.timeline.getValue(), raw);
 
 						results.add(result);
+
+						sourceRec.reset();
 					}
 				}
 
 				ScalarProducer sum = scalarAdd(Input.generateArguments(2 * getCount(), 0, results.size())).multiply(gain / count);
 
-				System.out.println("GranularSynthesizer: Summing grains...");
+				if (WaveOutput.enableVerbose) System.out.println("GranularSynthesizer: Summing grains...");
 				sum.get().kernelEvaluate(providers.get(i).get().getWave(), results.stream().toArray(MemoryBank[]::new));
-				System.out.println("GranularSynthesizer: Done");
+				if (WaveOutput.enableVerbose) System.out.println("GranularSynthesizer: Done");
 			}
 		});
 	}
