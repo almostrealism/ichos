@@ -36,6 +36,7 @@ import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.Input;
+import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.MemoryBank;
 import org.almostrealism.time.Frequency;
 
@@ -148,9 +149,12 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 						double amp = gp.getAmp().apply(params);
 						double phase = gp.getPhase().apply(params);
 						double wavelength = ampModWavelengthMin + Math.abs(gp.getWavelength().apply(params)) * (ampModWavelengthMax - ampModWavelengthMin);
-						ScalarProducer mod = sinw(scalarSubtract(v(Scalar.class, 0), v(phase)), v(wavelength), v(amp)).multiply(v(Scalar.class, 1));
-						mod.get().kernelEvaluate(result, WaveOutput.timeline.getValue(), raw);
 
+						ScalarProducer mod = sinw(scalarSubtract(v(Scalar.class, 0), v(phase)), v(wavelength), v(amp)).multiply(v(Scalar.class, 1));
+						KernelizedEvaluable<Scalar> ev = mod.get();
+						ev.kernelEvaluate(result, WaveOutput.timeline.getValue(), raw);
+
+						// System.out.println("timeline[50000] = " + WaveOutput.timeline.getValue().get(50000));
 						results.add(result);
 
 						sourceRec.reset();

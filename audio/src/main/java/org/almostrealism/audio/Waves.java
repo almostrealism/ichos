@@ -62,7 +62,7 @@ public class Waves implements TempoAware, CodeFeatures {
 	public Waves(String sourceName) { this(sourceName, null, -1, -1); }
 
 	public Waves(String sourceName, WaveSet source) {
-		this(sourceName, source, 0, source.getCount());
+		this(sourceName, source, -1, -1);
 	}
 
 	public Waves(String sourceName, WaveSet source, int pos, int len) {

@@ -25,6 +25,11 @@ public class RoutingChoices {
 
 	public RoutingChoices() { setChoices(new ArrayList<>()); }
 
+	public RoutingChoices(Integer... choices) {
+		this();
+		getChoices().addAll(List.of(choices));
+	}
+
 //	public RoutingChoices(int sourceCount, int delayCount) {
 //		setSourceCount(sourceCount);
 //		setDelayCount(delayCount);

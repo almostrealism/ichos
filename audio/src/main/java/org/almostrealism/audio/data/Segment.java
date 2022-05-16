@@ -34,6 +34,15 @@ public class Segment implements Setup {
 	}
 
 	public Segment(String sourceText, ScalarBank source, int pos, int len, Supplier<Runnable> setup) {
+		if (len == -1) {
+			pos = 0;
+			len = source.getCount();
+		}
+
+		if (pos + len > source.getCount()) {
+			throw new IllegalArgumentException("Cannot create Segment from " + pos + " to " + (pos + len) + " when source length is " + source.getCount());
+		}
+
 		this.sourceText = sourceText;
 		this.source = (ScalarBank) source.getRootDelegate();
 		this.pos = (source.getOffset() / 2) + pos;

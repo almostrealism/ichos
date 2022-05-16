@@ -43,6 +43,11 @@ public class GrainSet {
 		params.add(GrainParameters.random());
 	}
 
+	public void removeGrain(int index) {
+		grains.remove(index);
+		params.remove(index);
+	}
+
 	public Grain addGrain(GrainGenerationSettings settings) {
 		Grain grain = new Grain();
 		grain.setStart(settings.grainPositionMin + source.getDuration() * Math.random() * (settings.grainPositionMax - settings.grainPositionMin));

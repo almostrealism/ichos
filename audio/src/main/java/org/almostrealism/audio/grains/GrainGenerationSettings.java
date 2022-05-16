@@ -19,5 +19,5 @@ package org.almostrealism.audio.grains;
 public class GrainGenerationSettings {
 	public double grainPositionMin = 0, grainPositionMax = 1;
 	public double grainDurationMin = 0.05, grainDurationMax = 0.2;
-	public double playbackRateMin = -4.0, playbackRateMax = 4.0;
+	public double playbackRateMin = 0.25, playbackRateMax = 4.0;
 }

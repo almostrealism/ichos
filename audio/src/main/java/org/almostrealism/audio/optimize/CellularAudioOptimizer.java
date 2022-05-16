@@ -18,6 +18,7 @@ package org.almostrealism.audio.optimize;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
@@ -26,8 +27,12 @@ import java.util.stream.IntStream;
 
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.DesirablesProvider;
+import org.almostrealism.audio.RoutingChoices;
 import org.almostrealism.audio.WaveSet;
+import org.almostrealism.audio.data.FileWaveDataProvider;
+import org.almostrealism.audio.grains.Grain;
 import org.almostrealism.audio.grains.GrainGenerationSettings;
+import org.almostrealism.audio.grains.GrainParameters;
 import org.almostrealism.audio.grains.GranularSynthesizer;
 import org.almostrealism.audio.health.AudioHealthComputation;
 import org.almostrealism.audio.health.SilenceDurationHealthComputation;
@@ -61,6 +66,7 @@ import org.almostrealism.optimize.PopulationOptimizer;
 public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	public static final int verbosity = 0;
 	public static final boolean enableSourcesJson = true;
+	public static final boolean enableStems = false;
 
 	public static String LIBRARY = "Library";
 	public static String STEMS = "Stems";
@@ -287,11 +293,11 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	 * @see  CellularAudioOptimizer#run()
 	 */
 	public static void main(String args[]) throws IOException {
-		CLComputeContext.enableFastQueue = true;
+		CLComputeContext.enableFastQueue = false;
 		StableDurationHealthComputation.enableTimeout = true;
-		AudioScene.enableMainFilterUp = false; // true;
+		AudioScene.enableMainFilterUp = true;
 		AudioScene.enableEfxFilters = true;
-		AudioScene.enableEfx = false; // true;
+		AudioScene.enableEfx = true;
 		AudioScene.enableWetInAdjustment = true;
 		AudioScene.enableMasterFilterDown = false;
 		AudioScene.disableClean = false;
@@ -322,37 +328,56 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 		List<Integer> choices = IntStream.range(0, sourceCount).mapToObj(i -> i).collect(Collectors.toList());
 
+		GranularSynthesizer synth = new GranularSynthesizer();
+		synth.setGain(3.0);
+		synth.addFile("Library/organ.wav");
+		synth.addGrain(new GrainGenerationSettings());
+		synth.addGrain(new GrainGenerationSettings());
+
+		WaveSet synthNotes = new WaveSet(synth);
+		synthNotes.setRoot(WesternChromatic.C3);
+		synthNotes.setNotes(WesternScales.major(WesternChromatic.C3, 1));
+
+		GridSequencer sequencer = new GridSequencer();
+		sequencer.setStepCount(8);
+		// sequencer.getSamples().add(synthNotes);
+		sequencer.getSamples().add(new WaveSet(new FileWaveDataProvider("Library/MD_SNARE_09.wav")));
+		sequencer.getSamples().add(new WaveSet(new FileWaveDataProvider("Library/MD_SNARE_11.wav")));
+		sequencer.getSamples().add(new WaveSet(new FileWaveDataProvider("Library/Snare Perc DD.wav")));
+
+		Waves seqWaves = new Waves("Sequencer", new WaveSet(sequencer));
+		seqWaves.getChoices().setChoices(choices);
+
+		Waves group = new Waves("Group");
+		group.getChoices().setChoices(choices);
+		group.getChildren().add(seqWaves);
+
+
 		File sources = new File("sources.json");
 		Waves waves = scene.getWaves();
 
 		if (enableSourcesJson && sources.exists()) {
 			waves = Waves.load(sources);
 			scene.setWaves(waves);
+
+			waves.getChildren().get(0).getChildren().get(0).setPos(-1);
+			waves.getChildren().get(0).getChildren().get(0).setLen(-1);
+			waves.getChildren().get(1).getChildren().get(0).setPos(-1);
+			waves.getChildren().get(1).getChildren().get(0).setLen(-1);
+			waves.getChildren().get(2).getChildren().get(0).setPos(-1);
+			waves.getChildren().get(2).getChildren().get(0).setLen(-1);
+			waves.getChildren().get(3).getChildren().get(0).setPos(-1);
+			waves.getChildren().get(3).getChildren().get(0).setLen(-1);
+		} else if (enableStems) {
+			waves.addSplits(Arrays.asList(new File(STEMS).listFiles()), 116.0, Math.pow(10, -6), 1.0, 2.0, 4.0);
 		} else {
-//			scene.getWaves().addSplits(Arrays.asList(new File(STEMS).listFiles()), 116.0, Math.pow(10, -6), 1.0, 2.0, 4.0);
-
-			GranularSynthesizer synth = new GranularSynthesizer();
-			synth.setGain(3.0);
-			synth.addFile("Library/organ.wav");
-			synth.addGrain(new GrainGenerationSettings());
-
-			WaveSet synthNotes = new WaveSet(synth);
-			synthNotes.setRoot(WesternChromatic.C3);
-			synthNotes.setNotes(WesternScales.major(WesternChromatic.C3, 1));
-
-			GridSequencer sequencer = new GridSequencer();
-			sequencer.setBpm(116);
-			sequencer.getSamples().add(synthNotes);
-
-			Waves seqWaves = new Waves("Sequencer", new WaveSet(sequencer));
-			seqWaves.getChoices().setChoices(choices);
-
-			waves.getChildren().add(seqWaves);
+			waves.getChildren().add(group);
 			waves.getChoices().setChoices(choices);
 		}
 
-		// GeneticTemporalFactoryFromDesirables.sourceOverride = new Waves();
-		// GeneticTemporalFactoryFromDesirables.sourceOverride.addFiles(new File("Library/MD_SNARE_09.wav"));
+//		AudioScene.sourceOverride = new Waves();
+//		AudioScene.sourceOverride.getChoices().getChoices().addAll(List.of(0, 1, 2, 3, 4, 5));
+//		AudioScene.sourceOverride.addFiles(new RoutingChoices(0, 1, 2, 3, 4, 5), new File("Library/MD_SNARE_09.wav"));
 
 		CellularAudioOptimizer opt = build(scene, PopulationOptimizer.enableBreeding ? 25 : 1);
 		opt.init();
