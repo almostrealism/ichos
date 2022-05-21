@@ -46,6 +46,7 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 	private Frequency bpm;
 	private double stepSize;
 	private int stepCount;
+	private int totalBeats;
 	private List<WaveSet> samples;
 
 	private ParameterFunctionSequence sequence;
@@ -54,10 +55,12 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 		setBpm(120);
 		setStepSize(1.0);
 		setStepCount(16);
+		setTotalBeats(16);
 		setSamples(new ArrayList<>());
+		initParamSequence();
 	}
 
-	protected void initParamSequence() {
+	public void initParamSequence() {
 		sequence = ParameterFunctionSequence.random(getStepCount());
 	}
 
@@ -70,17 +73,20 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 	public void setStepSize(double stepSize) { this.stepSize = stepSize; }
 
 	public int getStepCount() { return stepCount; }
-	public void setStepCount(int stepCount) {
-		boolean reset = this.stepCount != stepCount;
-		this.stepCount = stepCount;
-		if (reset) initParamSequence();
-	}
+	public void setStepCount(int stepCount) { this.stepCount = stepCount; }
+
+	public int getTotalBeats() { return totalBeats; }
+	public void setTotalBeats(int totalBeats) { this.totalBeats = totalBeats; }
 
 	public List<WaveSet> getSamples() { return samples; }
 	public void setSamples(List<WaveSet> samples) { this.samples = samples; }
 
+	public ParameterFunctionSequence getSequence() { return sequence; }
+
+	public void setSequence(ParameterFunctionSequence sequence) { this.sequence = sequence; }
+
 	@JsonIgnore
-	public double getDuration() { return bpm.l(getStepCount() * getStepSize()); }
+	public double getDuration() { return bpm.l(getTotalBeats()); }
 
 	@Override
 	public int getCount() { return (int) (getDuration() * OutputLine.sampleRate); }
@@ -109,11 +115,10 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 		}
 
 		cells = cells
-				.grid(getDuration(), getStepCount(),
+				.grid(bpm.l(getStepSize() * getStepCount()), getStepCount(),
 						(IntFunction<Producer<Scalar>>) i -> () -> args -> {
 							ParameterSet params = new ParameterSet(evX.evaluate().getValue(), evY.evaluate().getValue(), evZ.evaluate().getValue());
 							Scalar s = new Scalar(sequence.apply(i).apply(params));
-							// System.out.println("GridSequencer: Computed step - " + s.getValue());
 							return s;
 						})
 				.sum().map(i -> new ReceptorCell<>(output));

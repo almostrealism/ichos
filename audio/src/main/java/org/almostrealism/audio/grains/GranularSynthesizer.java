@@ -19,6 +19,11 @@ package org.almostrealism.audio.grains;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
+import io.almostrealism.relation.Provider;
+import org.almostrealism.Ops;
+import org.almostrealism.algebra.Pair;
+import org.almostrealism.algebra.PairBank;
+import org.almostrealism.algebra.PairProducer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarProducer;
@@ -38,7 +43,12 @@ import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.Input;
 import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.MemoryBank;
+import org.almostrealism.hardware.ctx.ContextSpecific;
+import org.almostrealism.hardware.ctx.DefaultContextSpecific;
+import org.almostrealism.hardware.mem.MemoryBankAdapter;
+import org.almostrealism.time.AcceleratedTimeSeries;
 import org.almostrealism.time.Frequency;
+import org.almostrealism.time.computations.AcceleratedTimeSeriesValueAt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +57,38 @@ import java.util.UUID;
 public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory, CellFeatures {
 	public static double ampModWavelengthMin = 0.1;
 	public static double ampModWavelengthMax = 10;
+
+	private static ContextSpecific<KernelizedEvaluable<Pair>> sourceKernel;
+	private static ContextSpecific<KernelizedEvaluable<Scalar>> playbackKernel;
+	private static ContextSpecific<KernelizedEvaluable<Scalar>> modKernel;
+
+	static {
+		sourceKernel = new DefaultContextSpecific<>(() ->
+			Ops.ops().pair(Ops.ops().scalarsMultiply(
+						Ops.ops().v(Scalar.class, 1), Ops.ops().v(Scalar.class, 2, -1)),
+					Ops.ops().v(Scalar.class, 0)).get()
+		);
+
+		playbackKernel = new DefaultContextSpecific<>(() -> {
+			TraversalPolicy grainShape = new TraversalPolicy(3);
+			Producer<PackedCollection> g = Ops.ops().v(PackedCollection.class, 1, -1);
+			ScalarProducer pos = Ops.ops().scalar(grainShape, g, 0).add(
+							Ops.ops().mod(Ops.ops().scalar(grainShape, g, 2).multiply(Ops.ops().v(Scalar.class, 2, -1))
+									.multiply(Ops.ops().v(Scalar.class, 0)), Ops.ops().scalar(grainShape, g, 1)))
+					.multiply(OutputLine.sampleRate);
+			Producer cursor = Ops.ops().pair(pos, Ops.ops().v(0.0));
+			return new AcceleratedTimeSeriesValueAt(Ops.ops().v(AcceleratedTimeSeries.class, 3, -1), cursor).get();
+		});
+
+		modKernel = new DefaultContextSpecific<>(() ->
+				Ops.ops().sinw(Ops.ops().scalarSubtract(Ops.ops().v(Scalar.class, 0),
+							Ops.ops().v(Scalar.class, 2, -1)),
+							Ops.ops().v(Scalar.class, 3, -1),
+							Ops.ops().v(Scalar.class, 4, -1))
+					.multiply(Ops.ops().v(Scalar.class, 1)).get());
+
+
+	}
 
 	private double gain;
 	private List<GrainSet> grains;
@@ -108,7 +150,7 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 			providers.add(new DynamicWaveDataProvider("synth://" + UUID.randomUUID(), destination));
 		});
 
-		WaveOutput sourceRec = new WaveOutput();
+		AcceleratedTimeSeries sourceRec = AcceleratedTimeSeries.defaultSeries();
 
 		return new WaveDataProviderList(providers, () -> () -> {
 			ParameterSet params = new ParameterSet(evX.evaluate().getValue(), evY.evaluate().getValue(), evZ.evaluate().getValue());
@@ -126,35 +168,26 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 				for (GrainSet grainSet : grains) {
 					WaveData source = grainSet.getSource().get();
 
-					TraversalPolicy grainShape = new TraversalPolicy(3);
-					Producer<PackedCollection> g = v(PackedCollection.class, 1, -1);
-
-					ScalarProducer pos = scalar(grainShape, g, 0).add(
-									mod(scalar(grainShape, g, 2).multiply(v(Scalar.class, 2, -1))
-											.multiply(v(Scalar.class, 0)), scalar(grainShape, g, 1)))
-							.multiply(source.getSampleRate());
-					Producer cursor = pair(pos, v(0.0));
-
 					for (int n = 0; n < grainSet.getGrains().size(); n++) {
 						Grain grain = grainSet.getGrain(n);
 						GrainParameters gp = grainSet.getParams(n);
 
-						w(source).map(k -> new ReceptorCell<>(sourceRec)).iter(source.getWave().getCount(), false).get().run();
+						// TODO  Create a kernel function that inserts every Scalar from a bank into AcceleratedTimeSeries, to replace this
+						// w(source).map(k -> new ReceptorCell<>(sourceRec)).iter(source.getWave().getCount(), false).get().run();
+
+						PairBank sourceRecBank = new PairBank(source.getWave().getCount(), sourceRec, 2, MemoryBankAdapter.defaultCacheLevel);
+						sourceKernel.getValue().kernelEvaluate(sourceRecBank, source.getWave(), WaveOutput.timeline.getValue(), new Scalar(source.getSampleRate()));
+						sourceRec.set(0, 1, source.getWave().getCount() + 1);
 
 						ScalarBank raw = new ScalarBank(getCount());
-						sourceRec.getData().valueAt(cursor).get()
-								.kernelEvaluate(raw, WaveOutput.timeline.getValue(), grain, playbackRate);
+						playbackKernel.getValue().kernelEvaluate(raw, WaveOutput.timeline.getValue(), grain, playbackRate, sourceRec);
 
 						ScalarBank result = new ScalarBank(getCount());
 						double amp = gp.getAmp().apply(params);
 						double phase = gp.getPhase().apply(params);
 						double wavelength = ampModWavelengthMin + Math.abs(gp.getWavelength().apply(params)) * (ampModWavelengthMax - ampModWavelengthMin);
+						modKernel.getValue().kernelEvaluate(result, WaveOutput.timeline.getValue(), raw, new Scalar(phase), new Scalar(wavelength), new Scalar(amp));
 
-						ScalarProducer mod = sinw(scalarSubtract(v(Scalar.class, 0), v(phase)), v(wavelength), v(amp)).multiply(v(Scalar.class, 1));
-						KernelizedEvaluable<Scalar> ev = mod.get();
-						ev.kernelEvaluate(result, WaveOutput.timeline.getValue(), raw);
-
-						// System.out.println("timeline[50000] = " + WaveOutput.timeline.getValue().get(50000));
 						results.add(result);
 
 						sourceRec.reset();

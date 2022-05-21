@@ -64,7 +64,7 @@ import org.almostrealism.heredity.ScaleFactor;
 import org.almostrealism.optimize.PopulationOptimizer;
 
 public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
-	public static final int verbosity = 0;
+	public static final int verbosity = 3;
 	public static final boolean enableSourcesJson = true;
 	public static final boolean enableStems = false;
 
@@ -114,6 +114,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			// Random genetic material generators
 			ChromosomeFactory<Scalar> generators = DefaultAudioGenome.generatorFactory(config.offsetChoices, config.repeatChoices,
 													config.repeatSpeedUpDurationMin, config.repeatSpeedUpDurationMax);   // GENERATORS
+			RandomChromosomeFactory parameters = new RandomChromosomeFactory();   // PARAMETERS
 			RandomChromosomeFactory volume = new RandomChromosomeFactory();       // VOLUME
 			RandomChromosomeFactory filterUp = new RandomChromosomeFactory();     // MAIN FILTER UP
 			RandomChromosomeFactory wetIn = new RandomChromosomeFactory();		  // WET IN
@@ -124,6 +125,8 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			RandomChromosomeFactory masterFilterDown = new RandomChromosomeFactory(); // MASTER FILTER DOWN
 
 			generators.setChromosomeSize(sources, 0); // GENERATORS
+
+			parameters.setChromosomeSize(sources, 3);
 
 			volume.setChromosomeSize(sources, 6);     // VOLUME
 			Pair periodicVolumeDurationRange = new Pair(
@@ -259,7 +262,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			IntStream.range(0, sources).forEach(i -> masterFilterDown.setRange(i, 4, new Pair(-1.0, -1.0)));
 			IntStream.range(0, sources).forEach(i -> masterFilterDown.setRange(i, 5, overallMasterFilterDownOffsetRange));
 
-			return Genome.fromChromosomes(generators, volume, filterUp, wetIn, processors, transmission, wetOut, filters, masterFilterDown);
+			return Genome.fromChromosomes(generators, parameters, volume, filterUp, wetIn, processors, transmission, wetOut, filters, masterFilterDown);
 		};
 	}
 
@@ -274,6 +277,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 							Breeders.randomChoiceBreeder(),
 							Breeders.randomChoiceBreeder(),
 							Breeders.averageBreeder()), 							   // GENERATORS
+					Breeders.averageBreeder(),										   // PARAMETERS
 					Breeders.averageBreeder(),  									   // VOLUME
 					Breeders.averageBreeder(),  									   // MAIN FILTER UP
 					Breeders.averageBreeder(),  									   // WET IN
@@ -311,6 +315,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		PopulationOptimizer.enableDisplayGenomes = verbosity > 2;
 		NativeComputeContext.enableVerbose = verbosity > 2;
 		SilenceDurationHealthComputation.enableVerbose = verbosity > 2;
+		HardwareOperator.enableLog = verbosity > 2;
 		HardwareOperator.enableVerboseLog = verbosity > 3;
 
 		// PopulationOptimizer.THREADS = verbosity < 1 ? 2 : 1;
@@ -340,6 +345,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 		GridSequencer sequencer = new GridSequencer();
 		sequencer.setStepCount(8);
+		sequencer.initParamSequence();
 		// sequencer.getSamples().add(synthNotes);
 		sequencer.getSamples().add(new WaveSet(new FileWaveDataProvider("Library/MD_SNARE_09.wav")));
 		sequencer.getSamples().add(new WaveSet(new FileWaveDataProvider("Library/MD_SNARE_11.wav")));
@@ -360,14 +366,8 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			waves = Waves.load(sources);
 			scene.setWaves(waves);
 
-			waves.getChildren().get(0).getChildren().get(0).setPos(-1);
-			waves.getChildren().get(0).getChildren().get(0).setLen(-1);
-			waves.getChildren().get(1).getChildren().get(0).setPos(-1);
-			waves.getChildren().get(1).getChildren().get(0).setLen(-1);
-			waves.getChildren().get(2).getChildren().get(0).setPos(-1);
-			waves.getChildren().get(2).getChildren().get(0).setLen(-1);
-			waves.getChildren().get(3).getChildren().get(0).setPos(-1);
-			waves.getChildren().get(3).getChildren().get(0).setLen(-1);
+//			GridSequencer seq = (GridSequencer) waves.getChildren().get(0).getChildren().get(0).getSource().getSource();
+//			((GranularSynthesizer) seq.getSamples().get(0).getSource()).setGain(12);
 		} else if (enableStems) {
 			waves.addSplits(Arrays.asList(new File(STEMS).listFiles()), 116.0, Math.pow(10, -6), 1.0, 2.0, 4.0);
 		} else {

@@ -491,8 +491,8 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		ValueSequenceCell c = (ValueSequenceCell) seq(choices, v(duration), segments).get(0);
 		c.setReceptor(a(p(out)));
 
-		WaveOutput csv = new WaveOutput(new File("value-sequence-debug.wav"));
-		c.setMeter(csv);
+		// WaveOutput csv = new WaveOutput(new File("value-sequence-debug.wav"));
+		// c.setMeter(csv);
 
 		// TODO  By dropping the parent, we may be losing necessary dependencies
 		// TODO  However, if it is included, operations will be invoked multiple times

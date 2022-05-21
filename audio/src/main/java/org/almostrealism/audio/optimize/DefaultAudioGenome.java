@@ -43,14 +43,15 @@ import java.util.stream.IntStream;
 
 public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 	public static final int GENERATORS = 0;
-	public static final int VOLUME = 1;
-	public static final int MAIN_FILTER_UP = 2;
-	public static final int WET_IN = 3;
-	public static final int PROCESSORS = 4;
-	public static final int TRANSMISSION = 5;
-	public static final int WET_OUT = 6;
-	public static final int FX_FILTERS = 7;
-	public static final int MASTER_FILTER_DOWN = 8;
+	public static final int PARAMETERS = 1;
+	public static final int VOLUME = 2;
+	public static final int MAIN_FILTER_UP = 3;
+	public static final int WET_IN = 4;
+	public static final int PROCESSORS = 5;
+	public static final int TRANSMISSION = 6;
+	public static final int WET_OUT = 7;
+	public static final int FX_FILTERS = 8;
+	public static final int MASTER_FILTER_DOWN = 9;
 
 	public static double defaultResonance = 0.1; // TODO
 	private static double maxFrequency = 20000;
@@ -71,7 +72,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 	}
 
 	public DefaultAudioGenome(int sources, int delayLayers, int sampleRate) {
-		this(sources, delayLayers, 9, sampleRate);
+		this(sources, delayLayers, 10, sampleRate);
 	}
 
 	protected DefaultAudioGenome(int sources, int delayLayers, int length, int sampleRate) {

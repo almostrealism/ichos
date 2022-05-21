@@ -16,11 +16,14 @@
 
 package org.almostrealism.audio.data;
 
+import java.util.List;
 import java.util.function.IntFunction;
 import java.util.stream.IntStream;
 
 public class ParameterFunctionSequence implements IntFunction<ParameterFunction> {
 	private ParameterFunction steps[];
+
+	public ParameterFunctionSequence() { }
 
 	public ParameterFunctionSequence(int steps) {
 		this.steps = new ParameterFunction[steps];
@@ -29,6 +32,10 @@ public class ParameterFunctionSequence implements IntFunction<ParameterFunction>
 	public ParameterFunctionSequence(ParameterFunction... steps) {
 		this.steps = steps;
 	}
+
+	public void setSteps(List<ParameterFunction> steps) { this.steps = steps.toArray(new ParameterFunction[0]); }
+
+	public List<ParameterFunction> getSteps() { return List.of(steps); }
 
 	@Override
 	public ParameterFunction apply(int i) {

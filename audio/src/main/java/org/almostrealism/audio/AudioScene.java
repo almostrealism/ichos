@@ -35,6 +35,7 @@ import org.almostrealism.time.Frequency;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -88,22 +89,22 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 		tempoListeners.forEach(l -> l.accept(Frequency.forBPM(bpm)));
 	}
 
-	public double getBPM() {return this.bpm;}
+	public double getBPM() { return this.bpm; }
 
-	public Animation<T> getScene() {return scene;}
+	public Animation<T> getScene() { return scene; }
 
-	public DefaultAudioGenome getGenome() {return genome;}
+	public DefaultAudioGenome getGenome() { return genome; }
 
 	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
 
 	public void removeTempoListener(Consumer<Frequency> listener) { this.tempoListeners.remove(listener); }
 
 	@Override
-	public double getBeatPerMinute() {return bpm;}
+	public double getBeatPerMinute() { return bpm; }
 
-	public int getSourceCount() {return sourceCount;}
+	public int getSourceCount() { return sourceCount; }
 
-	public int getDelayLayerCount() {return delayLayerCount;}
+	public int getDelayLayerCount() { return delayLayerCount;}
 
 	public void setWaves(Waves waves) {this.sources = waves;}
 
@@ -113,14 +114,17 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	public Cells getCells(List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output) {
 		sources.setBpm(getBPM());
 
-		Function<Gene<Scalar>, IntFunction<WaveCell>> generator = g -> channel -> {
+		BiFunction<Gene<Scalar>, Gene<Scalar>, IntFunction<WaveCell>> generator = (g, p) -> channel -> {
 			Producer<Scalar> duration = g.valueAt(2).getResultant(v(bpm(getBeatPerMinute()).l(1)));
+
+			Producer<Scalar> x = p.valueAt(0).getResultant(v(1.0));
+			Producer<Scalar> y = p.valueAt(1).getResultant(v(1.0));
+			Producer<Scalar> z = p.valueAt(2).getResultant(v(1.0));
 
 			if (sourceOverride == null) {
 				return getWaves().getChoiceCell(channel,
 						g.valueAt(0).getResultant(Ops.ops().v(1.0)),
-						v(0.0), v(0.0), v(0.0),
-						g.valueAt(1).getResultant(duration),
+						x, y, z, g.valueAt(1).getResultant(duration),
 						enableRepeat ? duration : null);
 			} else {
 				return sourceOverride.getChoiceCell(channel, g.valueAt(0).getResultant(Ops.ops().v(1.0)),
@@ -132,7 +136,9 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 
 		// Generators
 		CellList cells = cells(genome.valueAt(DefaultAudioGenome.GENERATORS).length(),
-				i -> generator.apply(genome.valueAt(DefaultAudioGenome.GENERATORS, i)).apply(i));
+				i -> generator.apply(genome.valueAt(DefaultAudioGenome.GENERATORS, i),
+									genome.valueAt(DefaultAudioGenome.PARAMETERS, i))
+										.apply(i));
 
 		cells.addSetup(() -> genomeSetup);
 
