@@ -68,6 +68,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	private DefaultAudioGenome genome;
 
 	private List<Consumer<Frequency>> tempoListeners;
+	private List<Consumer<Waves>> sourcesListener;
 
 	public AudioScene(Animation<T> scene, int bpm, int sources, int delayLayers, int sampleRate) {
 		this.bpm = bpm;
@@ -75,6 +76,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 		this.delayLayerCount = delayLayers;
 		this.scene = scene;
 		this.tempoListeners = new ArrayList<>();
+		this.sourcesListener = new ArrayList<>();
 		this.genome = new DefaultAudioGenome(sources, delayLayers, sampleRate);
 		initSources();
 	}
@@ -96,20 +98,33 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	public DefaultAudioGenome getGenome() { return genome; }
 
 	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
-
 	public void removeTempoListener(Consumer<Frequency> listener) { this.tempoListeners.remove(listener); }
+
+	public void addSourcesListener(Consumer<Waves> listener) { this.sourcesListener.add(listener); }
+	public void removeSourcesListener(Consumer<Waves> listener) { this.sourcesListener.remove(listener); }
+
 
 	@Override
 	public double getBeatPerMinute() { return bpm; }
 
 	public int getSourceCount() { return sourceCount; }
 
-	public int getDelayLayerCount() { return delayLayerCount;}
+	public int getDelayLayerCount() { return delayLayerCount; }
 
-	public void setWaves(Waves waves) {this.sources = waves;}
+	public void setWaves(Waves waves) {
+		this.sources = waves;
+		sourcesListener.forEach(l -> l.accept(sources));
+	}
+
+	// This is needed because AudioScene doesn't manage save
+	// and restore itself. Once it does, this can be removed.
+	@Deprecated
+	public void triggerSourcesChange() {
+		sourcesListener.forEach(l -> l.accept(sources));
+	}
 
 	@Override
-	public Waves getWaves() {return sources;}
+	public Waves getWaves() { return sources; }
 
 	public Cells getCells(List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output) {
 		sources.setBpm(getBPM());
@@ -222,7 +237,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	 * This method wraps the specified {@link Factor} to prevent it from
 	 * being detected as Temporal by {@link org.almostrealism.graph.FilteredCell}s
 	 * that would proceed to invoke the {@link org.almostrealism.time.Temporal#tick()} operation.
-	 * This is not a good solution, and this process needs to be reworked so
+	 * This is not a good solution, and this process needs to be reworked, so
 	 * it is clear who bears the responsibility for invoking {@link org.almostrealism.time.Temporal#tick()}
 	 * and it doesn't get invoked multiple times.
 	 */
