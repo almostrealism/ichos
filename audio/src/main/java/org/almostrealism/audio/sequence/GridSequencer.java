@@ -57,7 +57,6 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 		setStepCount(16);
 		setTotalBeats(16);
 		setSamples(new ArrayList<>());
-		initParamSequence();
 	}
 
 	public void initParamSequence() {

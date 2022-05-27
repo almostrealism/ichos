@@ -26,6 +26,7 @@ import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.Waves;
 import org.almostrealism.graph.AdjustableDelayCell;
+import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.heredity.TemporalFactor;
@@ -241,7 +242,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 
 		List<TemporalFactor<Scalar>> temporals = new ArrayList<>();
 
-		Function<Gene<Scalar>, IntFunction<WaveCell>> generator = g -> channel -> {
+		Function<Gene<Scalar>, IntFunction<Cell<Scalar>>> generator = g -> channel -> {
 			TemporalFactor<Scalar> tf = (TemporalFactor<Scalar>) g.valueAt(2);
 			temporals.add(tf);
 

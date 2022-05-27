@@ -30,6 +30,7 @@ import org.almostrealism.audio.data.SegmentList;
 import org.almostrealism.audio.data.WaveDataProviderList;
 import org.almostrealism.audio.filter.EnvelopeProvider;
 import org.almostrealism.audio.sequence.TempoAware;
+import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.Frequency;
@@ -48,7 +49,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class Waves implements TempoAware, CodeFeatures {
+public class Waves implements TempoAware, CellFeatures {
 	private WaveSet source;
 	private EnvelopeProvider envelope;
 	private int pos = -1, len = -1;
@@ -102,14 +103,16 @@ public class Waves implements TempoAware, CodeFeatures {
 		getChildren().forEach(c -> c.setBpm(bpm));
 	}
 
-	public WaveCell getChoiceCell(int src, Producer<Scalar> decision,
-								  Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z,
-								  Producer<Scalar> offset, Producer<Scalar> duration) {
+	public ScalarTemporalCellAdapter getChoiceCell(int src, Producer<Scalar> decision,
+												   Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z,
+												   Producer<Scalar> offset, Producer<Scalar> duration) {
 		SegmentList segments = getSegments(src, x, y, z);
 
 		Map<ScalarBank, List<Segment>> segmentsByBank = segments.getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
 		if (segmentsByBank.size() > 1) {
 			throw new UnsupportedOperationException("More than one root ScalarBank for Waves instance");
+		} else if (segmentsByBank.size() <= 0) {
+			return silent();
 		}
 
 		ScalarBank source = segmentsByBank.keySet().iterator().next();

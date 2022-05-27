@@ -17,13 +17,15 @@
 package org.almostrealism.audio;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class RoutingChoices {
 //	private int sourceCount, delayCount;
-	private List<Integer> choices;
+	private Set<Integer> choices;
 
-	public RoutingChoices() { setChoices(new ArrayList<>()); }
+	public RoutingChoices() { setChoices(new HashSet<>()); }
 
 	public RoutingChoices(Integer... choices) {
 		this();
@@ -42,6 +44,6 @@ public class RoutingChoices {
 //	public int getDelayCount() { return delayCount; }
 //	public void setDelayCount(int delayCount) { this.delayCount = delayCount; }
 
-	public List<Integer> getChoices() { return choices; }
-	public void setChoices(List<Integer> choices) { this.choices = choices; }
+	public Set<Integer> getChoices() { return choices; }
+	public void setChoices(Set<Integer> choices) { this.choices = choices; }
 }

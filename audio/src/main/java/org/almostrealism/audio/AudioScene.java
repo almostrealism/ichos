@@ -21,6 +21,7 @@ import org.almostrealism.Ops;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
 import org.almostrealism.graph.AdjustableDelayCell;
+import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.graph.temporal.WaveCell;
@@ -70,7 +71,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	private List<Consumer<Frequency>> tempoListeners;
 	private List<Consumer<Waves>> sourcesListener;
 
-	public AudioScene(Animation<T> scene, int bpm, int sources, int delayLayers, int sampleRate) {
+	public AudioScene(Animation<T> scene, double bpm, int sources, int delayLayers, int sampleRate) {
 		this.bpm = bpm;
 		this.sourceCount = sources;
 		this.delayLayerCount = delayLayers;
@@ -129,7 +130,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	public Cells getCells(List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output) {
 		sources.setBpm(getBPM());
 
-		BiFunction<Gene<Scalar>, Gene<Scalar>, IntFunction<WaveCell>> generator = (g, p) -> channel -> {
+		BiFunction<Gene<Scalar>, Gene<Scalar>, IntFunction<Cell<Scalar>>> generator = (g, p) -> channel -> {
 			Producer<Scalar> duration = g.valueAt(2).getResultant(v(bpm(getBeatPerMinute()).l(1)));
 
 			Producer<Scalar> x = p.valueAt(0).getResultant(v(1.0));

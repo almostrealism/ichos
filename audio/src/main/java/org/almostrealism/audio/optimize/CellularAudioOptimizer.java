@@ -18,26 +18,23 @@ package org.almostrealism.audio.optimize;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.function.IntToDoubleFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.almostrealism.audio.AudioCellChoiceAdapter;
 import org.almostrealism.audio.AudioScene;
-import org.almostrealism.audio.DesirablesProvider;
-import org.almostrealism.audio.RoutingChoices;
 import org.almostrealism.audio.WaveSet;
 import org.almostrealism.audio.data.FileWaveDataProvider;
-import org.almostrealism.audio.grains.Grain;
 import org.almostrealism.audio.grains.GrainGenerationSettings;
-import org.almostrealism.audio.grains.GrainParameters;
 import org.almostrealism.audio.grains.GranularSynthesizer;
 import org.almostrealism.audio.health.AudioHealthComputation;
 import org.almostrealism.audio.health.SilenceDurationHealthComputation;
 import org.almostrealism.audio.health.StableDurationHealthComputation;
-import org.almostrealism.audio.DefaultDesirablesProvider;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBankHeap;
@@ -64,7 +61,7 @@ import org.almostrealism.heredity.ScaleFactor;
 import org.almostrealism.optimize.PopulationOptimizer;
 
 public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
-	public static final int verbosity = 3;
+	public static final int verbosity = 0;
 	public static final boolean enableSourcesJson = true;
 	public static final boolean enableStems = false;
 
@@ -112,7 +109,8 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	public static Supplier<Supplier<Genome<Scalar>>> generator(int sources, int delayLayers, GeneratorConfiguration config) {
 		return () -> {
 			// Random genetic material generators
-			ChromosomeFactory<Scalar> generators = DefaultAudioGenome.generatorFactory(config.offsetChoices, config.repeatChoices,
+			ChromosomeFactory<Scalar> generators = DefaultAudioGenome.generatorFactory(config.minChoice, config.maxChoice,
+													config.offsetChoices, config.repeatChoices,
 													config.repeatSpeedUpDurationMin, config.repeatSpeedUpDurationMax);   // GENERATORS
 			RandomChromosomeFactory parameters = new RandomChromosomeFactory();   // PARAMETERS
 			RandomChromosomeFactory volume = new RandomChromosomeFactory();       // VOLUME
@@ -127,6 +125,11 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			generators.setChromosomeSize(sources, 0); // GENERATORS
 
 			parameters.setChromosomeSize(sources, 3);
+			IntStream.range(0, sources).forEach(i -> {
+				parameters.setRange(i, 0, new Pair(config.minX.applyAsDouble(i), config.maxX.applyAsDouble(i)));
+				parameters.setRange(i, 1, new Pair(config.minY.applyAsDouble(i), config.maxY.applyAsDouble(i)));
+				parameters.setRange(i, 2, new Pair(config.minZ.applyAsDouble(i), config.maxZ.applyAsDouble(i)));
+			});
 
 			volume.setChromosomeSize(sources, 6);     // VOLUME
 			Pair periodicVolumeDurationRange = new Pair(
@@ -138,18 +141,20 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			Pair overallVolumeExponentRange = new Pair(
 					DefaultAudioGenome.factorForPolyAdjustmentExponent(config.overallVolumeExponentMin),
 					DefaultAudioGenome.factorForPolyAdjustmentExponent(config.overallVolumeExponentMax));
-			Pair overallVolumeInitialRange = new Pair(
-					DefaultAudioGenome.factorForAdjustmentInitial(config.minVolume),
-					DefaultAudioGenome.factorForAdjustmentInitial(config.maxVolume));
 			Pair overallVolumeOffsetRange = new Pair(
 					DefaultAudioGenome.factorForAdjustmentOffset(config.overallVolumeOffsetMin),
 					DefaultAudioGenome.factorForAdjustmentOffset(config.overallVolumeOffsetMax));
-			IntStream.range(0, sources).forEach(i -> volume.setRange(i, 0, periodicVolumeDurationRange));
-			IntStream.range(0, sources).forEach(i -> volume.setRange(i, 1, overallVolumeDurationRange));
-			IntStream.range(0, sources).forEach(i -> volume.setRange(i, 2, overallVolumeExponentRange));
-			IntStream.range(0, sources).forEach(i -> volume.setRange(i, 3, overallVolumeInitialRange));
-			IntStream.range(0, sources).forEach(i -> volume.setRange(i, 4, new Pair(-1.0, -1.0)));
-			IntStream.range(0, sources).forEach(i -> volume.setRange(i, 5, overallVolumeOffsetRange));
+
+			IntStream.range(0, sources).forEach(i -> {
+				volume.setRange(i, 0, periodicVolumeDurationRange);
+				volume.setRange(i, 1, overallVolumeDurationRange);
+				volume.setRange(i, 2, overallVolumeExponentRange);
+				volume.setRange(i, 3, new Pair(
+						DefaultAudioGenome.factorForAdjustmentInitial(config.minVolume.applyAsDouble(i)),
+						DefaultAudioGenome.factorForAdjustmentInitial(config.maxVolume.applyAsDouble(i))));
+				volume.setRange(i, 4, new Pair(-1.0, -1.0));
+				volume.setRange(i, 5, overallVolumeOffsetRange);
+			});
 
 			filterUp.setChromosomeSize(sources, 6); // MAIN FILTER UP
 			Pair periodicFilterUpDurationRange = new Pair(
@@ -326,12 +331,14 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		// HealthCallable.setComputeRequirements(ComputeRequirement.PROFILING);
 		// Hardware.getLocalHardware().setMaximumOperationDepth(7);
 
-		WavFile.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
+		WavFile.setHeap(() -> new ScalarBankHeap(1200 * OutputLine.sampleRate), ScalarBankHeap::destroy);
+		AudioCellChoiceAdapter.setHeap(() -> new ScalarBankHeap(120 * OutputLine.sampleRate), ScalarBankHeap::destroy);
 
+		double bpm = 120.0; // 116.0;
 		int sourceCount = 6;
-		AudioScene<?> scene = new AudioScene<>(null, 116, sourceCount, 3, OutputLine.sampleRate);
+		AudioScene<?> scene = new AudioScene<>(null, bpm, sourceCount, 3, OutputLine.sampleRate);
 
-		List<Integer> choices = IntStream.range(0, sourceCount).mapToObj(i -> i).collect(Collectors.toList());
+		Set<Integer> choices = IntStream.range(0, sourceCount).mapToObj(i -> i).collect(Collectors.toSet());
 
 		GranularSynthesizer synth = new GranularSynthesizer();
 		synth.setGain(3.0);
@@ -369,7 +376,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 //			GridSequencer seq = (GridSequencer) waves.getChildren().get(0).getChildren().get(0).getSource().getSource();
 //			((GranularSynthesizer) seq.getSamples().get(0).getSource()).setGain(12);
 		} else if (enableStems) {
-			waves.addSplits(Arrays.asList(new File(STEMS).listFiles()), 116.0, Math.pow(10, -6), 1.0, 2.0, 4.0);
+			waves.addSplits(Arrays.asList(new File(STEMS).listFiles()), bpm, Math.pow(10, -6), 1.0, 2.0, 4.0);
 		} else {
 			waves.getChildren().add(group);
 			waves.getChoices().setChoices(choices);
@@ -385,9 +392,20 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	}
 
 	public static class GeneratorConfiguration {
+		public IntToDoubleFunction minChoice, maxChoice;
+		public double minChoiceValue, maxChoiceValue;
+
 		public double repeatSpeedUpDurationMin, repeatSpeedUpDurationMax;
 
-		public double minVolume, maxVolume;
+		public IntToDoubleFunction minX, maxX;
+		public IntToDoubleFunction minY, maxY;
+		public IntToDoubleFunction minZ, maxZ;
+		public double minXValue, maxXValue;
+		public double minYValue, maxYValue;
+		public double minZValue, maxZValue;
+
+		public IntToDoubleFunction minVolume, maxVolume;
+		public double minVolumeValue, maxVolumeValue;
 		public double periodicVolumeDurationMin, periodicVolumeDurationMax;
 		public double overallVolumeDurationMin, overallVolumeDurationMax;
 		public double overallVolumeExponentMin, overallVolumeExponentMax;
@@ -428,11 +446,13 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		public GeneratorConfiguration() { this(1); }
 
 		public GeneratorConfiguration(int scale) {
+			minChoiceValue = 0.0;
+			maxChoiceValue = 1.0;
 			repeatSpeedUpDurationMin = 1;
 			repeatSpeedUpDurationMax = 90;
 
-			minVolume = 0.5 / scale;
-			maxVolume = 1 / scale;
+			minVolumeValue = 0.5 / scale;
+			maxVolumeValue = 1 / scale;
 			periodicVolumeDurationMin = 0.5;
 			periodicVolumeDurationMax = 180;
 //			overallVolumeDurationMin = 60;
@@ -512,6 +532,18 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 					.toArray();
 
 			repeatChoices = new double[] { 16 };
+
+
+			minChoice = i -> minChoiceValue;
+			maxChoice = i -> maxChoiceValue;
+			minX = i -> minXValue;
+			maxX = i -> maxXValue;
+			minY = i -> minYValue;
+			maxY = i -> maxYValue;
+			minZ = i -> minZValue;
+			maxZ = i -> maxZValue;
+			minVolume = i -> minVolumeValue;
+			maxVolume = i -> maxVolumeValue;
 		}
 	}
 }

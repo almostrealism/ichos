@@ -37,6 +37,7 @@ import org.almostrealism.heredity.HeredityFeatures;
 import org.almostrealism.heredity.ScaleFactor;
 import org.almostrealism.time.TemporalList;
 
+import java.util.function.IntToDoubleFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -406,7 +407,8 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		}
 	}
 
-	public static ChromosomeFactory<Scalar> generatorFactory(double offsetChoices[], double repeatChoices[],
+	public static ChromosomeFactory<Scalar> generatorFactory(IntToDoubleFunction choiceMin, IntToDoubleFunction choiceMax,
+															 double offsetChoices[], double repeatChoices[],
 															 double repeatSpeedUpDurationMin, double repeatSpeedUpDurationMax) {
 		return new ChromosomeFactory<>() {
 			private int genes;
@@ -428,7 +430,9 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 
 			private double value(int gene, int factor) {
 				if (factor == 0) {
-					return Math.random();
+					double min = choiceMin.applyAsDouble(gene);
+					double max = choiceMax.applyAsDouble(gene);
+					return min + Math.random() * (max - min);
 				} else if (factor == 1) {
 					return offsetChoices[(int) (Math.random() * offsetChoices.length)];
 				} else if (factor == 2) {

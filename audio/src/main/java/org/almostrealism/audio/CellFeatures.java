@@ -74,9 +74,13 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		}
 	}
 
+	default ScalarTemporalCellAdapter silent() {
+		return ScalarTemporalCellAdapter.from(v(0.0));
+	}
+
 	default CellList silence() {
 		CellList cells = new CellList();
-		cells.addRoot(ScalarTemporalCellAdapter.from(v(0.0)));
+		cells.addRoot(silent());
 		return cells;
 	}
 
