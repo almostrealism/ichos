@@ -376,7 +376,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 //			GridSequencer seq = (GridSequencer) waves.getChildren().get(0).getChildren().get(0).getSource().getSource();
 //			((GranularSynthesizer) seq.getSamples().get(0).getSource()).setGain(12);
 		} else if (enableStems) {
-			waves.addSplits(Arrays.asList(new File(STEMS).listFiles()), bpm, Math.pow(10, -6), 1.0, 2.0, 4.0);
+			waves.addSplits(Arrays.asList(new File(STEMS).listFiles()), bpm, Math.pow(10, -6), choices, 1.0, 2.0, 4.0);
 		} else {
 			waves.getChildren().add(group);
 			waves.getChoices().setChoices(choices);

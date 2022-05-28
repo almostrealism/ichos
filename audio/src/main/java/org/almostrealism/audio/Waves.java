@@ -45,6 +45,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -182,18 +183,20 @@ public class Waves implements TempoAware, CellFeatures {
 				.forEach(this.getChildren()::add);
 	}
 
-	public void addSplits(Collection<File> files, double bpm, double silenceThreshold, Double... splits) {
-		addSplits(files, bpm(bpm), silenceThreshold, splits);
+	public void addSplits(Collection<File> files, double bpm, double silenceThreshold, Set<Integer> choices, Double... splits) {
+		addSplits(files, bpm(bpm), silenceThreshold, choices, splits);
 	}
 
-	public void addSplits(Collection<File> files, Frequency bpm, double silenceThreshold, Double... splits) {
+	public void addSplits(Collection<File> files, Frequency bpm, double silenceThreshold, Set<Integer> choices, Double... splits) {
 		if (isLeaf()) throw new UnsupportedOperationException();
 
 		List<Double> sizes = List.of(splits);
 
 		files.stream().map(file -> {
 					try {
-						return Waves.loadAudio(file, w -> w.getSampleRate() == OutputLine.sampleRate);
+						Waves wav = Waves.loadAudio(file, w -> w.getSampleRate() == OutputLine.sampleRate);
+						wav.getChoices().getChoices().addAll(choices);
+						return wav;
 					} catch (UnsupportedOperationException | IOException e) {
 						return null;
 					}
@@ -210,10 +213,13 @@ public class Waves implements TempoAware, CellFeatures {
 		if (!isLeaf()) throw new UnsupportedOperationException();
 
 		Waves waves = new Waves(sourceName);
+		waves.getChoices().getChoices().addAll(getChoices().getChoices());
+		int pos = this.pos < 0 ? 0 : this.pos;
+		int len = this.len < 0 ? source.getCount() : this.len;
 		IntStream.range(0, len / frames)
 				.mapToObj(i -> {
 					Waves w = new Waves(sourceName, source, pos + i * frames, frames);
-					w.getChoices().getChoices().add(0);
+					w.getChoices().getChoices().addAll(getChoices().getChoices());
 					return w;
 				})
 				.filter(w -> w.getSegments(0, null, null, null).getSegments().get(0).range().length().getValue() > (silenceThreshold * frames))

@@ -28,6 +28,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 public class WavesTest implements CellFeatures, TestFeatures {
 	@Test
@@ -40,7 +41,7 @@ public class WavesTest implements CellFeatures, TestFeatures {
 				List.of(new File("/Users/michael/AlmostRealism/ringsdesktop/Stems/001 Kicks 1.7_1.wav"),
 						new File("/Users/michael/AlmostRealism/ringsdesktop/Stems/002 Percussion 1.6_1.wav"),
 						new File("/Users/michael/AlmostRealism/ringsdesktop/Stems/006 Orchestra 1.5_1.wav")),
-				bpm(116.0), Math.pow(10, -6), 1.0);
+				bpm(116.0), Math.pow(10, -6), Set.of(0), 1.0);
 		CellList cells = cells(3, i ->
 				waves.getChoiceCell(0, v(choose(i)), v(0.0), v(0.0), v(0.0),
 									v(0.0), v(bpm(116.0).l(1))));
