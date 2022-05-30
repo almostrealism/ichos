@@ -30,6 +30,7 @@ import org.almostrealism.audio.AudioCellChoiceAdapter;
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.WaveSet;
 import org.almostrealism.audio.data.FileWaveDataProvider;
+import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.grains.GrainGenerationSettings;
 import org.almostrealism.audio.grains.GranularSynthesizer;
 import org.almostrealism.audio.health.AudioHealthComputation;
@@ -308,7 +309,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		AudioScene.enableEfxFilters = true;
 		AudioScene.enableEfx = true;
 		AudioScene.enableWetInAdjustment = true;
-		AudioScene.enableMasterFilterDown = false;
+		AudioScene.enableMasterFilterDown = true;
 		AudioScene.disableClean = false;
 		AudioScene.enableSourcesOnly = false;
 		SilenceDurationHealthComputation.enableSilenceCheck = false;
@@ -331,8 +332,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		// HealthCallable.setComputeRequirements(ComputeRequirement.PROFILING);
 		// Hardware.getLocalHardware().setMaximumOperationDepth(7);
 
-		WavFile.setHeap(() -> new ScalarBankHeap(1200 * OutputLine.sampleRate), ScalarBankHeap::destroy);
-		AudioCellChoiceAdapter.setHeap(() -> new ScalarBankHeap(120 * OutputLine.sampleRate), ScalarBankHeap::destroy);
+		WaveData.setHeap(() -> new ScalarBankHeap(5000 * OutputLine.sampleRate), ScalarBankHeap::destroy);
 
 		double bpm = 120.0; // 116.0;
 		int sourceCount = 6;
@@ -514,11 +514,11 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			periodicMasterFilterDownDurationMin = 0.5;
 			periodicMasterFilterDownDurationMax = 90;
 			overallMasterFilterDownDurationMin = 5;
-			overallMasterFilterDownDurationMax = 90;
+			overallMasterFilterDownDurationMax = 30;
 			overallMasterFilterDownExponentMin = 0.5;
 			overallMasterFilterDownExponentMax = 3.5;
 			overallMasterFilterDownOffsetMin = 15;
-			overallMasterFilterDownOffsetMax = 15;
+			overallMasterFilterDownOffsetMax = 120;
 
 			offsetChoices = IntStream.range(0, 7)
 					.mapToDouble(i -> Math.pow(2, -i))

@@ -18,12 +18,20 @@ package org.almostrealism.audio.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.audio.WavFile;
+import org.almostrealism.hardware.ctx.ContextSpecific;
+import org.almostrealism.hardware.ctx.DefaultContextSpecific;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 public class WaveData {
+	private static ContextSpecific<ScalarBankHeap> heap;
+
 	private ScalarBank wave;
 	private int sampleRate;
 
@@ -90,5 +98,20 @@ public class WaveData {
 		int channel = 0;
 
 		return new WaveData(WavFile.channel(wave, channel), (int) w.getSampleRate());
+	}
+
+	public static ScalarBankHeap getHeap() { return heap == null ? null : heap.getValue(); }
+
+	public static void setHeap(Supplier<ScalarBankHeap> create, Consumer<ScalarBankHeap> destroy) {
+		heap = new DefaultContextSpecific<>(create, destroy);
+		heap.init();
+	}
+
+	public static void dropHeap() {
+		heap = null;
+	}
+
+	public static ScalarBank allocate(int count) {
+		return Optional.ofNullable(getHeap()).map(h -> h.allocate(count)).orElse(new ScalarBank(count));
 	}
 }

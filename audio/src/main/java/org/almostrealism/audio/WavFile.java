@@ -28,7 +28,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class WavFile {
-	private static ContextSpecific<ScalarBankHeap> heap;
 
 	private enum ReaderState {
 		READING, WRITING, CLOSED
@@ -178,19 +177,10 @@ public class WavFile {
 		return wavFile;
 	}
 
-	public static void setHeap(Supplier<ScalarBankHeap> create, Consumer<ScalarBankHeap> destroy) {
-		heap = new DefaultContextSpecific<>(create, destroy);
-		heap.init();
-	}
-
-	public static void dropHeap() {
-		heap = null;
-	}
-
 	public static ScalarBank channel(double[][] data, int chan) {
 		// System.out.println("WavFile: Allocating " + data[chan].length / OutputLine.sampleRate + " seconds");
 
-		ScalarBank waveform = Optional.ofNullable(heap).map(ContextSpecific::getValue)
+		ScalarBank waveform = Optional.ofNullable(WaveData.getHeap())
 				.map(h -> h.allocate(data[chan].length)).orElseGet(() -> new ScalarBank(data[chan].length));
 
 		for (int i = 0; i < data[chan].length; i++) {

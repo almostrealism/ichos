@@ -145,7 +145,7 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 
 		List<WaveDataProvider> providers = new ArrayList<>();
 		playbackRates.forEach(rate -> {
-			ScalarBank output = new ScalarBank(getCount());
+			ScalarBank output = WaveData.allocate(getCount());
 			WaveData destination = new WaveData(output, OutputLine.sampleRate);
 			providers.add(new DynamicWaveDataProvider("synth://" + UUID.randomUUID(), destination));
 		});

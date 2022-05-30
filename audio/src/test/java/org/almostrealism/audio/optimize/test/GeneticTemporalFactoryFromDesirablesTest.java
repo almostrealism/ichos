@@ -18,6 +18,7 @@ package org.almostrealism.audio.optimize.test;
 
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.DesirablesProvider;
+import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.filter.test.AdjustableDelayCellTest;
 import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
@@ -224,7 +225,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		AudioScene.enableEfxFilters = false;
 		AudioScene.enableEfx = false;
 
-		WavFile.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
+		WaveData.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/genetic-factory-test.wav")).get(0);
 		Cells organ = cells(sources(), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out, false);
 		organ.sec(6).get().run();
@@ -330,7 +331,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 
 	@Test
 	public void comparisonOnce() {
-		WavFile.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
+		WaveData.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
 		comparison(false);
 	}
 

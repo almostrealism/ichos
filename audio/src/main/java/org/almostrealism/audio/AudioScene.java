@@ -52,7 +52,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	public static boolean enableEfxFilters = true;
 	public static boolean enableEfx = true;
 	public static boolean enableWetInAdjustment = true;
-	public static boolean enableMasterFilterDown = false;
+	public static boolean enableMasterFilterDown = true;
 
 	public static boolean enableMixdown = false;
 	public static boolean enableSourcesOnly = false;

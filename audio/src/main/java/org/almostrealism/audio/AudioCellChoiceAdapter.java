@@ -24,6 +24,7 @@ import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.algebra.computations.Switch;
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.hardware.ctx.ContextSpecific;
@@ -42,7 +43,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter implements CellFeatures {
-	private static ContextSpecific<ScalarBankHeap> heap;
 
 	private ProducerComputation<Scalar> decision;
 	private final List<ScalarTemporalCellAdapter> cells;
@@ -67,12 +67,10 @@ public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter i
 		this.parallel = parallel;
 
 		if (parallel) {
-			storage = Optional.ofNullable(heap).map(ContextSpecific::getValue)
-					.map(h -> h.allocate(choices.size())).orElseGet(() -> new ScalarBank(choices.size()));
+			storage = WaveData.allocate(choices.size());
 			initParallel();
 		} else {
-			storage = Optional.ofNullable(heap).map(ContextSpecific::getValue)
-					.map(h -> h.allocate(1)).orElseGet(() -> new ScalarBank(1));
+			storage = WaveData.allocate(1);
 			cells.forEach(cell -> cell.setReceptor(a(p(storage.get(0)))));
 		}
 	}
@@ -168,14 +166,5 @@ public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter i
 	public void reset() {
 		super.reset();
 		getCellSet().forEach(Cell::reset);
-	}
-
-	public static void setHeap(Supplier<ScalarBankHeap> create, Consumer<ScalarBankHeap> destroy) {
-		heap = new DefaultContextSpecific<>(create, destroy);
-		heap.init();
-	}
-
-	public static void dropHeap() {
-		heap = null;
 	}
 }

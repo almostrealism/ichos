@@ -39,6 +39,7 @@ import org.almostrealism.time.Frequency;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.IntFunction;
 
@@ -92,7 +93,7 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 
 	@Override
 	public WaveDataProviderList create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z, List<Frequency> playbackRates) {
-		ScalarBank export = new ScalarBank(getCount());
+		ScalarBank export = WaveData.allocate(getCount());
 		WaveData destination = new WaveData(export, OutputLine.sampleRate);
 
 		Evaluable<Scalar> evX = x.get();
