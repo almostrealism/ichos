@@ -17,6 +17,7 @@
 package org.almostrealism.audio.pattern.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.pattern.PatternElement;
 import org.almostrealism.audio.pattern.PatternElementFactory;
 import org.almostrealism.audio.pattern.PatternFactoryChoice;
@@ -65,7 +66,7 @@ public class PatternFactoryTest {
 		System.out.println(layerString(manager.lastLayer()));
 
 		for (int i = 0; i < 4; i++) {
-			manager.addLayer(0.0, 0.0, 0.0);
+			manager.addLayer(new ParameterSet(0.6, 0.2, 0.7));
 			System.out.println(layerString(manager.lastLayer()));
 		}
 

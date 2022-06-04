@@ -16,6 +16,9 @@
 
 package org.almostrealism.audio.pattern;
 
+import org.almostrealism.audio.data.ParameterFunction;
+import org.almostrealism.audio.data.ParameterSet;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -25,6 +28,7 @@ public class PatternFactoryNode {
 	private double selfWeight;
 	private double minScale;
 	private List<PatternFactoryChoice> choices;
+	private ParameterFunction nodeSelection;
 
 	public PatternFactoryNode() {
 		this(null);
@@ -34,6 +38,11 @@ public class PatternFactoryNode {
 		setFactory(factory);
 		setSelfWeight(1.0);
 		setChoices(new ArrayList<>());
+		initSelectionFunctions();
+	}
+
+	public void initSelectionFunctions() {
+		nodeSelection = ParameterFunction.random();
 	}
 
 	public PatternElementFactory getFactory() {
@@ -68,16 +77,24 @@ public class PatternFactoryNode {
 		this.choices = choices;
 	}
 
-	public PatternFactoryLayer apply(List<PatternElement> elements, double scale, double x, double y, double z) {
+	public ParameterFunction getNodeSelection() {
+		return nodeSelection;
+	}
+
+	public void setNodeSelection(ParameterFunction nodeSelection) {
+		this.nodeSelection = nodeSelection;
+	}
+
+	public PatternFactoryLayer apply(List<PatternElement> elements, double scale, ParameterSet params) {
 		PatternFactoryLayer layer = new PatternFactoryLayer();
-		layer.setNext(choose(scale, x, y, z));
-		elements.forEach(e -> layer.getElements().addAll(apply(e, scale, x, y, z).getElements()));
+		layer.setNext(choose(scale, params));
+		elements.forEach(e -> layer.getElements().addAll(apply(e, scale, params).getElements()));
 		return layer;
 	}
 
-	public PatternFactoryLayer apply(PatternElement element, double scale, double x, double y, double z) {
+	public PatternFactoryLayer apply(PatternElement element, double scale, ParameterSet params) {
 		PatternFactoryLayer layer = new PatternFactoryLayer();
-		IntStream.range(0, 2).forEach(i -> layer.getElements().add(factory.apply(element.getPosition(), scale, x, y, z)));
+		IntStream.range(0, 2).forEach(i -> factory.apply(element.getPosition(), scale, params).ifPresent(layer.getElements()::add));
 		return layer;
 	}
 
@@ -85,9 +102,11 @@ public class PatternFactoryNode {
 		return new PatternFactoryLayer(this, List.of(new PatternElement(factory.getNotes().get((int) (Math.random() * factory.getNotes().size())), position)));
 	}
 
-	protected PatternFactoryNode choose(double scale, double x, double y, double z) {
+	protected PatternFactoryNode choose(double scale, ParameterSet params) {
 		double total = (scale < minScale ? 0 : selfWeight) + choices.stream().mapToDouble(PatternFactoryChoice::getWeight).sum();
-		double choice = Math.random() * total - (scale < minScale ? 0 : selfWeight);
+		double c = nodeSelection.apply(params);
+		if (c < 0) c = c + 1.0;
+		double choice = c * total - (scale < minScale ? 0 : selfWeight);
 		if (choice < 0) return this;
 
 		for (int i = 0; i < choices.size() - 1; i++) {

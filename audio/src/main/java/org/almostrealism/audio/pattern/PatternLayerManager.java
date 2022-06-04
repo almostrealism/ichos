@@ -16,6 +16,8 @@
 
 package org.almostrealism.audio.pattern;
 
+import org.almostrealism.audio.data.ParameterSet;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,9 +59,9 @@ public class PatternLayerManager {
 
 	public int layerCount() { return layers.size(); }
 
-	public void addLayer(double x, double y, double z) {
+	public void addLayer(ParameterSet params) {
 		// TODO  Each layer should be processed separately, with lower probability for higher layers
-		PatternFactoryLayer layer = lastLayer().getNext().apply(elements, scale, x, y, z);
+		PatternFactoryLayer layer = lastLayer().getNext().apply(elements, scale, params);
 		layer.trim(duration);
 		addLayer(layer);
 	}

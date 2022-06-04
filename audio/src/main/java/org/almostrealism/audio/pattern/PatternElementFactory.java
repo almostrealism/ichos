@@ -16,11 +16,17 @@
 
 package org.almostrealism.audio.pattern;
 
+import org.almostrealism.audio.data.ParameterFunction;
+import org.almostrealism.audio.data.ParameterSet;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class PatternElementFactory {
 	private List<PatternNote> notes;
+	private ParameterFunction noteSelection;
+	private ParameterFunction positionSelection;
 
 	public PatternElementFactory() {
 		this(new PatternNote[0]);
@@ -29,6 +35,12 @@ public class PatternElementFactory {
 	public PatternElementFactory(PatternNote... notes) {
 		setNotes(new ArrayList<>());
 		getNotes().addAll(List.of(notes));
+		initSelectionFunctions();
+	}
+
+	public void initSelectionFunctions() {
+		noteSelection = ParameterFunction.random();
+		positionSelection = ParameterFunction.random();
 	}
 
 	public List<PatternNote> getNotes() {
@@ -39,7 +51,27 @@ public class PatternElementFactory {
 		this.notes = notes;
 	}
 
-	public PatternElement apply(double position, double scale, double x, double y, double z) {
-		return new PatternElement(getNotes().get((int) (Math.random() * getNotes().size())), position + (Math.random() > 0.5 ? scale : -scale));
+	public ParameterFunction getNoteSelection() {
+		return noteSelection;
+	}
+
+	public void setNoteSelection(ParameterFunction noteSelection) {
+		this.noteSelection = noteSelection;
+	}
+
+	public ParameterFunction getPositionSelection() {
+		return positionSelection;
+	}
+
+	public void setPositionSelection(ParameterFunction positionSelection) {
+		this.positionSelection = positionSelection;
+	}
+
+	public Optional<PatternElement> apply(double position, double scale, ParameterSet params) {
+		double note = noteSelection.apply(params);
+		if (note < 0.0) return Optional.empty();
+
+		double pos = positionSelection.apply(params);
+		return Optional.of(new PatternElement(getNotes().get((int) (note * getNotes().size())), position + (pos > 0.0 ? scale : -scale)));
 	}
 }
