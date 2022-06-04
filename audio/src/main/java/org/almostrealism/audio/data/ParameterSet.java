@@ -50,4 +50,8 @@ public class ParameterSet {
 	public void setZ(double z) {
 		this.z = z;
 	}
+
+	public static ParameterSet random() {
+		return new ParameterSet(Math.random(), Math.random(), Math.random());
+	}
 }

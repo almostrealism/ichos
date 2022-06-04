@@ -61,59 +61,15 @@ public class PatternFactoryTest {
 	public void runLayers() throws IOException {
 		PatternLayerManager manager = new PatternLayerManager(readNodes());
 
-		System.out.println(layerHeader());
+		System.out.println(PatternLayerManager.layerHeader());
 
-		System.out.println(layerString(manager.lastLayer()));
+		System.out.println(PatternLayerManager.layerString(manager.lastLayer()));
 
 		for (int i = 0; i < 4; i++) {
 			manager.addLayer(new ParameterSet(0.6, 0.2, 0.7));
-			System.out.println(layerString(manager.lastLayer()));
+			System.out.println(PatternLayerManager.layerString(manager.lastLayer()));
 		}
 
 		System.out.println("Produced " + manager.layerCount() + " layers");
-	}
-
-	private String layerHeader() {
-		int count = 128;
-		int divide = count / 4;
-
-		StringBuffer buf = new StringBuffer();
-
-		i: for (int i = 0; i < count; i++) {
-			if (i % (divide / 2) == 0) {
-				if (i % divide == 0) {
-					buf.append("|");
-				} else {
-					buf.append(" ");
-				}
-			}
-
-			buf.append(" ");
-		}
-
-		buf.append("|");
-		return buf.toString();
-	}
-
-	private String layerString(PatternFactoryLayer layer) {
-		int count = 128;
-		int divide = count / 8;
-		double scale = 1.0 / count;
-
-		StringBuffer buf = new StringBuffer();
-
-		i: for (int i = 0; i < count; i++) {
-			if (i % divide == 0) buf.append("|");
-			for (PatternElement e : layer.getElements()) {
-				if (e.getPosition() >= i * scale && e.getPosition() < (i + 1) * scale) {
-					buf.append(e.getNote().getSource());
-					continue i;
-				}
-			}
-			buf.append(" ");
-		}
-
-		buf.append("|");
-		return buf.toString();
 	}
 }

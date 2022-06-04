@@ -49,6 +49,7 @@ public class PatternLayerManager {
 		increment();
 	}
 
+	protected void decrement() { scale *= 2; }
 	protected void increment() {
 		scale /= 2;
 	}
@@ -64,5 +65,60 @@ public class PatternLayerManager {
 		PatternFactoryLayer layer = lastLayer().getNext().apply(elements, scale, params);
 		layer.trim(duration);
 		addLayer(layer);
+	}
+
+	public void removeLayer() {
+		decrement();
+		lastLayer().getElements().forEach(elements::remove);
+		layers.remove(layers.size() - 1);
+	}
+
+	public void replaceLayer(ParameterSet params) {
+		removeLayer();
+		addLayer(params);
+	}
+
+	public static String layerHeader() {
+		int count = 128;
+		int divide = count / 4;
+
+		StringBuffer buf = new StringBuffer();
+
+		i: for (int i = 0; i < count; i++) {
+			if (i % (divide / 2) == 0) {
+				if (i % divide == 0) {
+					buf.append("|");
+				} else {
+					buf.append(" ");
+				}
+			}
+
+			buf.append(" ");
+		}
+
+		buf.append("|");
+		return buf.toString();
+	}
+
+	public static String layerString(PatternFactoryLayer layer) {
+		int count = 128;
+		int divide = count / 8;
+		double scale = 1.0 / count;
+
+		StringBuffer buf = new StringBuffer();
+
+		i: for (int i = 0; i < count; i++) {
+			if (i % divide == 0) buf.append("|");
+			for (PatternElement e : layer.getElements()) {
+				if (e.getPosition() >= i * scale && e.getPosition() < (i + 1) * scale) {
+					buf.append(e.getNote().getSource());
+					continue i;
+				}
+			}
+			buf.append(" ");
+		}
+
+		buf.append("|");
+		return buf.toString();
 	}
 }
