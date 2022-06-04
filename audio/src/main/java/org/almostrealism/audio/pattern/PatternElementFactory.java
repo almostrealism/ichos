@@ -22,6 +22,10 @@ import java.util.List;
 public class PatternElementFactory {
 	private List<PatternNote> notes;
 
+	public PatternElementFactory() {
+		this(new PatternNote[0]);
+	}
+
 	public PatternElementFactory(PatternNote... notes) {
 		setNotes(new ArrayList<>());
 		getNotes().addAll(List.of(notes));

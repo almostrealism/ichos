@@ -19,12 +19,25 @@ package org.almostrealism.audio.pattern;
 import org.almostrealism.collect.PackedCollection;
 
 public class PatternNote {
+	private String source;
 	private PackedCollection audio;
 
-	public PatternNote() { this(null); }
+	public PatternNote() { this((String) null); }
+
+	public PatternNote(String source) {
+		setSource(source);
+	}
 
 	public PatternNote(PackedCollection audio) {
 		setAudio(audio);
+	}
+
+	public String getSource() {
+		return source;
+	}
+
+	public void setSource(String source) {
+		this.source = source;
 	}
 
 	public PackedCollection getAudio() {
