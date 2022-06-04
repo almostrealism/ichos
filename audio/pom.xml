@@ -5,7 +5,7 @@
 	<parent>
 		<artifactId>Ichos</artifactId>
 		<groupId>org.almostrealism</groupId>
-		<version>1.34</version>
+		<version>1.35</version>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
 
@@ -17,6 +17,12 @@
 	</properties>
 
 	<dependencies>
+		<!-- TODO  This is redundant, it shuld not be required -->
+		<dependency>
+			<groupId>org.almostrealism</groupId>
+			<artifactId>ar-algebra</artifactId>
+			<version>${common.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.almostrealism</groupId>
 			<artifactId>ar-utils</artifactId>
