@@ -87,14 +87,18 @@ public class PatternFactoryNode {
 
 	public PatternFactoryLayer apply(List<PatternElement> elements, double scale, ParameterSet params) {
 		PatternFactoryLayer layer = new PatternFactoryLayer();
-		layer.setNext(choose(scale, params));
+		layer.setNode(choose(scale, params));
 		elements.forEach(e -> layer.getElements().addAll(apply(e, scale, params).getElements()));
 		return layer;
 	}
 
 	public PatternFactoryLayer apply(PatternElement element, double scale, ParameterSet params) {
 		PatternFactoryLayer layer = new PatternFactoryLayer();
-		IntStream.range(0, 2).forEach(i -> factory.apply(element.getPosition(), scale, params).ifPresent(layer.getElements()::add));
+		PatternFactoryNode node = choose(scale, params);
+		layer.setNode(node);
+
+		node.getFactory().apply(ElementParity.LEFT, element.getPosition(), scale, params).ifPresent(layer.getElements()::add);
+		node.getFactory().apply(ElementParity.RIGHT, element.getPosition(), scale, params).ifPresent(layer.getElements()::add);
 		return layer;
 	}
 

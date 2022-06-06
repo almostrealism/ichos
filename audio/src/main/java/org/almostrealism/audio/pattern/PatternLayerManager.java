@@ -62,7 +62,7 @@ public class PatternLayerManager {
 
 	public void addLayer(ParameterSet params) {
 		// TODO  Each layer should be processed separately, with lower probability for higher layers
-		PatternFactoryLayer layer = lastLayer().getNext().apply(elements, scale, params);
+		PatternFactoryLayer layer = lastLayer().getNode().apply(elements, scale, params);
 		layer.trim(duration);
 		addLayer(layer);
 	}

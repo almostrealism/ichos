@@ -22,11 +22,13 @@ import org.almostrealism.audio.data.ParameterSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.DoubleUnaryOperator;
 
 public class PatternElementFactory {
 	private List<PatternNote> notes;
+	private ParameterFunction regularitySelection;
+	private ParameterFunction offsetSelection;
 	private ParameterFunction noteSelection;
-	private ParameterFunction positionSelection;
 
 	public PatternElementFactory() {
 		this(new PatternNote[0]);
@@ -39,8 +41,9 @@ public class PatternElementFactory {
 	}
 
 	public void initSelectionFunctions() {
-		noteSelection = ParameterFunction.random();
-		positionSelection = ParameterFunction.random();
+		regularitySelection = ParameterFunction.random();
+		offsetSelection = ParameterFunction.random();
+		noteSelection = ParameterFunction.random(100);
 	}
 
 	public List<PatternNote> getNotes() {
@@ -51,6 +54,22 @@ public class PatternElementFactory {
 		this.notes = notes;
 	}
 
+	public ParameterFunction getRegularitySelection() {
+		return regularitySelection;
+	}
+
+	public void setRegularitySelection(ParameterFunction regularitySelection) {
+		this.regularitySelection = regularitySelection;
+	}
+
+	public ParameterFunction getOffsetSelection() {
+		return offsetSelection;
+	}
+
+	public void setOffsetSelection(ParameterFunction offsetSelection) {
+		this.offsetSelection = offsetSelection;
+	}
+
 	public ParameterFunction getNoteSelection() {
 		return noteSelection;
 	}
@@ -59,19 +78,39 @@ public class PatternElementFactory {
 		this.noteSelection = noteSelection;
 	}
 
-	public ParameterFunction getPositionSelection() {
-		return positionSelection;
-	}
+	public Optional<PatternElement> apply(ElementParity parity, double position, double scale, ParameterSet params) {
+		if (parity == ElementParity.LEFT) {
+			position -= scale;
+		} else if (parity == ElementParity.RIGHT) {
+			position += scale;
+		}
 
-	public void setPositionSelection(ParameterFunction positionSelection) {
-		this.positionSelection = positionSelection;
-	}
-
-	public Optional<PatternElement> apply(double position, double scale, ParameterSet params) {
-		double note = noteSelection.apply(params);
+		double note = applyPositional(regularitySelection.apply(params),
+						position + offsetSelection.apply(params), scale,
+								v -> noteSelection.apply(new ParameterSet(0.0, 0.0, v)));
 		if (note < 0.0) return Optional.empty();
 
-		double pos = positionSelection.apply(params);
-		return Optional.of(new PatternElement(getNotes().get((int) (note * getNotes().size())), position + (pos > 0.0 ? scale : -scale)));
+		return Optional.of(new PatternElement(getNotes().get((int) (note * getNotes().size())), position));
+	}
+
+	private static double applyPositional(double selection, double position, double scale, DoubleUnaryOperator operator) {
+		if (selection > 0.0) selection = Math.floor(3 * selection);
+		if (selection < 0.0) selection = Math.ceil(3 * selection);
+
+		while (position < 0.0) position = position + 1.0;
+		while (position > 1.0) position = position - 1.0;
+
+		double regularity = scale * Math.pow(2.0, selection);
+
+		int i;
+		for (i = 0; position > 0; i++) {
+			position -= regularity;
+		}
+
+		if (i % 2 == 0) {
+			return operator.applyAsDouble(position);
+		} else {
+			return -operator.applyAsDouble(position);
+		}
 	}
 }

@@ -35,7 +35,7 @@ public class PatternFactoryTest {
 	public PatternFactoryNode createNodes() {
 		PatternFactoryNode kick = new PatternFactoryNode(new PatternElementFactory(new PatternNote("0")));
 		kick.setSelfWeight(10);
-		kick.setMinimumScale(0.5);
+		kick.setMinimumScale(0.25);
 
 		PatternFactoryNode clap = new PatternFactoryNode(new PatternElementFactory(new PatternNote("1")));
 		kick.getChoices().add(new PatternFactoryChoice(clap));

@@ -49,7 +49,11 @@ public class ParameterFunction implements Function<ParameterSet, Double> {
 	public void setC(double c) { this.c = c; }
 
 	public static ParameterFunction random() {
-		DoubleSupplier rand = () -> (Math.random() - 0.5) * 4;
+		return random(2.0);
+	}
+
+	public static ParameterFunction random(double scale) {
+		DoubleSupplier rand = () -> (Math.random() - 0.5) * 2.0 * scale;
 		return new ParameterFunction(rand.getAsDouble(), rand.getAsDouble(), rand.getAsDouble(), rand.getAsDouble());
 	}
 }

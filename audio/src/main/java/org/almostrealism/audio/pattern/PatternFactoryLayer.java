@@ -21,22 +21,22 @@ import java.util.Iterator;
 import java.util.List;
 
 public class PatternFactoryLayer {
-	private PatternFactoryNode next;
+	private PatternFactoryNode node;
 	private List<PatternElement> elements;
 
 	public PatternFactoryLayer() { this(null, new ArrayList<>()); }
 
-	public PatternFactoryLayer(PatternFactoryNode next, List<PatternElement> elements) {
-		this.next = next;
+	public PatternFactoryLayer(PatternFactoryNode node, List<PatternElement> elements) {
+		this.node = node;
 		this.elements = elements;
 	}
 
-	public PatternFactoryNode getNext() {
-		return next;
+	public PatternFactoryNode getNode() {
+		return node;
 	}
 
-	public void setNext(PatternFactoryNode next) {
-		this.next = next;
+	public void setNode(PatternFactoryNode node) {
+		this.node = node;
 	}
 
 	public List<PatternElement> getElements() {
