@@ -75,4 +75,13 @@ public class PatternElement {
 	public void setRepeatDuration(double repeatDuration) {
 		this.repeatDuration = repeatDuration;
 	}
+
+	public boolean isPresent(double start, double end) {
+		for (int i = 0; i < repeatCount; i++) {
+			double pos = getPosition() + i * repeatDuration;
+			if (pos >= start && pos < end) return true;
+		}
+
+		return false;
+	}
 }

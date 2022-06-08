@@ -110,7 +110,7 @@ public class PatternLayerManager {
 		i: for (int i = 0; i < count; i++) {
 			if (i % divide == 0) buf.append("|");
 			for (PatternElement e : layer.getElements()) {
-				if (e.getPosition() >= i * scale && e.getPosition() < (i + 1) * scale) {
+				if (e.isPresent(i * scale, (i + 1) * scale)) {
 					buf.append(e.getNote().getSource());
 					continue i;
 				}
