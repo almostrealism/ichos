@@ -40,6 +40,11 @@ public class FilterOutputLine implements OutputLine, Evaluable<byte[]>, DataRece
 		this.line.write(this.filter.operate(b));
 	}
 
+	@Override
+	public void write(double[][] d) {
+		throw new UnsupportedOperationException();
+	}
+
 	/**
 	 * Converts the specified sample to a frame using
 	 * {@link LineUtilities#toFrame(Scalar, AudioFormat)}

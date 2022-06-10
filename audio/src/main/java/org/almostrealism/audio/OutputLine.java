@@ -19,7 +19,7 @@ package org.almostrealism.audio;
 import org.almostrealism.algebra.Scalar;
 
 public interface OutputLine {
-	int sampleRate = 44100; // 44100;
+	int sampleRate = 44100;
 
 	/**
 	 * Write the specified bytes. Using this method, the caller must
@@ -27,6 +27,11 @@ public interface OutputLine {
 	 * set of samples.
 	 */
 	void write(byte b[]);
+
+	/**
+	 * Write the specified frames.
+	 */
+	void write(double d[][]);
 
 	/**
 	 * Write one sample, coercing the {@link Scalar} value into whatever

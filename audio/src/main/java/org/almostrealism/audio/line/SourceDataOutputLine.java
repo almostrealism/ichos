@@ -36,6 +36,11 @@ public class SourceDataOutputLine implements OutputLine {
 	@Override
 	public void write(byte[] b) { line.write(b, 0, b.length); }
 
+	@Override
+	public void write(double[][] d) {
+		write(LineUtilities.toBytes(d, line.getFormat()));
+	}
+
 	/**
 	 * Converts the specified sample to a frame using
 	 * {@link LineUtilities#toFrame(Scalar, AudioFormat)}

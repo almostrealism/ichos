@@ -39,6 +39,10 @@ public class DefaultDualOutputLine implements DualOutputLine, Runnable, Evaluabl
 			}
 		}
 
+		public void write(double[][] frames) {
+			throw new UnsupportedOperationException();
+		}
+
 		public void write(Scalar sample) {
 			if (this.isLeft) {
 				this.line.writeLeft(sample);

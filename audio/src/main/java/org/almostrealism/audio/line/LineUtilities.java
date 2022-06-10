@@ -3,10 +3,12 @@ package org.almostrealism.audio.line;
 import org.almostrealism.audio.JavaAudioSample;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
+import org.almostrealism.audio.WavFile;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -22,7 +24,15 @@ public class LineUtilities {
 	/**
 	 * Returns a SourceDataOutputLine for the most recent format requested.
 	 */
-	public static OutputLine getLine() { return getLine(lastFormat); }
+	public static OutputLine getLine() {
+		if (lastFormat == null) {
+			lastFormat = new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, OutputLine.sampleRate,
+					16, 2, 4,
+					OutputLine.sampleRate, false);
+		}
+
+		return getLine(lastFormat);
+	}
 	
 	/**
 	 * Returns a SourceDataOutputLine for the specified format.
@@ -70,6 +80,42 @@ public class LineUtilities {
 	 */
 	public static JavaAudioSample convert(JavaAudioSample s, AudioFormat f) {
 		return s;
+	}
+
+	public static byte[] toBytes(double frames[][], AudioFormat format) {
+		int byteCount = format.getFrameSize();
+		ByteBuffer buf = ByteBuffer.allocate(frames[0].length * byteCount);
+
+		int offset = 0;
+		int bitRate = format.getSampleSizeInBits();
+		double floatOffset;
+		double floatScale;
+
+		if (format.getEncoding() == AudioFormat.Encoding.PCM_SIGNED) {
+			floatOffset = 0;
+			floatScale = Long.MAX_VALUE >> (64 - bitRate);
+		} else if (format.getEncoding() == AudioFormat.Encoding.PCM_UNSIGNED) {
+			floatOffset = 1;
+			floatScale = 0.5 * ((1 << bitRate) - 1);
+		} else {
+			throw new UnsupportedOperationException();
+		}
+
+		for (int f = 0; f < frames[0].length; f++) {
+			for (int c = 0; c < format.getChannels(); c++) {
+				long val = (long) (floatScale * (floatOffset + frames[0][offset]));
+				for (int b = 0; b < format.getFrameSize() / format.getChannels(); b++) {
+					buf.put((byte) (val & 0xFF));
+					val >>= 8;
+				}
+			}
+
+			offset++;
+		}
+
+		byte out[] = new byte[frames[0].length * byteCount];
+		buf.get(0, out);
+		return out;
 	}
 
 	/**
