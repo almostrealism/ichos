@@ -89,7 +89,7 @@ public class PatternLayerManager {
 				.flatMap(List::stream)
 				.collect(Collectors.toList());
 
-		RootDelegateSegmentsAdd<PackedCollection> op = new RootDelegateSegmentsAdd<>(notes, destination);
+		RootDelegateSegmentsAdd<PackedCollection> op = new RootDelegateSegmentsAdd<>(notes, destination.traverse(1));
 		return op.get();
 	}
 

@@ -31,11 +31,15 @@ import org.almostrealism.audio.pattern.PatternLayerManager;
 import org.almostrealism.audio.pattern.PatternNote;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.PackedCollectionHeap;
+import org.almostrealism.collect.ProducerWithOffset;
+import org.almostrealism.collect.computations.RootDelegateSegmentsAdd;
+import org.almostrealism.hardware.cl.HardwareOperator;
 import org.almostrealism.time.Frequency;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 public class PatternFactoryTest implements CellFeatures {
 
@@ -62,6 +66,23 @@ public class PatternFactoryTest implements CellFeatures {
 	@Test
 	public void storeNodes() throws IOException {
 		new ObjectMapper().writeValue(new File("pattern-factory.json"), createNodes());
+	}
+
+	@Test
+	public void sum() throws IOException {
+		HardwareOperator.enableLog = true;
+		HardwareOperator.enableVerboseLog = true;
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
+
+		WaveData kick = WaveData.load(new File("Kit/Kick.wav"));
+
+		Frequency bpm = bpm(120);
+		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
+		RootDelegateSegmentsAdd<PackedCollection> op = new RootDelegateSegmentsAdd<>(List.of(new ProducerWithOffset<>(v(kick.getCollection()), 0)), destination);
+		op.get().run();
+
+		WaveData out = new WaveData(destination, OutputLine.sampleRate);
+		out.save(new File("sum-test.wav"));
 	}
 
 	@Test
