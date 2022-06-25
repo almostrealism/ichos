@@ -16,11 +16,16 @@
 
 package org.almostrealism.audio.pattern;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.almostrealism.audio.data.FileWaveDataProvider;
 import org.almostrealism.collect.PackedCollection;
 
 public class PatternNote {
 	private String source;
 	private PackedCollection audio;
+
+	@JsonIgnore
+	private FileWaveDataProvider provider;
 
 	public PatternNote() { this((String) null); }
 
@@ -40,10 +45,17 @@ public class PatternNote {
 		this.source = source;
 	}
 
+	@JsonIgnore
 	public PackedCollection getAudio() {
+		if (audio == null) {
+			if (provider == null) provider = new FileWaveDataProvider(source);
+			audio = provider.get().getCollection();
+		}
+
 		return audio;
 	}
 
+	@JsonIgnore
 	public void setAudio(PackedCollection audio) {
 		this.audio = audio;
 	}

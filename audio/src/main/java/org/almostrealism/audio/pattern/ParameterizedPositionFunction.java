@@ -86,7 +86,7 @@ public class ParameterizedPositionFunction {
 		while (position > 1.0) position = position - 1.0;
 
 		double regularity = scale * Math.pow(2.0, selection + 1);
-		System.out.println("Regularity = " + regularity);
+//		System.out.println("Regularity = " + regularity);
 		position = position / regularity;
 
 		while (position < 0.0) position = position + 1.0;

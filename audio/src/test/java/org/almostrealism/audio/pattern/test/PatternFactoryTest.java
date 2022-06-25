@@ -17,7 +17,11 @@
 package org.almostrealism.audio.pattern.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.almostrealism.algebra.ScalarBankHeap;
+import org.almostrealism.audio.CellFeatures;
+import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.data.ParameterSet;
+import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.pattern.PatternElement;
 import org.almostrealism.audio.pattern.PatternElementFactory;
 import org.almostrealism.audio.pattern.PatternFactoryChoice;
@@ -25,24 +29,27 @@ import org.almostrealism.audio.pattern.PatternFactoryLayer;
 import org.almostrealism.audio.pattern.PatternFactoryNode;
 import org.almostrealism.audio.pattern.PatternLayerManager;
 import org.almostrealism.audio.pattern.PatternNote;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.collect.PackedCollectionHeap;
+import org.almostrealism.time.Frequency;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 
-public class PatternFactoryTest {
+public class PatternFactoryTest implements CellFeatures {
 
 	public PatternFactoryNode createNodes() {
-		PatternFactoryNode kick = new PatternFactoryNode(new PatternElementFactory(new PatternNote("0")));
+		PatternFactoryNode kick = new PatternFactoryNode(new PatternElementFactory(new PatternNote("Kit/Kick.wav")));
 		kick.setSelfWeight(10);
 		kick.setMinimumScale(0.25);
 
-		PatternFactoryNode clap = new PatternFactoryNode(new PatternElementFactory(new PatternNote("1")));
+		PatternFactoryNode clap = new PatternFactoryNode(new PatternElementFactory(new PatternNote("Kit/Clap.wav")));
 		kick.getChoices().add(new PatternFactoryChoice(clap));
 
 		PatternFactoryNode toms = new PatternFactoryNode(
-				new PatternElementFactory(new PatternNote("2"),
-						new PatternNote("3")));
+				new PatternElementFactory(new PatternNote("Kit/Tom1.wav"),
+						new PatternNote("Kit/Tom2.wav")));
 		clap.getChoices().add(new PatternFactoryChoice(toms));
 
 		return kick;
@@ -59,10 +66,11 @@ public class PatternFactoryTest {
 
 	@Test
 	public void runLayers() throws IOException {
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
+
 		PatternLayerManager manager = new PatternLayerManager(readNodes());
 
 		System.out.println(PatternLayerManager.layerHeader());
-
 		System.out.println(PatternLayerManager.layerString(manager.lastLayer()));
 
 		for (int i = 0; i < 4; i++) {
@@ -70,6 +78,12 @@ public class PatternFactoryTest {
 			System.out.println(PatternLayerManager.layerString(manager.lastLayer()));
 		}
 
-		System.out.println("Produced " + manager.layerCount() + " layers");
+		Frequency bpm = bpm(120);
+
+		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
+		manager.sum(destination, pos -> (int) (pos * bpm.l(16) * OutputLine.sampleRate)).run();
+
+		WaveData out = new WaveData(destination, OutputLine.sampleRate);
+		out.save(new File("pattern-test.wav"));
 	}
 }

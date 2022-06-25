@@ -17,9 +17,14 @@
 package org.almostrealism.audio.pattern;
 
 import org.almostrealism.audio.data.ParameterSet;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.collect.ProducerWithOffset;
+import org.almostrealism.collect.computations.RootDelegateSegmentsAdd;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleToIntFunction;
+import java.util.stream.Collectors;
 
 public class PatternLayerManager {
 	private double position;
@@ -78,6 +83,16 @@ public class PatternLayerManager {
 		addLayer(params);
 	}
 
+	public Runnable sum(PackedCollection destination, DoubleToIntFunction offsetForPosition) {
+		List<ProducerWithOffset<PackedCollection>> notes = elements.stream()
+				.map(e -> e.getNoteDestinations(offsetForPosition))
+				.flatMap(List::stream)
+				.collect(Collectors.toList());
+
+		RootDelegateSegmentsAdd<PackedCollection> op = new RootDelegateSegmentsAdd<>(notes, destination);
+		return op.get();
+	}
+
 	public static String layerHeader() {
 		int count = 128;
 		int divide = count / 4;
@@ -111,7 +126,9 @@ public class PatternLayerManager {
 			if (i % divide == 0) buf.append("|");
 			for (PatternElement e : layer.getElements()) {
 				if (e.isPresent(i * scale, (i + 1) * scale)) {
-					buf.append(e.getNote().getSource());
+					String s = e.getNote().getSource();
+					if (s.contains("/")) s = s.substring(s.lastIndexOf("/") + 1, s.lastIndexOf("/") + 2);
+					buf.append(s);
 					continue i;
 				}
 			}
