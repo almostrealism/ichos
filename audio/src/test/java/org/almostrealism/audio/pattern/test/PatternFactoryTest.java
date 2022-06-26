@@ -87,9 +87,12 @@ public class PatternFactoryTest implements CellFeatures {
 
 	@Test
 	public void runLayers() throws IOException {
-		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
+		Frequency bpm = bpm(120);
 
-		PatternLayerManager manager = new PatternLayerManager(readNodes());
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
+		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
+
+		PatternLayerManager manager = new PatternLayerManager(readNodes(), destination);
 
 		System.out.println(PatternLayerManager.layerHeader());
 		System.out.println(PatternLayerManager.layerString(manager.lastLayer()));
@@ -99,10 +102,7 @@ public class PatternFactoryTest implements CellFeatures {
 			System.out.println(PatternLayerManager.layerString(manager.lastLayer()));
 		}
 
-		Frequency bpm = bpm(120);
-
-		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
-		manager.sum(destination, pos -> (int) (pos * bpm.l(16) * OutputLine.sampleRate)).run();
+		manager.sum(pos -> (int) (pos * bpm.l(16) * OutputLine.sampleRate));
 
 		WaveData out = new WaveData(destination, OutputLine.sampleRate);
 		out.save(new File("pattern-test.wav"));

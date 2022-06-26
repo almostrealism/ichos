@@ -34,18 +34,23 @@ public class PatternLayerManager {
 	private List<PatternFactoryLayer> layers;
 	private List<PatternElement> elements;
 
-	public PatternLayerManager(PatternFactoryNode root) {
+	private RootDelegateSegmentsAdd sum;
+	private Runnable runSum;
+
+	public PatternLayerManager(PatternFactoryNode root, PackedCollection destination) {
 		this.position = 0.0;
 		this.duration = 1.0;
 		this.scale = 1.0;
 		this.root = root;
 		this.layers = new ArrayList<>();
 		this.elements = new ArrayList<>();
-		init();
+		init(destination);
 	}
 
-	protected void init() {
+	protected void init(PackedCollection destination) {
 		addLayer(root.initial(position));
+		sum = new RootDelegateSegmentsAdd<>(256, destination.traverse(1));
+		runSum = sum.get();
 	}
 
 	protected void addLayer(PatternFactoryLayer layer) {
@@ -83,14 +88,13 @@ public class PatternLayerManager {
 		addLayer(params);
 	}
 
-	public Runnable sum(PackedCollection destination, DoubleToIntFunction offsetForPosition) {
-		List<ProducerWithOffset<PackedCollection>> notes = elements.stream()
+	public void sum(DoubleToIntFunction offsetForPosition) {
+		sum.getInput().clear();
+		elements.stream()
 				.map(e -> e.getNoteDestinations(offsetForPosition))
 				.flatMap(List::stream)
-				.collect(Collectors.toList());
-
-		RootDelegateSegmentsAdd<PackedCollection> op = new RootDelegateSegmentsAdd<>(notes, destination.traverse(1));
-		return op.get();
+				.forEach(sum.getInput()::add);
+		runSum.run();
 	}
 
 	public static String layerHeader() {
