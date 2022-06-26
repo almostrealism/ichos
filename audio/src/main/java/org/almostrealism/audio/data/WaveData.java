@@ -50,16 +50,7 @@ public class WaveData {
 	public WaveData(PackedCollection wave, int sampleRate) {
 		this.collection = wave;
 		this.sampleRate = sampleRate;
-
-		long start = System.currentTimeMillis();
-
 		this.wave = allocate(wave.getMemLength());
-		double data[] = wave.toArray(0, wave.getMemLength());
-		for (int i = 0; i < this.wave.getCount(); i++) {
-			this.wave.set(i, data[i], 1.0);
-		}
-
-		System.out.println("WaveData: Imported collection in " + (System.currentTimeMillis() - start) + "ms");
 	}
 
 	@Deprecated
@@ -71,6 +62,17 @@ public class WaveData {
 	@JsonIgnore
 	@Deprecated
 	public ScalarBank getWave() {
+		if (collection != null) {
+			long start = System.currentTimeMillis();
+
+			double data[] = collection.toArray(0, collection.getMemLength());
+			for (int i = 0; i < this.wave.getCount(); i++) {
+				this.wave.set(i, data[i], 1.0);
+			}
+
+			System.out.println("WaveData: Imported collection in " + (System.currentTimeMillis() - start) + "ms");
+		}
+
 		return wave;
 	}
 
@@ -104,7 +106,9 @@ public class WaveData {
 	}
 
 	public void save(File file) {
-		int frames = getWave().getCount();
+		ScalarBank w = getWave();
+
+		int frames = w.getCount();
 
 		WavFile wav;
 
@@ -116,7 +120,7 @@ public class WaveData {
 		}
 
 		for (int i = 0; i < frames; i++) {
-			double value = getWave().get(i).getValue();
+			double value = w.get(i).getValue();
 
 			try {
 				wav.writeFrames(new double[][]{{value}, {value}}, 1);
