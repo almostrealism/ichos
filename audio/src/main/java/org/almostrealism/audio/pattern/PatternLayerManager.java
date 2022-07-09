@@ -16,9 +16,9 @@
 
 package org.almostrealism.audio.pattern;
 
+import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.collect.PackedCollection;
-import org.almostrealism.collect.ProducerWithOffset;
 import org.almostrealism.collect.computations.RootDelegateSegmentsAdd;
 
 import java.util.ArrayList;
@@ -30,27 +30,40 @@ public class PatternLayerManager {
 	private double position;
 	private double duration;
 	private double scale;
-	private PatternFactoryNode root;
+
+	private List<PatternFactoryChoice> choices;
+	private ParameterFunction factorySelection;
+
 	private List<PatternFactoryLayer> layers;
 	private List<PatternElement> elements;
 
 	private RootDelegateSegmentsAdd sum;
 	private Runnable runSum;
 
-	public PatternLayerManager(PatternFactoryNode root, PackedCollection destination) {
+	public PatternLayerManager(List<PatternFactoryChoice> choices) {
+		this(choices, null);
+	}
+
+	public PatternLayerManager(List<PatternFactoryChoice> choices, PackedCollection destination) {
 		this.position = 0.0;
 		this.duration = 1.0;
 		this.scale = 1.0;
-		this.root = root;
+		this.choices = choices;
 		this.layers = new ArrayList<>();
 		this.elements = new ArrayList<>();
-		init(destination);
+		if (destination != null) init(destination);
 	}
 
-	protected void init(PackedCollection destination) {
-		addLayer(root.initial(position));
+	public void init(PackedCollection destination) {
+		factorySelection = ParameterFunction.random();
+
+//		addLayer(choose(1.0, new ParameterSet(0.0, 0.0, 0.0)).initial(position));
 		sum = new RootDelegateSegmentsAdd<>(256, destination.traverse(1));
 		runSum = sum.get();
+	}
+
+	public List<PatternFactoryChoice> getChoices() {
+		return choices;
 	}
 
 	protected void addLayer(PatternFactoryLayer layer) {
@@ -65,6 +78,7 @@ public class PatternLayerManager {
 	}
 
 	public PatternFactoryLayer lastLayer() {
+		if (layers.isEmpty()) return null;
 		return layers.get(layers.size() - 1);
 	}
 
@@ -72,7 +86,7 @@ public class PatternLayerManager {
 
 	public void addLayer(ParameterSet params) {
 		// TODO  Each layer should be processed separately, with lower probability for higher layers
-		PatternFactoryLayer layer = lastLayer().getNode().apply(elements, scale, params);
+		PatternFactoryLayer layer = choose(scale, params).apply(elements, scale, params);
 		layer.trim(duration);
 		addLayer(layer);
 	}
@@ -86,6 +100,17 @@ public class PatternLayerManager {
 	public void replaceLayer(ParameterSet params) {
 		removeLayer();
 		addLayer(params);
+	}
+
+	public PatternFactoryChoice choose(double scale, ParameterSet params) {
+		List<PatternFactoryChoice> options = choices.stream()
+				.filter(c -> scale >= c.getMinScale())
+				.filter(c -> scale < c.getMaxScale())
+				.collect(Collectors.toList());
+
+		double c = factorySelection.apply(params);
+		if (c < 0) c = c + 1.0;
+		return options.get((int) (options.size() * c));
 	}
 
 	public void sum(DoubleToIntFunction offsetForPosition) {

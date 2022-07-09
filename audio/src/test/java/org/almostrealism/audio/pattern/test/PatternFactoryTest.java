@@ -17,16 +17,13 @@
 package org.almostrealism.audio.pattern.test;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.WaveData;
-import org.almostrealism.audio.pattern.PatternElement;
 import org.almostrealism.audio.pattern.PatternElementFactory;
 import org.almostrealism.audio.pattern.PatternFactoryChoice;
-import org.almostrealism.audio.pattern.PatternFactoryLayer;
-import org.almostrealism.audio.pattern.PatternFactoryNode;
+import org.almostrealism.audio.pattern.PatternFactoryChoiceList;
 import org.almostrealism.audio.pattern.PatternLayerManager;
 import org.almostrealism.audio.pattern.PatternNote;
 import org.almostrealism.collect.PackedCollection;
@@ -39,32 +36,36 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class PatternFactoryTest implements CellFeatures {
 
-	public PatternFactoryNode createNodes() {
-		PatternFactoryNode kick = new PatternFactoryNode(new PatternElementFactory(new PatternNote("Kit/Kick.wav")));
-		kick.setSelfWeight(10);
-		kick.setMinimumScale(0.25);
+	public List<PatternFactoryChoice> createNodes() {
+		List<PatternFactoryChoice> choices = new ArrayList<>();
 
-		PatternFactoryNode clap = new PatternFactoryNode(new PatternElementFactory(new PatternNote("Kit/Clap.wav")));
-		kick.getChoices().add(new PatternFactoryChoice(clap));
+		PatternFactoryChoice kick = new PatternFactoryChoice(new PatternElementFactory(new PatternNote("Kit/Kick.wav")));
+		kick.setMinScale(0.25);
 
-		PatternFactoryNode toms = new PatternFactoryNode(
+		PatternFactoryChoice clap = new PatternFactoryChoice(new PatternElementFactory(new PatternNote("Kit/Clap.wav")));
+		clap.setMaxScale(0.5);
+		choices.add(clap);
+
+		PatternFactoryChoice toms = new PatternFactoryChoice(
 				new PatternElementFactory(new PatternNote("Kit/Tom1.wav"),
 						new PatternNote("Kit/Tom2.wav")));
-		clap.getChoices().add(new PatternFactoryChoice(toms));
+		clap.setMaxScale(0.25);
+		choices.add(toms);
 
-		return kick;
+		return choices;
 	}
 
-	public PatternFactoryNode readNodes() throws IOException {
-		return new ObjectMapper().readValue(new File("pattern-factory.json"), PatternFactoryNode.class);
+	public PatternFactoryChoiceList readChoices() throws IOException {
+		return new ObjectMapper().readValue(new File("pattern-factory.json"), PatternFactoryChoiceList.class);
 	}
 
 	@Test
-	public void storeNodes() throws IOException {
+	public void storeChoices() throws IOException {
 		new ObjectMapper().writeValue(new File("pattern-factory.json"), createNodes());
 	}
 
@@ -92,7 +93,7 @@ public class PatternFactoryTest implements CellFeatures {
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
 
-		PatternLayerManager manager = new PatternLayerManager(readNodes(), destination);
+		PatternLayerManager manager = new PatternLayerManager(readChoices(), destination);
 
 		System.out.println(PatternLayerManager.layerHeader());
 		System.out.println(PatternLayerManager.layerString(manager.lastLayer()));

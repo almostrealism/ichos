@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.IntStream;
 
+@Deprecated
 public class PatternFactoryNode {
 	private PatternElementFactory factory;
 	private double selfWeight;
@@ -87,38 +88,34 @@ public class PatternFactoryNode {
 
 	public PatternFactoryLayer apply(List<PatternElement> elements, double scale, ParameterSet params) {
 		PatternFactoryLayer layer = new PatternFactoryLayer();
-		layer.setNode(choose(scale, params));
+//		layer.setNode(choose(scale, params));
 		elements.forEach(e -> layer.getElements().addAll(apply(e, scale, params).getElements()));
 		return layer;
 	}
 
 	public PatternFactoryLayer apply(PatternElement element, double scale, ParameterSet params) {
 		PatternFactoryLayer layer = new PatternFactoryLayer();
-		PatternFactoryNode node = choose(scale, params);
-		layer.setNode(node);
+		PatternFactoryChoice node = null; // choose(scale, params);
+		layer.setChoice(node);
 
 		node.getFactory().apply(ElementParity.LEFT, element.getPosition(), scale, params).ifPresent(layer.getElements()::add);
 		node.getFactory().apply(ElementParity.RIGHT, element.getPosition(), scale, params).ifPresent(layer.getElements()::add);
 		return layer;
 	}
 
-	public PatternFactoryLayer initial(double position) {
-		return new PatternFactoryLayer(this, List.of(new PatternElement(factory.getNotes().get((int) (Math.random() * factory.getNotes().size())), position)));
-	}
-
-	protected PatternFactoryNode choose(double scale, ParameterSet params) {
+	protected PatternElementFactory choose(double scale, ParameterSet params) {
 		double total = (scale < minScale ? 0 : selfWeight) + choices.stream().mapToDouble(PatternFactoryChoice::getWeight).sum();
 		double c = nodeSelection.apply(params);
 		if (c < 0) c = c + 1.0;
 		double choice = c * total - (scale < minScale ? 0 : selfWeight);
-		if (choice < 0) return this;
+		if (choice < 0) return factory;
 
 		for (int i = 0; i < choices.size() - 1; i++) {
 			if (choice < IntStream.range(0, i + 1).mapToObj(choices::get).mapToDouble(PatternFactoryChoice::getWeight).sum()) {
-				return choices.get(i).getNode();
+				return choices.get(i).getFactory();
 			}
 		}
 
-		return choices.get(choices.size() - 1).getNode();
+		return choices.get(choices.size() - 1).getFactory();
 	}
 }

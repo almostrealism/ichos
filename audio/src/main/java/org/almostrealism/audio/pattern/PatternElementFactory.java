@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class PatternElementFactory {
+	private String name;
 	private List<PatternNote> notes;
 	private ParameterizedPositionFunction noteSelection;
 	private ParameterizedPositionFunction repeatSelection;
@@ -41,6 +42,10 @@ public class PatternElementFactory {
 		noteSelection = ParameterizedPositionFunction.random();
 		repeatSelection = ParameterizedPositionFunction.random();
 	}
+
+	public String getName() { return name; }
+
+	public void setName(String name) { this.name = name; }
 
 	public List<PatternNote> getNotes() {
 		return notes;
