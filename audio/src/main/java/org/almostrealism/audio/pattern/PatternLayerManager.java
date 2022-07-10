@@ -16,17 +16,22 @@
 
 package org.almostrealism.audio.pattern;
 
+import org.almostrealism.CodeFeatures;
 import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.collect.computations.RootDelegateSegmentsAdd;
+import org.almostrealism.hardware.KernelizedEvaluable;
+import org.almostrealism.hardware.OperationList;
+import org.almostrealism.hardware.PassThroughProducer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleToIntFunction;
 import java.util.stream.Collectors;
 
-public class PatternLayerManager {
+public class PatternLayerManager implements CodeFeatures {
 	private double position;
 	private double duration;
 	private double scale;
@@ -37,6 +42,7 @@ public class PatternLayerManager {
 	private List<PatternFactoryLayer> layers;
 	private List<PatternElement> elements;
 
+	private PackedCollection volume;
 	private RootDelegateSegmentsAdd sum;
 	private Runnable runSum;
 
@@ -57,9 +63,19 @@ public class PatternLayerManager {
 	public void init(PackedCollection destination) {
 		factorySelection = ParameterFunction.random();
 
-//		addLayer(choose(1.0, new ParameterSet(0.0, 0.0, 0.0)).initial(position));
+		volume = new PackedCollection(1);
+		volume.setMem(0, 0.1);
+
 		sum = new RootDelegateSegmentsAdd<>(256, destination.traverse(1));
-		runSum = sum.get();
+
+		KernelizedEvaluable<PackedCollection> scale = multiply(new TraversalPolicy(1),
+				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
+
+		OperationList generate = new OperationList();
+		generate.add(sum);
+		generate.add(() -> () ->
+				scale.kernelEvaluate(destination.traverse(1), destination.traverse(1), volume));
+		runSum = generate.get();
 	}
 
 	public List<PatternFactoryChoice> getChoices() {
