@@ -33,6 +33,11 @@ public class PatternElementFactory {
 	}
 
 	public PatternElementFactory(PatternNote... notes) {
+		this(null, notes);
+	}
+
+	public PatternElementFactory(String name, PatternNote... notes) {
+		setName(name);
 		setNotes(new ArrayList<>());
 		getNotes().addAll(List.of(notes));
 		initSelectionFunctions();
@@ -77,6 +82,8 @@ public class PatternElementFactory {
 		} else if (parity == ElementParity.RIGHT) {
 			position += scale;
 		}
+
+		if (notes.isEmpty()) return Optional.empty();
 
 		double note = noteSelection.apply(params, position, scale);
 		if (note < 0.0) return Optional.empty();

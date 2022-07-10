@@ -85,10 +85,14 @@ public class PatternLayerManager {
 	public int layerCount() { return layers.size(); }
 
 	public void addLayer(ParameterSet params) {
-		// TODO  Each layer should be processed separately, with lower probability for higher layers
-		PatternFactoryLayer layer = choose(scale, params).apply(elements, scale, params);
-		layer.trim(duration);
-		addLayer(layer);
+		if (layerCount() <= 0) {
+			addLayer(choose(1.0, new ParameterSet(0.0, 0.0, 0.0)).initial(position));
+		} else {
+			// TODO  Each layer should be processed separately, with lower probability for higher layers
+			PatternFactoryLayer layer = choose(scale, params).apply(elements, scale, params);
+			layer.trim(duration);
+			addLayer(layer);
+		}
 	}
 
 	public void removeLayer() {
@@ -102,10 +106,14 @@ public class PatternLayerManager {
 		addLayer(params);
 	}
 
+	public void clear() {
+		while (layerCount() > 0) removeLayer();
+	}
+
 	public PatternFactoryChoice choose(double scale, ParameterSet params) {
 		List<PatternFactoryChoice> options = choices.stream()
 				.filter(c -> scale >= c.getMinScale())
-				.filter(c -> scale < c.getMaxScale())
+				.filter(c -> scale <= c.getMaxScale())
 				.collect(Collectors.toList());
 
 		double c = factorySelection.apply(params);

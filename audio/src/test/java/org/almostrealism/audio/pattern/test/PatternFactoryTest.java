@@ -41,21 +41,41 @@ import java.util.List;
 
 public class PatternFactoryTest implements CellFeatures {
 
-	public List<PatternFactoryChoice> createNodes() {
+//	@Test
+	public void fixChoices() throws IOException {
+		List<PatternFactoryChoice> choices = readChoices();
+
+		List<PatternNote> hats = new ArrayList<>();
+		hats.addAll(choices.get(2).getFactory().getNotes());
+		hats.remove(1);
+		hats.remove(0);
+		choices.get(2).getFactory().getNotes().clear();
+
+		choices.get(3).getFactory().setNotes(hats);
+
+		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
+	}
+
+	public List<PatternFactoryChoice> createChoices() {
 		List<PatternFactoryChoice> choices = new ArrayList<>();
 
-		PatternFactoryChoice kick = new PatternFactoryChoice(new PatternElementFactory(new PatternNote("Kit/Kick.wav")));
+		PatternFactoryChoice kick = new PatternFactoryChoice(new PatternElementFactory("Kicks", new PatternNote("Kit/Kick.wav")));
 		kick.setMinScale(0.25);
+		choices.add(kick);
 
-		PatternFactoryChoice clap = new PatternFactoryChoice(new PatternElementFactory(new PatternNote("Kit/Clap.wav")));
+		PatternFactoryChoice clap = new PatternFactoryChoice(new PatternElementFactory("Clap/Snare", new PatternNote("Kit/Clap.wav")));
 		clap.setMaxScale(0.5);
 		choices.add(clap);
 
 		PatternFactoryChoice toms = new PatternFactoryChoice(
-				new PatternElementFactory(new PatternNote("Kit/Tom1.wav"),
+				new PatternElementFactory("Toms", new PatternNote("Kit/Tom1.wav"),
 						new PatternNote("Kit/Tom2.wav")));
-		clap.setMaxScale(0.25);
+		toms.setMaxScale(0.25);
 		choices.add(toms);
+
+		PatternFactoryChoice hats = new PatternFactoryChoice(new PatternElementFactory("Hats"));
+		hats.setMaxScale(0.25);
+		choices.add(hats);
 
 		return choices;
 	}
@@ -66,7 +86,7 @@ public class PatternFactoryTest implements CellFeatures {
 
 	@Test
 	public void storeChoices() throws IOException {
-		new ObjectMapper().writeValue(new File("pattern-factory.json"), createNodes());
+		new ObjectMapper().writeValue(new File("pattern-factory.json"), createChoices());
 	}
 
 	@Test
