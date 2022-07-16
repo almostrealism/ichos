@@ -32,15 +32,13 @@ import java.util.function.DoubleToIntFunction;
 import java.util.stream.Collectors;
 
 public class PatternLayerManager implements CodeFeatures {
-	private double position;
 	private double duration;
 	private double scale;
 
 	private List<PatternFactoryChoice> choices;
 	private ParameterFunction factorySelection;
 
-	private List<PatternFactoryLayer> layers;
-	private List<PatternElement> elements;
+	private List<PatternLayer> roots;
 
 	private PackedCollection volume;
 	private RootDelegateSegmentsAdd sum;
@@ -51,12 +49,11 @@ public class PatternLayerManager implements CodeFeatures {
 	}
 
 	public PatternLayerManager(List<PatternFactoryChoice> choices, PackedCollection destination) {
-		this.position = 0.0;
 		this.duration = 1.0;
 		this.scale = 1.0;
+
 		this.choices = choices;
-		this.layers = new ArrayList<>();
-		this.elements = new ArrayList<>();
+		this.roots = new ArrayList<>();
 		if (destination != null) init(destination);
 	}
 
@@ -66,7 +63,7 @@ public class PatternLayerManager implements CodeFeatures {
 		volume = new PackedCollection(1);
 		volume.setMem(0, 0.1);
 
-		sum = new RootDelegateSegmentsAdd<>(256, destination.traverse(1));
+		sum = new RootDelegateSegmentsAdd<>(512, destination.traverse(1));
 
 		KernelizedEvaluable<PackedCollection> scale = multiply(new TraversalPolicy(1),
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
@@ -82,10 +79,26 @@ public class PatternLayerManager implements CodeFeatures {
 		return choices;
 	}
 
-	protected void addLayer(PatternFactoryLayer layer) {
-		layers.add(layer);
-		elements.addAll(layer.getElements());
-		increment();
+	public PatternLayerSeeds getSeeds() {
+		return getChoices().stream()
+				.filter(PatternFactoryChoice::isSeed)
+				.map(PatternFactoryChoice::seeds)
+				.findFirst().orElseThrow();
+	}
+
+	public List<PatternElement> getTailElements() {
+		return roots.stream()
+				.map(PatternLayer::getTail)
+				.map(PatternLayer::getElements)
+				.flatMap(List::stream)
+				.collect(Collectors.toList());
+	}
+
+	public List<PatternElement> getAllElements() {
+		return roots.stream()
+				.map(PatternLayer::getAllElements)
+				.flatMap(List::stream)
+				.collect(Collectors.toList());
 	}
 
 	protected void decrement() { scale *= 2; }
@@ -93,28 +106,41 @@ public class PatternLayerManager implements CodeFeatures {
 		scale /= 2;
 	}
 
-	public PatternFactoryLayer lastLayer() {
-		if (layers.isEmpty()) return null;
-		return layers.get(layers.size() - 1);
+	public int rootCount() { return roots.size(); }
+	public int depth() {
+		if (rootCount() <= 0) return 0;
+		return roots.stream()
+				.map(PatternLayer::depth)
+				.max(Integer::compareTo).orElse(0);
 	}
 
-	public int layerCount() { return layers.size(); }
-
 	public void addLayer(ParameterSet params) {
-		if (layerCount() <= 0) {
-			addLayer(choose(1.0, new ParameterSet(0.0, 0.0, 0.0)).initial(position));
+		if (rootCount() <= 0) {
+			PatternLayerSeeds seeds = getSeeds();
+			seeds.generator().forEach(roots::add);
+			scale = seeds.getScale();
 		} else {
-			// TODO  Each layer should be processed separately, with lower probability for higher layers
-			PatternFactoryLayer layer = choose(scale, params).apply(elements, scale, params);
-			layer.trim(duration);
-			addLayer(layer);
+			roots.forEach(layer -> {
+				// TODO  Each layer should be processed separately, with lower probability for higher layers
+				PatternLayer next = choose(scale, params).apply(layer.getAllElements(), scale, params);
+				next.trim(2 * duration);
+				layer.getTail().setChild(next);
+			});
 		}
+
+		increment();
 	}
 
 	public void removeLayer() {
 		decrement();
-		lastLayer().getElements().forEach(elements::remove);
-		layers.remove(layers.size() - 1);
+
+		if (depth() <= 0) return;
+		if (depth() <= 1) {
+			roots.clear();
+			return;
+		}
+
+		roots.forEach(layer -> layer.getLastParent().setChild(null));
 	}
 
 	public void replaceLayer(ParameterSet params) {
@@ -123,7 +149,7 @@ public class PatternLayerManager implements CodeFeatures {
 	}
 
 	public void clear() {
-		while (layerCount() > 0) removeLayer();
+		while (depth() > 0) removeLayer();
 	}
 
 	public PatternFactoryChoice choose(double scale, ParameterSet params) {
@@ -139,10 +165,16 @@ public class PatternLayerManager implements CodeFeatures {
 
 	public void sum(DoubleToIntFunction offsetForPosition) {
 		sum.getInput().clear();
-		elements.stream()
+		getAllElements().stream()
 				.map(e -> e.getNoteDestinations(offsetForPosition))
 				.flatMap(List::stream)
 				.forEach(sum.getInput()::add);
+
+		if (sum.getInput().size() > sum.getMaxInputs()) {
+			System.out.println("PatternLayerManager: Too many inputs (" + sum.getInput().size() + ") for sum");
+			return;
+		}
+
 		runSum.run();
 	}
 
@@ -168,7 +200,11 @@ public class PatternLayerManager implements CodeFeatures {
 		return buf.toString();
 	}
 
-	public static String layerString(PatternFactoryLayer layer) {
+	public static String layerString(PatternLayer layer) {
+		return layerString(layer.getElements());
+	}
+
+	public static String layerString(List<PatternElement> elements) {
 		int count = 128;
 		int divide = count / 8;
 		double scale = 1.0 / count;
@@ -177,7 +213,7 @@ public class PatternLayerManager implements CodeFeatures {
 
 		i: for (int i = 0; i < count; i++) {
 			if (i % divide == 0) buf.append("|");
-			for (PatternElement e : layer.getElements()) {
+			for (PatternElement e : elements) {
 				if (e.isPresent(i * scale, (i + 1) * scale)) {
 					String s = e.getNote().getSource();
 					if (s.contains("/")) s = s.substring(s.lastIndexOf("/") + 1, s.lastIndexOf("/") + 2);

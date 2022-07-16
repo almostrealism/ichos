@@ -38,20 +38,21 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class PatternFactoryTest implements CellFeatures {
 
-//	@Test
+	@Test
 	public void fixChoices() throws IOException {
 		List<PatternFactoryChoice> choices = readChoices();
 
-		List<PatternNote> hats = new ArrayList<>();
-		hats.addAll(choices.get(2).getFactory().getNotes());
-		hats.remove(1);
-		hats.remove(0);
-		choices.get(2).getFactory().getNotes().clear();
-
-		choices.get(3).getFactory().setNotes(hats);
+		PatternFactoryChoice cuba = new PatternFactoryChoice(new PatternElementFactory("Cuba"));
+		Stream.of(new File("/Users/michael/Documents/AudioLibrary/").listFiles())
+				.map(File::getAbsolutePath)
+				.map(PatternNote::new)
+				.forEach(cuba.getFactory().getNotes()::add);
+		cuba.setMaxScale(0.5);
+		choices.add(cuba);
 
 		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
 	}
@@ -116,11 +117,11 @@ public class PatternFactoryTest implements CellFeatures {
 		PatternLayerManager manager = new PatternLayerManager(readChoices(), destination);
 
 		System.out.println(PatternLayerManager.layerHeader());
-		System.out.println(PatternLayerManager.layerString(manager.lastLayer()));
+		System.out.println(PatternLayerManager.layerString(manager.getTailElements()));
 
 		for (int i = 0; i < 4; i++) {
 			manager.addLayer(new ParameterSet(0.6, 0.2, 0.7));
-			System.out.println(PatternLayerManager.layerString(manager.lastLayer()));
+			System.out.println(PatternLayerManager.layerString(manager.getTailElements()));
 		}
 
 		manager.sum(pos -> (int) (pos * bpm.l(16) * OutputLine.sampleRate));

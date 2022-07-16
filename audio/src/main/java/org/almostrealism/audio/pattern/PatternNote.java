@@ -17,12 +17,17 @@
 package org.almostrealism.audio.pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.almostrealism.audio.OutputLine;
+import org.almostrealism.audio.Waves;
 import org.almostrealism.audio.data.FileWaveDataProvider;
 import org.almostrealism.collect.PackedCollection;
+
+import java.io.File;
 
 public class PatternNote {
 	private String source;
 	private PackedCollection audio;
+	private Boolean valid;
 
 	@JsonIgnore
 	private FileWaveDataProvider provider;
@@ -43,6 +48,7 @@ public class PatternNote {
 
 	public void setSource(String source) {
 		this.source = source;
+		this.valid = null;
 	}
 
 	@JsonIgnore
@@ -58,5 +64,12 @@ public class PatternNote {
 	@JsonIgnore
 	public void setAudio(PackedCollection audio) {
 		this.audio = audio;
+	}
+
+	public boolean isValid() {
+		if (audio != null) return true;
+		if (valid != null) return valid;
+		valid = Waves.isValid(new File(source), w -> w.getSampleRate() == OutputLine.sampleRate);
+		return valid;
 	}
 }

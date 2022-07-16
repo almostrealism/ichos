@@ -25,6 +25,7 @@ public class PatternFactoryChoice {
 	private double weight;
 	private double minScale;
 	private double maxScale;
+	private boolean seed;
 
 	public PatternFactoryChoice() { this(null); }
 
@@ -75,19 +76,25 @@ public class PatternFactoryChoice {
 		this.maxScale = maxScale;
 	}
 
-	public PatternFactoryLayer initial(double position) {
-		return new PatternFactoryLayer(this, List.of(new PatternElement(factory.getNotes().get((int) (Math.random() * factory.getNotes().size())), position)));
+	public boolean isSeed() { return seed; }
+
+	public void setSeed(boolean seed) { this.seed = seed; }
+
+	public PatternLayerSeeds seeds() {
+		// TODO  This can't be random, it needs to be deterministic
+		PatternNote note = factory.getNotes().get((int) (Math.random() * factory.getNotes().size()));
+		return new PatternLayerSeeds(0, minScale, 1, (int) (1 / minScale), () -> note);
 	}
 
-	public PatternFactoryLayer apply(List<PatternElement> elements, double scale, ParameterSet params) {
-		PatternFactoryLayer layer = new PatternFactoryLayer();
+	public PatternLayer apply(List<PatternElement> elements, double scale, ParameterSet params) {
+		PatternLayer layer = new PatternLayer();
 		layer.setChoice(this);
 		elements.forEach(e -> layer.getElements().addAll(apply(e, scale, params).getElements()));
 		return layer;
 	}
 
-	public PatternFactoryLayer apply(PatternElement element, double scale, ParameterSet params) {
-		PatternFactoryLayer layer = new PatternFactoryLayer();
+	public PatternLayer apply(PatternElement element, double scale, ParameterSet params) {
+		PatternLayer layer = new PatternLayer();
 		layer.setChoice(this);
 
 		getFactory().apply(ElementParity.LEFT, element.getPosition(), scale, params).ifPresent(layer.getElements()::add);

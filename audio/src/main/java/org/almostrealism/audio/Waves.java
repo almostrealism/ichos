@@ -256,4 +256,19 @@ public class Waves implements TempoAware, CellFeatures {
 
 		return new Waves(f.getCanonicalPath(), new WaveSet(new FileWaveDataProvider(f.getCanonicalPath())));
 	}
+
+	public static boolean isValid(File f, Predicate<WavFile> validator) {
+		try {
+			validate(f, validator);
+			return true;
+		} catch (IOException e) {
+			return false;
+		}
+	}
+
+	public static void validate(File f, Predicate<WavFile> validator) throws IOException {
+		WavFile w = WavFile.openWavFile(f);
+		if (w.getNumFrames() >= Integer.MAX_VALUE) throw new UnsupportedOperationException();
+		if (!validator.test(w)) throw new IOException();
+	}
 }

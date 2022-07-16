@@ -21,6 +21,7 @@ import org.almostrealism.audio.data.ParameterSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class PatternElementFactory {
 	private String name;
@@ -76,6 +77,10 @@ public class PatternElementFactory {
 		this.repeatSelection = repeatSelection;
 	}
 
+	public List<PatternNote> getValidNotes() {
+		return notes.stream().filter(PatternNote::isValid).collect(Collectors.toList());
+	}
+
 	public Optional<PatternElement> apply(ElementParity parity, double position, double scale, ParameterSet params) {
 		if (parity == ElementParity.LEFT) {
 			position -= scale;
@@ -88,7 +93,8 @@ public class PatternElementFactory {
 		double note = noteSelection.apply(params, position, scale);
 		if (note < 0.0) return Optional.empty();
 
-		PatternElement element = new PatternElement(getNotes().get((int) (note * getNotes().size())), position);
+		List<PatternNote> notes = getValidNotes();
+		PatternElement element = new PatternElement(notes.get((int) (note * notes.size())), position);
 
 		double r = repeatSelection.apply(params, position, scale);
 

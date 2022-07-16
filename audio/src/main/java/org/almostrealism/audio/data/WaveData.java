@@ -22,6 +22,7 @@ import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.PackedCollectionHeap;
+import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.ctx.ContextSpecific;
 import org.almostrealism.hardware.ctx.DefaultContextSpecific;
@@ -103,6 +104,18 @@ public class WaveData {
 
 	public void setSampleRate(int sampleRate) {
 		this.sampleRate = sampleRate;
+	}
+
+	public double getDuration() {
+		return getCollection().getMemLength() / (double) sampleRate;
+	}
+
+	public WaveData range(double start, double length) {
+		return range((int) (start * sampleRate), (int) (length * sampleRate));
+	}
+
+	public WaveData range(int start, int length) {
+		return new WaveData(getCollection().range(new TraversalPolicy(length), start), sampleRate);
 	}
 
 	public void save(File file) {

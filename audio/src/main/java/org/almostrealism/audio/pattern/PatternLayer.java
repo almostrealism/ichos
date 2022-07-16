@@ -20,13 +20,18 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class PatternFactoryLayer {
+public class PatternLayer {
 	private PatternFactoryChoice choice;
 	private List<PatternElement> elements;
+	private PatternLayer child;
 
-	public PatternFactoryLayer() { this(null, new ArrayList<>()); }
+	public PatternLayer() { this(null, new ArrayList<>()); }
 
-	public PatternFactoryLayer(PatternFactoryChoice choice, List<PatternElement> elements) {
+	public PatternLayer(List<PatternElement> elements) {
+		this(null, elements);
+	}
+
+	public PatternLayer(PatternFactoryChoice choice, List<PatternElement> elements) {
 		this.choice = choice;
 		this.elements = elements;
 	}
@@ -45,6 +50,32 @@ public class PatternFactoryLayer {
 
 	public void setElements(List<PatternElement> elements) {
 		this.elements = elements;
+	}
+
+	public List<PatternElement> getAllElements() {
+		List<PatternElement> result = new ArrayList<>(elements);
+		if (child != null) result.addAll(child.getAllElements());
+		return result;
+	}
+
+	public PatternLayer getChild() { return child; }
+
+	public void setChild(PatternLayer child) { this.child = child; }
+
+	public PatternLayer getTail() {
+		if (child == null) return this;
+		return child.getTail();
+	}
+
+	public PatternLayer getLastParent() {
+		if (child == null) return null;
+		if (child.getChild() == null) return this;
+		return child.getLastParent();
+	}
+
+	public int depth() {
+		if (child == null) return 1;
+		return child.depth() + 1;
 	}
 
 	public void trim(double duration) {
