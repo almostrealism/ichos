@@ -25,7 +25,9 @@ public class PatternFactoryChoice {
 	private double weight;
 	private double minScale;
 	private double maxScale;
+
 	private boolean seed;
+	private ParameterizedPositionFunction seedNoteFunction;
 
 	public PatternFactoryChoice() { this(null); }
 
@@ -42,6 +44,10 @@ public class PatternFactoryChoice {
 		setWeight(weight);
 		setMinScale(minScale);
 		setMaxScale(maxScale);
+	}
+
+	public void initSelectionFunctions() {
+		seedNoteFunction = ParameterizedPositionFunction.random();
 	}
 
 	public PatternElementFactory getFactory() {
@@ -80,10 +86,22 @@ public class PatternFactoryChoice {
 
 	public void setSeed(boolean seed) { this.seed = seed; }
 
-	public PatternLayerSeeds seeds() {
-		// TODO  This can't be random, it needs to be deterministic
-		PatternNote note = factory.getNotes().get((int) (Math.random() * factory.getNotes().size()));
-		return new PatternLayerSeeds(0, minScale, 1, (int) (1 / minScale), () -> note);
+	public ParameterizedPositionFunction getSeedNoteFunction() {
+		return seedNoteFunction;
+	}
+
+	public void setSeedNoteFunction(ParameterizedPositionFunction seedNoteFunction) {
+		this.seedNoteFunction = seedNoteFunction;
+	}
+
+	public PatternLayerSeeds seeds(ParameterSet params) {
+		double seedScale = minScale;
+
+		return new PatternLayerSeeds(0, seedScale, 1, (int) (1 / seedScale),
+				pos -> {
+					double r = seedNoteFunction.apply(params, pos, seedScale);
+					return r < 0.0 ? null : factory.getNotes().get((int) (r * factory.getNotes().size()));
+				});
 	}
 
 	public PatternLayer apply(List<PatternElement> elements, double scale, ParameterSet params) {

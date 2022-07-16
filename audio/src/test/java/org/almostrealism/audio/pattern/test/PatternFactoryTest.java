@@ -45,15 +45,7 @@ public class PatternFactoryTest implements CellFeatures {
 	@Test
 	public void fixChoices() throws IOException {
 		List<PatternFactoryChoice> choices = readChoices();
-
-		PatternFactoryChoice cuba = new PatternFactoryChoice(new PatternElementFactory("Cuba"));
-		Stream.of(new File("/Users/michael/Documents/AudioLibrary/").listFiles())
-				.map(File::getAbsolutePath)
-				.map(PatternNote::new)
-				.forEach(cuba.getFactory().getNotes()::add);
-		cuba.setMaxScale(0.5);
-		choices.add(cuba);
-
+		choices.stream().filter(PatternFactoryChoice::isSeed).findFirst().orElseThrow().initSelectionFunctions();
 		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
 	}
 

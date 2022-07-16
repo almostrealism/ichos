@@ -17,7 +17,8 @@
 package org.almostrealism.audio.pattern;
 
 import java.util.List;
-import java.util.function.Supplier;
+import java.util.Objects;
+import java.util.function.DoubleFunction;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -27,13 +28,13 @@ public class PatternLayerSeeds {
 	private int units;
 	private int count;
 
-	private Supplier<PatternNote> notes;
+	private DoubleFunction<PatternNote> notes;
 
 	public PatternLayerSeeds() {
 		this(0, 1.0, 1, 1, null);
 	}
 
-	public PatternLayerSeeds(double position, double scale, int units, int count, Supplier<PatternNote> notes) {
+	public PatternLayerSeeds(double position, double scale, int units, int count, DoubleFunction<PatternNote> notes) {
 		this.position = position;
 		this.scale = scale;
 		this.units = units;
@@ -75,7 +76,12 @@ public class PatternLayerSeeds {
 
 	public Stream<PatternLayer> generator() {
 		return IntStream.range(0, count)
-				.mapToObj(i -> List.of(new PatternElement(notes.get(), position + i * scale / units)))
+				.mapToObj(i -> {
+					PatternNote note = notes.apply(position + i * scale / units);
+					if (note == null) return null;
+					return List.of(new PatternElement(note, position + i * scale / units));
+				})
+				.filter(Objects::nonNull)
 				.map(PatternLayer::new);
 	}
 }

@@ -28,6 +28,7 @@ public class PatternElementFactory {
 	private List<PatternNote> notes;
 	private ParameterizedPositionFunction noteSelection;
 	private ParameterizedPositionFunction repeatSelection;
+	private boolean melodic;
 
 	public PatternElementFactory() {
 		this(new PatternNote[0]);
@@ -76,6 +77,10 @@ public class PatternElementFactory {
 	public void setRepeatSelection(ParameterizedPositionFunction repeatSelection) {
 		this.repeatSelection = repeatSelection;
 	}
+
+	public boolean isMelodic() { return melodic; }
+
+	public void setMelodic(boolean melodic) { this.melodic = melodic; }
 
 	public List<PatternNote> getValidNotes() {
 		return notes.stream().filter(PatternNote::isValid).collect(Collectors.toList());

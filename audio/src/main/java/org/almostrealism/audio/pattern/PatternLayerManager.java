@@ -79,10 +79,10 @@ public class PatternLayerManager implements CodeFeatures {
 		return choices;
 	}
 
-	public PatternLayerSeeds getSeeds() {
+	public PatternLayerSeeds getSeeds(ParameterSet params) {
 		return getChoices().stream()
 				.filter(PatternFactoryChoice::isSeed)
-				.map(PatternFactoryChoice::seeds)
+				.map(choice -> choice.seeds(params))
 				.findFirst().orElseThrow();
 	}
 
@@ -116,7 +116,7 @@ public class PatternLayerManager implements CodeFeatures {
 
 	public void addLayer(ParameterSet params) {
 		if (rootCount() <= 0) {
-			PatternLayerSeeds seeds = getSeeds();
+			PatternLayerSeeds seeds = getSeeds(params);
 			seeds.generator().forEach(roots::add);
 			scale = seeds.getScale();
 		} else {
