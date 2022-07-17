@@ -26,7 +26,7 @@ public class ParameterizedPositionFunction {
 	private ParameterFunction rate;
 	private ParameterFunction rateOffset;
 
-	public  ParameterizedPositionFunction() { }
+	public ParameterizedPositionFunction() { }
 
 	public ParameterizedPositionFunction(ParameterFunction regularity, ParameterFunction regularityOffset, ParameterFunction rate, ParameterFunction rateOffset) {
 		this.regularity = regularity;
@@ -75,17 +75,16 @@ public class ParameterizedPositionFunction {
 	}
 
 	protected double regularize(ParameterSet params, double position, double scale) {
-		return applyPositionalAlt(regularity.apply(params), position + regularityOffset.apply(params), scale);
+		return applyPositionalAlt(params, position + regularityOffset.apply(params), scale);
 	}
 
-	private static double applyPositionalAlt(double selection, double position, double scale) {
-		if (selection > 0.0) selection = Math.floor(3 * selection);
-		if (selection < 0.0) selection = Math.ceil(3 * selection);
+	private double applyPositionalAlt(ParameterSet params, double position, double scale) {
+		double selection = regularity.power(2.0, 3, 1).apply(params);
 
 		while (position < 0.0) position = position + 1.0;
 		while (position > 1.0) position = position - 1.0;
 
-		double regularity = scale * Math.pow(2.0, selection + 1);
+		double regularity = scale * selection;
 //		System.out.println("Regularity = " + regularity);
 		position = position / regularity;
 

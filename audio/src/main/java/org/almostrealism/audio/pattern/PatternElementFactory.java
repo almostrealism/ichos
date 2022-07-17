@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio.pattern;
 
+import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
 
 import java.util.ArrayList;
@@ -26,9 +27,12 @@ import java.util.stream.Collectors;
 public class PatternElementFactory {
 	private String name;
 	private List<PatternNote> notes;
-	private ParameterizedPositionFunction noteSelection;
-	private ParameterizedPositionFunction repeatSelection;
 	private boolean melodic;
+
+	private ParameterizedPositionFunction noteSelection;
+	private ParameterFunction noteLengthSelection;
+
+	private ParameterizedPositionFunction repeatSelection;
 
 	public PatternElementFactory() {
 		this(new PatternNote[0]);
@@ -47,6 +51,7 @@ public class PatternElementFactory {
 
 	public void initSelectionFunctions() {
 		noteSelection = ParameterizedPositionFunction.random();
+		noteLengthSelection = ParameterFunction.random();
 		repeatSelection = ParameterizedPositionFunction.random();
 	}
 
@@ -69,6 +74,10 @@ public class PatternElementFactory {
 	public void setNoteSelection(ParameterizedPositionFunction noteSelection) {
 		this.noteSelection = noteSelection;
 	}
+
+	public ParameterFunction getNoteLengthSelection() { return noteLengthSelection; }
+
+	public void setNoteLengthSelection(ParameterFunction noteLengthSelection) { this.noteLengthSelection = noteLengthSelection; }
 
 	public ParameterizedPositionFunction getRepeatSelection() {
 		return repeatSelection;
@@ -99,7 +108,10 @@ public class PatternElementFactory {
 		if (note < 0.0) return Optional.empty();
 
 		List<PatternNote> notes = getValidNotes();
+
 		PatternElement element = new PatternElement(notes.get((int) (note * notes.size())), position);
+		element.setNoteDuration(noteLengthSelection.power(2.0, 3, -3).apply(params));
+		element.setApplyNoteDuration(isMelodic());
 
 		double r = repeatSelection.apply(params, position, scale);
 

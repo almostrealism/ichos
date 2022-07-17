@@ -36,6 +36,15 @@ public class ParameterFunction implements Function<ParameterSet, Double> {
 		return Math.sin(2 * Math.PI * (params.getX() * getX() + params.getY() * getY() + params.getZ() * getZ() + getC()));
 	}
 
+	public Function<ParameterSet, Double> power(double base, int unit, int offset) {
+		return (ParameterSet params) -> {
+			double selection = apply(params);
+			if (selection > 0.0) selection = Math.floor(unit * selection);
+			if (selection < 0.0) selection = Math.ceil(unit * selection);
+			return Math.pow(base, selection + offset);
+		};
+	}
+
 	public double getX() { return x; }
 	public void setX(double x) { this.x = x; }
 

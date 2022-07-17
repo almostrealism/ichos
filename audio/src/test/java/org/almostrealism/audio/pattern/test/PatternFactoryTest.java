@@ -19,6 +19,7 @@ package org.almostrealism.audio.pattern.test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.OutputLine;
+import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.pattern.PatternElementFactory;
@@ -46,23 +47,9 @@ public class PatternFactoryTest implements CellFeatures {
 	public void fixChoices() throws IOException {
 		List<PatternFactoryChoice> choices = readChoices();
 
-		PatternFactoryChoice kick = choices.get(0);
-		kick.setMaxScale(1.0);
-		kick.setMinScale(1.0 / 4);
-		kick.setSeed(true);
-		kick.setSeedUnits(1);
-		kick.setSeedScale(1.0 / 4);
-		kick.getFactory().setMelodic(false);
-
-		PatternFactoryChoice monarch = choices.get(6);
-		monarch.setMaxScale(1.0);
-		monarch.setMinScale(0.0);
-		monarch.setSeed(true);
-		monarch.setSeedUnits(8);
-		monarch.setSeedScale(1.0 / 2);
-		monarch.getFactory().setMelodic(true);
-
-		choices.remove(5);
+		choices.forEach(choice -> {
+			choice.getFactory().setNoteLengthSelection(ParameterFunction.random());
+		});
 
 //		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
 	}
