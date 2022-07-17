@@ -45,8 +45,26 @@ public class PatternFactoryTest implements CellFeatures {
 	@Test
 	public void fixChoices() throws IOException {
 		List<PatternFactoryChoice> choices = readChoices();
-		choices.stream().filter(PatternFactoryChoice::isSeed).findFirst().orElseThrow().initSelectionFunctions();
-		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
+
+		PatternFactoryChoice kick = choices.get(0);
+		kick.setMaxScale(1.0);
+		kick.setMinScale(1.0 / 4);
+		kick.setSeed(true);
+		kick.setSeedUnits(1);
+		kick.setSeedScale(1.0 / 4);
+		kick.getFactory().setMelodic(false);
+
+		PatternFactoryChoice monarch = choices.get(6);
+		monarch.setMaxScale(1.0);
+		monarch.setMinScale(0.0);
+		monarch.setSeed(true);
+		monarch.setSeedUnits(8);
+		monarch.setSeedScale(1.0 / 2);
+		monarch.getFactory().setMelodic(true);
+
+		choices.remove(5);
+
+//		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
 	}
 
 	public List<PatternFactoryChoice> createChoices() {

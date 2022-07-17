@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleToIntFunction;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class PatternSystemManager implements CodeFeatures {
 	private List<PatternFactoryChoice> choices;
@@ -68,11 +69,18 @@ public class PatternSystemManager implements CodeFeatures {
 		return choices;
 	}
 
-	public PatternLayerManager addPattern() {
+	public PatternLayerManager addPattern(boolean melodic) {
 		PackedCollection out = intermediateDestination.get();
 		patternOutputs.add(new ProducerWithOffset<>(v(out), 0));
 
-		PatternLayerManager pattern = new PatternLayerManager(choices, out);
+		// TODO  This is a problem, because if the user changes the choices,
+		// TODO  they will expect those changes to take effect, but they will
+		// TODO  not until the next pattern is created
+		PatternLayerManager pattern = new PatternLayerManager(
+				choices.stream()
+					.filter(c -> c.getFactory().isMelodic() == melodic)
+					.collect(Collectors.toList()),
+				out);
 		patterns.add(pattern);
 
 		return pattern;

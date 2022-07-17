@@ -27,6 +27,8 @@ public class PatternFactoryChoice {
 	private double maxScale;
 
 	private boolean seed;
+	private int seedUnits;
+	private double seedScale;
 	private ParameterizedPositionFunction seedNoteFunction;
 
 	public PatternFactoryChoice() { this(null); }
@@ -44,47 +46,41 @@ public class PatternFactoryChoice {
 		setWeight(weight);
 		setMinScale(minScale);
 		setMaxScale(maxScale);
+		setSeedUnits(1);
+		setSeedScale(1.0);
 	}
 
 	public void initSelectionFunctions() {
 		seedNoteFunction = ParameterizedPositionFunction.random();
 	}
 
-	public PatternElementFactory getFactory() {
-		return factory;
-	}
+	public PatternElementFactory getFactory() { return factory; }
 
-	public void setFactory(PatternElementFactory factory) {
-		this.factory = factory;
-	}
+	public void setFactory(PatternElementFactory factory) { this.factory = factory; }
 
-	public double getWeight() {
-		return weight;
-	}
+	public double getWeight() { return weight; }
 
-	public void setWeight(double weight) {
-		this.weight = weight;
-	}
+	public void setWeight(double weight) { this.weight = weight; }
 
-	public double getMinScale() {
-		return minScale;
-	}
+	public double getMinScale() { return minScale; }
 
-	public void setMinScale(double minScale) {
-		this.minScale = minScale;
-	}
+	public void setMinScale(double minScale) { this.minScale = minScale; }
 
-	public double getMaxScale() {
-		return maxScale;
-	}
+	public double getMaxScale() { return maxScale; }
 
-	public void setMaxScale(double maxScale) {
-		this.maxScale = maxScale;
-	}
+	public void setMaxScale(double maxScale) { this.maxScale = maxScale; }
 
 	public boolean isSeed() { return seed; }
 
 	public void setSeed(boolean seed) { this.seed = seed; }
+
+	public int getSeedUnits() { return seedUnits; }
+
+	public void setSeedUnits(int seedUnits) { this.seedUnits = seedUnits; }
+
+	public double getSeedScale() { return seedScale; }
+
+	public void setSeedScale(double seedScale) { this.seedScale = seedScale; }
 
 	public ParameterizedPositionFunction getSeedNoteFunction() {
 		return seedNoteFunction;
@@ -95,9 +91,7 @@ public class PatternFactoryChoice {
 	}
 
 	public PatternLayerSeeds seeds(ParameterSet params) {
-		double seedScale = minScale;
-
-		return new PatternLayerSeeds(0, seedScale, 1, (int) (1 / seedScale),
+		return new PatternLayerSeeds(0, seedScale, seedUnits, (int) (1 / seedScale),
 				pos -> {
 					double r = seedNoteFunction.apply(params, pos, seedScale);
 					return r < 0.0 ? null : factory.getNotes().get((int) (r * factory.getNotes().size()));
