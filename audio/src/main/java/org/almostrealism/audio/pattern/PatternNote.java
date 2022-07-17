@@ -21,6 +21,7 @@ import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.Waves;
 import org.almostrealism.audio.data.FileWaveDataProvider;
 import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.collect.TraversalPolicy;
 
 import java.io.File;
 
@@ -49,6 +50,10 @@ public class PatternNote {
 	public void setSource(String source) {
 		this.source = source;
 		this.valid = null;
+	}
+
+	public PackedCollection getAudio(double duration) {
+		return getAudio().range(new TraversalPolicy((int) (duration * OutputLine.sampleRate)));
 	}
 
 	@JsonIgnore

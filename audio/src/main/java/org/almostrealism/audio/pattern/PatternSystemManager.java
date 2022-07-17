@@ -79,7 +79,7 @@ public class PatternSystemManager implements CodeFeatures {
 		PatternLayerManager pattern = new PatternLayerManager(
 				choices.stream()
 					.filter(c -> c.getFactory().isMelodic() == melodic)
-					.collect(Collectors.toList()),
+					.collect(Collectors.toList()), melodic,
 				out);
 		patterns.add(pattern);
 

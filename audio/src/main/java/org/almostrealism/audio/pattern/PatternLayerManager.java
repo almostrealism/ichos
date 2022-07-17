@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 public class PatternLayerManager implements CodeFeatures {
 	private double duration;
 	private double scale;
+	private boolean applyNoteDuration;
 
 	private List<PatternFactoryChoice> choices;
 	private ParameterFunction factorySelection;
@@ -44,13 +45,10 @@ public class PatternLayerManager implements CodeFeatures {
 	private RootDelegateSegmentsAdd sum;
 	private Runnable runSum;
 
-	public PatternLayerManager(List<PatternFactoryChoice> choices) {
-		this(choices, null);
-	}
-
-	public PatternLayerManager(List<PatternFactoryChoice> choices, PackedCollection destination) {
+	public PatternLayerManager(List<PatternFactoryChoice> choices, boolean applyNoteDuration, PackedCollection destination) {
 		this.duration = 1.0;
 		this.scale = 1.0;
+		this.applyNoteDuration = applyNoteDuration;
 
 		this.choices = choices;
 		this.roots = new ArrayList<>();
@@ -117,7 +115,7 @@ public class PatternLayerManager implements CodeFeatures {
 	public void addLayer(ParameterSet params) {
 		if (rootCount() <= 0) {
 			PatternLayerSeeds seeds = getSeeds(params);
-			seeds.generator().forEach(roots::add);
+			seeds.generator(applyNoteDuration).forEach(roots::add);
 			scale = seeds.getScale();
 		} else {
 			roots.forEach(layer -> {

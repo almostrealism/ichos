@@ -124,7 +124,7 @@ public class PatternFactoryTest implements CellFeatures {
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
 
-		PatternLayerManager manager = new PatternLayerManager(readChoices(), destination);
+		PatternLayerManager manager = new PatternLayerManager(readChoices(), false, destination);
 
 		System.out.println(PatternLayerManager.layerHeader());
 		System.out.println(PatternLayerManager.layerString(manager.getTailElements()));

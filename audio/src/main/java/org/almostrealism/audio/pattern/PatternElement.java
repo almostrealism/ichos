@@ -23,11 +23,14 @@ import org.almostrealism.collect.ProducerWithOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleToIntFunction;
-import java.util.function.DoubleUnaryOperator;
 
 public class PatternElement implements CodeFeatures {
 	private PatternNote note;
 	private double position;
+
+	private boolean applyNoteDuration;
+	private double noteDuration;
+
 	private PatternDirection direction;
 	private int repeatCount;
 	private double repeatDuration;
@@ -61,6 +64,14 @@ public class PatternElement implements CodeFeatures {
 		this.position = position;
 	}
 
+	public boolean isApplyNoteDuration() { return applyNoteDuration; }
+
+	public void setApplyNoteDuration(boolean applyNoteDuration) { this.applyNoteDuration = applyNoteDuration; }
+
+	public double getNoteDuration() { return noteDuration; }
+
+	public void setNoteDuration(double noteDuration) { this.noteDuration = noteDuration; }
+
 	public PatternDirection getDirection() {
 		return direction;
 	}
@@ -89,10 +100,18 @@ public class PatternElement implements CodeFeatures {
 		List<ProducerWithOffset<PackedCollection>> destinations = new ArrayList<>();
 
 		for (int i = 0; i < repeatCount; i++) {
-			destinations.add(new ProducerWithOffset<>(v(getNote().getAudio()), offsetForPosition.applyAsInt(getPosition() + i * repeatDuration)));
+			destinations.add(new ProducerWithOffset<>(v(getNoteAudio()), offsetForPosition.applyAsInt(getPosition() + i * repeatDuration)));
 		}
 
 		return destinations;
+	}
+
+	public PackedCollection getNoteAudio() {
+		if (isApplyNoteDuration()) {
+			return getNote().getAudio(getNoteDuration());
+		} else {
+			return getNote().getAudio();
+		}
 	}
 
 	public boolean isPresent(double start, double end) {
