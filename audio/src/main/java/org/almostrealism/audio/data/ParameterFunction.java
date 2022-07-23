@@ -36,6 +36,11 @@ public class ParameterFunction implements Function<ParameterSet, Double> {
 		return Math.sin(2 * Math.PI * (params.getX() * getX() + params.getY() * getY() + params.getZ() * getZ() + getC()));
 	}
 
+	public Function<ParameterSet, Double> positive() {
+		// TODO  Should this wrap instead of being continuous?
+		return (ParameterSet params) -> Math.abs(apply(params));
+	}
+
 	public Function<ParameterSet, Double> power(double base, int unit, int offset) {
 		return (ParameterSet params) -> {
 			double selection = apply(params);

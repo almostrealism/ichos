@@ -1,11 +1,17 @@
 package org.almostrealism.audio.pattern.test;
 
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.audio.OutputLine;
+import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.pattern.PatternAudio;
 import org.almostrealism.audio.pattern.PatternElement;
 import org.almostrealism.audio.pattern.PatternNote;
+import org.almostrealism.audio.tone.DefaultKeyboardTuning;
+import org.almostrealism.audio.tone.WesternChromatic;
 import org.almostrealism.collect.PackedCollection;
 import org.junit.Test;
+
+import java.io.File;
 
 public class PatternAudioTest {
 	@Test
@@ -21,5 +27,12 @@ public class PatternAudioTest {
 
 		Scalar out = new Scalar(audio.getData(), 5);
 		System.out.println(out);
+	}
+
+	@Test
+	public void noteAudio() {
+		PatternNote note = new PatternNote("Library/Monarch_C1.wav", WesternChromatic.C1);
+		note.setTuning(new DefaultKeyboardTuning());
+		new WaveData(note.getAudio(WesternChromatic.C2).get().evaluate(), OutputLine.sampleRate).save(new File("output/Monarch_C2.wav"));
 	}
 }

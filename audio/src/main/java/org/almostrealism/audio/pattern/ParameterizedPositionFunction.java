@@ -74,6 +74,11 @@ public class ParameterizedPositionFunction {
 		return Math.sin(Math.PI * (Math.pow(2.0, 10) * position * r + Math.pow(2.0, 3) * o));
 	}
 
+	public double applyPositive(ParameterSet params, double position, double scale) {
+		// TODO  Should this wrap instead of being continuous?
+		return Math.abs(apply(params, position, scale));
+	}
+
 	protected double regularize(ParameterSet params, double position, double scale) {
 		return applyPositionalAlt(params, position + regularityOffset.apply(params), scale);
 	}

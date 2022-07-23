@@ -19,6 +19,8 @@ package org.almostrealism.audio.pattern;
 import org.almostrealism.CodeFeatures;
 import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
+import org.almostrealism.audio.tone.KeyboardTuning;
+import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.collect.computations.RootDelegateSegmentsAdd;
@@ -75,6 +77,10 @@ public class PatternLayerManager implements CodeFeatures {
 
 	public List<PatternFactoryChoice> getChoices() {
 		return choices;
+	}
+
+	public void setTuning(KeyboardTuning tuning) {
+		getChoices().forEach(c -> c.setTuning(tuning));
 	}
 
 	public PatternLayerSeeds getSeeds(ParameterSet params) {
@@ -161,10 +167,10 @@ public class PatternLayerManager implements CodeFeatures {
 		return options.get((int) (options.size() * c));
 	}
 
-	public void sum(DoubleToIntFunction offsetForPosition) {
+	public void sum(DoubleToIntFunction offsetForPosition, Scale<?> scale) {
 		sum.getInput().clear();
 		getAllElements().stream()
-				.map(e -> e.getNoteDestinations(offsetForPosition))
+				.map(e -> e.getNoteDestinations(offsetForPosition, scale))
 				.flatMap(List::stream)
 				.forEach(sum.getInput()::add);
 

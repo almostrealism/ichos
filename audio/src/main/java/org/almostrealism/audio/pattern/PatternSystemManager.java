@@ -17,6 +17,8 @@
 package org.almostrealism.audio.pattern;
 
 import org.almostrealism.CodeFeatures;
+import org.almostrealism.audio.tone.KeyboardTuning;
+import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.ProducerWithOffset;
 import org.almostrealism.collect.TraversalPolicy;
@@ -69,6 +71,11 @@ public class PatternSystemManager implements CodeFeatures {
 		return choices;
 	}
 
+	public void setTuning(KeyboardTuning tuning) {
+		getChoices().forEach(c -> c.setTuning(tuning));
+		patterns.forEach(l -> l.setTuning(tuning));
+	}
+
 	public PatternLayerManager addPattern(boolean melodic) {
 		PackedCollection out = intermediateDestination.get();
 		patternOutputs.add(new ProducerWithOffset<>(v(out), 0));
@@ -86,8 +93,8 @@ public class PatternSystemManager implements CodeFeatures {
 		return pattern;
 	}
 
-	public void sum(DoubleToIntFunction offsetForPosition) {
-		patterns.forEach(p -> p.sum(offsetForPosition));
+	public void sum(DoubleToIntFunction offsetForPosition, Scale<?> scale) {
+		patterns.forEach(p -> p.sum(offsetForPosition, scale));
 
 		sum.getInput().clear();
 		sum.getInput().addAll(patternOutputs);

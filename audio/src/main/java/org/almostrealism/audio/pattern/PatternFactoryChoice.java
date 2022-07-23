@@ -17,6 +17,7 @@
 package org.almostrealism.audio.pattern;
 
 import org.almostrealism.audio.data.ParameterSet;
+import org.almostrealism.audio.tone.KeyboardTuning;
 
 import java.util.List;
 
@@ -88,6 +89,10 @@ public class PatternFactoryChoice {
 
 	public void setSeedNoteFunction(ParameterizedPositionFunction seedNoteFunction) {
 		this.seedNoteFunction = seedNoteFunction;
+	}
+
+	public void setTuning(KeyboardTuning tuning) {
+		getFactory().setTuning(tuning);
 	}
 
 	public PatternLayerSeeds seeds(ParameterSet params) {

@@ -27,6 +27,9 @@ import org.almostrealism.audio.pattern.PatternFactoryChoice;
 import org.almostrealism.audio.pattern.PatternFactoryChoiceList;
 import org.almostrealism.audio.pattern.PatternLayerManager;
 import org.almostrealism.audio.pattern.PatternNote;
+import org.almostrealism.audio.tone.DefaultKeyboardTuning;
+import org.almostrealism.audio.tone.Scale;
+import org.almostrealism.audio.tone.WesternChromatic;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.PackedCollectionHeap;
 import org.almostrealism.collect.ProducerWithOffset;
@@ -112,6 +115,7 @@ public class PatternFactoryTest implements CellFeatures {
 		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
 
 		PatternLayerManager manager = new PatternLayerManager(readChoices(), false, destination);
+		manager.setTuning(new DefaultKeyboardTuning());
 
 		System.out.println(PatternLayerManager.layerHeader());
 		System.out.println(PatternLayerManager.layerString(manager.getTailElements()));
@@ -121,7 +125,7 @@ public class PatternFactoryTest implements CellFeatures {
 			System.out.println(PatternLayerManager.layerString(manager.getTailElements()));
 		}
 
-		manager.sum(pos -> (int) (pos * bpm.l(16) * OutputLine.sampleRate));
+		manager.sum(pos -> (int) (pos * bpm.l(16) * OutputLine.sampleRate), Scale.of(WesternChromatic.C1));
 
 		WaveData out = new WaveData(destination, OutputLine.sampleRate);
 		out.save(new File("pattern-test.wav"));

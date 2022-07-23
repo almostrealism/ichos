@@ -16,9 +16,15 @@
 
 package org.almostrealism.audio.pattern;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.almostrealism.relation.Producer;
 import org.almostrealism.CodeFeatures;
+import org.almostrealism.audio.tone.KeyPosition;
+import org.almostrealism.audio.tone.KeyboardTuning;
+import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.ProducerWithOffset;
+import org.almostrealism.time.Frequency;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,11 +36,11 @@ public class PatternElement implements CodeFeatures {
 
 	private boolean applyNoteDuration;
 	private double noteDuration;
+	private double scalePosition;
 
 	private PatternDirection direction;
 	private int repeatCount;
 	private double repeatDuration;
-
 
 	public PatternElement() {
 		this(null, 0.0);
@@ -72,6 +78,10 @@ public class PatternElement implements CodeFeatures {
 
 	public void setNoteDuration(double noteDuration) { this.noteDuration = noteDuration; }
 
+	public double getScalePosition() { return scalePosition;}
+
+	public void setScalePosition(double scalePosition) { this.scalePosition = scalePosition; }
+
 	public PatternDirection getDirection() {
 		return direction;
 	}
@@ -96,14 +106,28 @@ public class PatternElement implements CodeFeatures {
 		this.repeatDuration = repeatDuration;
 	}
 
-	public List<ProducerWithOffset<PackedCollection>> getNoteDestinations(DoubleToIntFunction offsetForPosition) {
+	@JsonIgnore
+	public void setTuning(KeyboardTuning tuning) {
+		this.note.setTuning(tuning);
+	}
+
+	public List<ProducerWithOffset<PackedCollection>> getNoteDestinations(DoubleToIntFunction offsetForPosition, Scale<?> scale) {
 		List<ProducerWithOffset<PackedCollection>> destinations = new ArrayList<>();
 
 		for (int i = 0; i < repeatCount; i++) {
-			destinations.add(new ProducerWithOffset<>(v(getNoteAudio()), offsetForPosition.applyAsInt(getPosition() + i * repeatDuration)));
+			Producer<PackedCollection> note = getNoteAudio(scale.valueAt((int) (scalePosition * scale.length())));
+			destinations.add(new ProducerWithOffset<>(note, offsetForPosition.applyAsInt(getPosition() + i * repeatDuration)));
 		}
 
 		return destinations;
+	}
+
+	public Producer<PackedCollection> getNoteAudio(KeyPosition<?> target) {
+		if (isApplyNoteDuration()) {
+			return getNote().getAudio(target, getNoteDuration());
+		} else {
+			return getNote().getAudio(target);
+		}
 	}
 
 	public PackedCollection getNoteAudio() {

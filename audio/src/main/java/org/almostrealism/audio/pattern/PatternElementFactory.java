@@ -18,6 +18,7 @@ package org.almostrealism.audio.pattern;
 
 import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
+import org.almostrealism.audio.tone.KeyboardTuning;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,7 @@ public class PatternElementFactory {
 
 	private ParameterizedPositionFunction noteSelection;
 	private ParameterFunction noteLengthSelection;
+	private ParameterizedPositionFunction scalePositionSelection;
 
 	private ParameterizedPositionFunction repeatSelection;
 
@@ -52,6 +54,7 @@ public class PatternElementFactory {
 	public void initSelectionFunctions() {
 		noteSelection = ParameterizedPositionFunction.random();
 		noteLengthSelection = ParameterFunction.random();
+		scalePositionSelection = ParameterizedPositionFunction.random();
 		repeatSelection = ParameterizedPositionFunction.random();
 	}
 
@@ -79,6 +82,14 @@ public class PatternElementFactory {
 
 	public void setNoteLengthSelection(ParameterFunction noteLengthSelection) { this.noteLengthSelection = noteLengthSelection; }
 
+	public ParameterizedPositionFunction getScalePositionSelection() {
+		return scalePositionSelection;
+	}
+
+	public void setScalePositionSelection(ParameterizedPositionFunction scalePositionSelection) {
+		this.scalePositionSelection = scalePositionSelection;
+	}
+
 	public ParameterizedPositionFunction getRepeatSelection() {
 		return repeatSelection;
 	}
@@ -90,6 +101,10 @@ public class PatternElementFactory {
 	public boolean isMelodic() { return melodic; }
 
 	public void setMelodic(boolean melodic) { this.melodic = melodic; }
+
+	public void setTuning(KeyboardTuning tuning) {
+		notes.forEach(n -> n.setTuning(tuning));
+	}
 
 	public List<PatternNote> getValidNotes() {
 		return notes.stream().filter(PatternNote::isValid).collect(Collectors.toList());
