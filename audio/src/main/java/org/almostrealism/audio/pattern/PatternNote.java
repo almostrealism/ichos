@@ -18,6 +18,7 @@ package org.almostrealism.audio.pattern;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.almostrealism.code.CachedValue;
+import io.almostrealism.expression.Product;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.ScalarBank;
@@ -31,6 +32,7 @@ import org.almostrealism.audio.tone.KeyboardTuning;
 import org.almostrealism.audio.tone.WesternChromatic;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
+import org.almostrealism.hardware.HardwareFeatures;
 import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.PassThroughProducer;
 import org.almostrealism.hardware.ctx.ContextSpecific;
@@ -48,9 +50,10 @@ public class PatternNote {
 	static {
 		interpolate = new DefaultContextSpecific<>(() ->
 				new Interpolate(
-						new PassThroughProducer<>(-1, 0),
+						new PassThroughProducer<>(-1, 0, -1),
 						new PassThroughProducer<>(1, 1),
-						new PassThroughProducer<>(2, 2)).get());
+						new PassThroughProducer<>(2, 2, -1),
+						v -> new Product(v, HardwareFeatures.ops().expressionForDouble(1.0 / OutputLine.sampleRate))).get());
 	}
 
 	private String source;
