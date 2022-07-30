@@ -110,7 +110,11 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 			setup.add(provider.setup());
 
 			for (WaveDataProvider p : provider.getProviders()) {
-				cells = cells.and(w(v(bpm.l(1)), p.get()));
+				try {
+					cells = cells.and(w(v(bpm.l(1)), p.get()));
+				} catch (Exception e) {
+					System.out.println("Skipping invalid sample: " + e.getMessage());
+				}
 			}
 		}
 

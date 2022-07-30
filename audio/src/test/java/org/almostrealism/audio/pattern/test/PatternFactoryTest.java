@@ -22,6 +22,7 @@ import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.WaveData;
+import org.almostrealism.audio.pattern.ParameterizedPositionFunction;
 import org.almostrealism.audio.pattern.PatternElementFactory;
 import org.almostrealism.audio.pattern.PatternFactoryChoice;
 import org.almostrealism.audio.pattern.PatternFactoryChoiceList;
@@ -40,8 +41,15 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class PatternFactoryTest implements CellFeatures {
@@ -51,10 +59,39 @@ public class PatternFactoryTest implements CellFeatures {
 		List<PatternFactoryChoice> choices = readChoices();
 
 		choices.forEach(choice -> {
-			choice.getFactory().setNoteLengthSelection(ParameterFunction.random());
+			if (choice.getSeedNoteFunction() == null)
+				choice.setSeedNoteFunction(ParameterizedPositionFunction.random());
 		});
 
-//		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
+		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
+	}
+
+	@Test
+	public void consolidateChoices() throws IOException {
+		List<PatternFactoryChoice> choices = readChoices();
+
+		Map<String, List<File>> dirs = new HashMap<>();
+
+		choices.forEach(c -> {
+			dirs.put(c.getFactory().getName().replaceAll(" ", "_"),
+					c.getFactory().getNotes().stream().map(PatternNote::getSource).map(File::new).collect(Collectors.toList()));
+		});
+
+		dirs.forEach((name, files) -> {
+			File root = new File("pattern-factory/" + name);
+			root.mkdirs();
+
+			files.forEach(file -> {
+				try {
+					Files.copy(file.toPath(),
+							new File(root, file.getName()).toPath(),
+							StandardCopyOption.REPLACE_EXISTING);
+					System.out.println("Copied " + file.getName());
+				} catch (IOException e) {
+					throw new RuntimeException(e);
+				}
+			});
+		});
 	}
 
 	public List<PatternFactoryChoice> createChoices() {

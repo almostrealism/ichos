@@ -94,6 +94,8 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 
 	public double getBPM() { return this.bpm; }
 
+	public Frequency getTempo() { return Frequency.forBPM(bpm); }
+
 	public Animation<T> getScene() { return scene; }
 
 	public DefaultAudioGenome getGenome() { return genome; }

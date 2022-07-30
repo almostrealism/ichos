@@ -44,8 +44,9 @@ public class PatternLayerManager implements CodeFeatures {
 	private List<PatternLayer> roots;
 
 	private PackedCollection volume;
+	private PackedCollection destination;
 	private RootDelegateSegmentsAdd sum;
-	private Runnable runSum;
+	private OperationList runSum;
 
 	public PatternLayerManager(List<PatternFactoryChoice> choices, boolean applyNoteDuration, PackedCollection destination) {
 		this.duration = 1.0;
@@ -63,16 +64,21 @@ public class PatternLayerManager implements CodeFeatures {
 		volume = new PackedCollection(1);
 		volume.setMem(0, 0.1);
 
-		sum = new RootDelegateSegmentsAdd<>(512, destination.traverse(1));
+		updateDestination(destination);
 
 		KernelizedEvaluable<PackedCollection> scale = multiply(new TraversalPolicy(1),
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
 
 		OperationList generate = new OperationList();
-		generate.add(sum);
+		generate.add(() -> sum.get());
 		generate.add(() -> () ->
-				scale.kernelEvaluate(destination.traverse(1), destination.traverse(1), volume));
-		runSum = generate.get();
+				scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
+		runSum = generate;
+	}
+
+	public void updateDestination(PackedCollection destination) {
+		this.destination = destination;
+		this.sum = new RootDelegateSegmentsAdd<>(512, this.destination.traverse(1));
 	}
 
 	public List<PatternFactoryChoice> getChoices() {
@@ -179,7 +185,12 @@ public class PatternLayerManager implements CodeFeatures {
 			return;
 		}
 
-		runSum.run();
+		if (sum.getInput().size() <= 0) {
+			System.out.println("PatternLayerManager: No inputs for sum");
+			return;
+		}
+
+		runSum.get().run();
 	}
 
 	public static String layerHeader() {

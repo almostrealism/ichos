@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.function.DoubleToIntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class PatternSystemManager implements CodeFeatures {
 	private List<PatternFactoryChoice> choices;
@@ -40,8 +41,9 @@ public class PatternSystemManager implements CodeFeatures {
 	private Supplier<PackedCollection> intermediateDestination;
 	private List<ProducerWithOffset<PackedCollection>> patternOutputs;
 	private PackedCollection volume;
+	private PackedCollection destination;
 	private RootDelegateSegmentsAdd<PackedCollection> sum;
-	private Runnable runSum;
+	private OperationList runSum;
 
 	public PatternSystemManager(List<PatternFactoryChoice> choices) {
 		this.choices = choices;
@@ -55,16 +57,27 @@ public class PatternSystemManager implements CodeFeatures {
 		volume = new PackedCollection(1);
 		volume.setMem(0, 1.0);
 
-		sum = new RootDelegateSegmentsAdd<>(8, destination.traverse(1));
+		updateDestination(destination, intermediateDestination);
 
 		KernelizedEvaluable<PackedCollection> scale = multiply(new TraversalPolicy(1),
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
 
 		OperationList generate = new OperationList();
-		generate.add(sum);
+		generate.add(() -> sum.get());
 		generate.add(() -> () ->
-				scale.kernelEvaluate(destination.traverse(1), destination.traverse(1), volume));
-		runSum = generate.get();
+				scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
+		runSum = generate;
+	}
+
+	public void updateDestination(PackedCollection destination, Supplier<PackedCollection> intermediateDestination) {
+		this.destination = destination;
+		this.intermediateDestination = intermediateDestination;
+		this.sum = new RootDelegateSegmentsAdd<>(8, destination.traverse(1));
+		IntStream.range(0, patterns.size()).forEach(i -> {
+			PackedCollection out = intermediateDestination.get();
+			patternOutputs.get(i).setProducer(v(out));
+			patterns.get(i).updateDestination(out);
+		});
 	}
 
 	public List<PatternFactoryChoice> getChoices() {
@@ -93,6 +106,11 @@ public class PatternSystemManager implements CodeFeatures {
 		return pattern;
 	}
 
+	public void clear() {
+		patterns.clear();
+		patternOutputs.clear();
+	}
+
 	public void sum(DoubleToIntFunction offsetForPosition, Scale<?> scale) {
 		patterns.forEach(p -> p.sum(offsetForPosition, scale));
 
@@ -104,6 +122,6 @@ public class PatternSystemManager implements CodeFeatures {
 			return;
 		}
 
-		runSum.run();
+		runSum.get().run();
 	}
 }
