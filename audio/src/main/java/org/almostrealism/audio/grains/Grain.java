@@ -23,7 +23,7 @@ import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.hardware.MemoryData;
 import org.almostrealism.hardware.PooledMem;
 
-public class Grain extends PackedCollection {
+public class Grain extends PackedCollection<PackedCollection> {
 	public Grain() {
 		super(3);
 	}

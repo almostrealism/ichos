@@ -20,6 +20,7 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.DualOutputLine;
 import org.almostrealism.audio.OutputLine;
 import io.almostrealism.relation.Evaluable;
+import org.almostrealism.collect.PackedCollection;
 
 public class DefaultDualOutputLine implements DualOutputLine, Runnable, Evaluable<byte[]> {
 	protected static class HalfLine implements OutputLine {
@@ -43,7 +44,7 @@ public class DefaultDualOutputLine implements DualOutputLine, Runnable, Evaluabl
 			throw new UnsupportedOperationException();
 		}
 
-		public void write(Scalar sample) {
+		public void write(PackedCollection<?> sample) {
 			if (this.isLeft) {
 				this.line.writeLeft(sample);
 			} else {
@@ -91,11 +92,11 @@ public class DefaultDualOutputLine implements DualOutputLine, Runnable, Evaluabl
 		}
 	}
 
-	public void writeLeft(Scalar sample) {
+	public void writeLeft(PackedCollection<?> sample) {
 		throw new RuntimeException("Not implemented");
 	}
 
-	public void writeRight(Scalar sample) {
+	public void writeRight(PackedCollection<?> sample) {
 		throw new RuntimeException("Not implemented");
 	}
 	
@@ -141,7 +142,7 @@ public class DefaultDualOutputLine implements DualOutputLine, Runnable, Evaluabl
 		this.output.write(b);
 	}
 
-	protected void write(Scalar sample) {
+	protected void write(PackedCollection<?> sample) {
 		this.output.write(sample);
 	}
 	

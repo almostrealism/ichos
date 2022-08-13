@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import io.almostrealism.scope.ArrayVariable;
 import io.almostrealism.relation.Producer;
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
 
 import java.util.function.Supplier;
@@ -27,7 +28,7 @@ import java.util.function.Supplier;
 public abstract class SineWaveComputation extends DynamicOperationComputationAdapter {
 	protected static final double TWO_PI = 2 * Math.PI;
 
-	public SineWaveComputation(SineWaveCellData data, Producer<Scalar> envelope, Scalar output) {
+	public SineWaveComputation(SineWaveCellData data, Producer<Scalar> envelope, PackedCollection<?> output) {
 		super(() -> new Provider<>(output),
 				data::getWavePosition,
 				data::getWaveLength,
@@ -39,7 +40,7 @@ public abstract class SineWaveComputation extends DynamicOperationComputationAda
 				(Supplier) envelope);
 	}
 
-	public ArrayVariable getOutput() { return getArgument(0, 2); }
+	public ArrayVariable getOutput() { return getArgument(0, 1); }
 	public ArrayVariable getWavePosition() { return getArgument(1, 2); }
 	public ArrayVariable getWaveLength() { return getArgument(2, 2); }
 	public ArrayVariable getNotePosition() { return getArgument(3, 2); }

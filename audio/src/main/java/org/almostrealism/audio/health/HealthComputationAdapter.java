@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.AudioMeter;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WaveOutput;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.heredity.TemporalCellular;
 
@@ -50,7 +51,7 @@ public abstract class HealthComputationAdapter implements AudioHealthComputation
 	protected WaveOutput getWaveOut() { return out; }
 
 	@Override
-	public synchronized Receptor<Scalar> getOutput() {
+	public synchronized Receptor<PackedCollection<?>> getOutput() {
 		if (out == null) {
 			out = new WaveOutput(() ->
 					Optional.ofNullable(outputFileSupplier).map(s -> {

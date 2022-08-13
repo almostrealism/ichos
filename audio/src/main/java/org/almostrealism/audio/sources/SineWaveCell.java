@@ -21,7 +21,8 @@ import org.almostrealism.audio.filter.Envelope;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.SamplingFeatures;
 import org.almostrealism.audio.data.PolymorphicAudioData;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.algebra.Scalar;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.hardware.OperationList;
@@ -29,7 +30,7 @@ import org.almostrealism.hardware.OperationList;
 import java.util.function.Supplier;
 
 // TODO  Reimplement as a function of org.almostrealism.graph.TimeCell
-public class SineWaveCell extends ScalarTemporalCellAdapter implements SamplingFeatures {
+public class SineWaveCell extends CollectionTemporalCellAdapter implements SamplingFeatures {
 	private Envelope env;
 	private final SineWaveCellData data;
 
@@ -75,7 +76,7 @@ public class SineWaveCell extends ScalarTemporalCellAdapter implements SamplingF
 	@Override
 	public Supplier<Runnable> setup() {
 		OperationList defaults = new OperationList("SineWaveCell Default Value Assignment");
-		defaults.add(a(1, data::getDepth, v(ScalarTemporalCellAdapter.depth)));
+		defaults.add(a(1, data::getDepth, v(CollectionTemporalCellAdapter.depth)));
 		defaults.add(a(1, data::getNotePosition, v(0)));
 		defaults.add(a(1, data::getWavePosition, v(0)));
 		defaults.add(a(1, data::getNoteLength, v(noteLength)));
@@ -92,8 +93,8 @@ public class SineWaveCell extends ScalarTemporalCellAdapter implements SamplingF
 	}
 
 	@Override
-	public Supplier<Runnable> push(Producer<Scalar> protein) {
-		Scalar value = new Scalar();
+	public Supplier<Runnable> push(Producer<PackedCollection<?>> protein) {
+		PackedCollection<?> value = new PackedCollection<>(1);
 		OperationList push = new OperationList("SineWaveCell Push");
 		push.add(new SineWavePush(data, env == null ? v(1.0) :
 					env.getScale(data::getNotePosition), value));

@@ -19,11 +19,9 @@ package org.almostrealism.audio.grains;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
-import io.almostrealism.relation.Provider;
 import org.almostrealism.Ops;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.PairBank;
-import org.almostrealism.algebra.PairProducer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarProducer;
@@ -39,7 +37,6 @@ import org.almostrealism.audio.data.WaveDataProvider;
 import org.almostrealism.audio.data.WaveDataProviderList;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
-import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.Input;
 import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.MemoryBank;
@@ -58,7 +55,7 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 	public static double ampModWavelengthMin = 0.1;
 	public static double ampModWavelengthMax = 10;
 
-	private static ContextSpecific<KernelizedEvaluable<Pair>> sourceKernel;
+	private static ContextSpecific<KernelizedEvaluable<Pair<?>>> sourceKernel;
 	private static ContextSpecific<KernelizedEvaluable<Scalar>> playbackKernel;
 	private static ContextSpecific<KernelizedEvaluable<Scalar>> modKernel;
 
@@ -145,7 +142,7 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 
 		List<WaveDataProvider> providers = new ArrayList<>();
 		playbackRates.forEach(rate -> {
-			ScalarBank output = WaveData.allocate(getCount());
+			PackedCollection<?> output = WaveData.allocateCollection(getCount());
 			WaveData destination = new WaveData(output, OutputLine.sampleRate);
 			providers.add(new DynamicWaveDataProvider("synth://" + UUID.randomUUID(), destination));
 		});
@@ -175,18 +172,18 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 						// TODO  Create a kernel function that inserts every Scalar from a bank into AcceleratedTimeSeries, to replace this
 						// w(source).map(k -> new ReceptorCell<>(sourceRec)).iter(source.getWave().getCount(), false).get().run();
 
-						PairBank sourceRecBank = new PairBank(source.getWave().getCount(), sourceRec, 2, MemoryBankAdapter.defaultCacheLevel);
-						sourceKernel.getValue().kernelEvaluate(sourceRecBank, source.getWave(), WaveOutput.timeline.getValue(), new Scalar(source.getSampleRate()));
-						sourceRec.set(0, 1, source.getWave().getCount() + 1);
+						PairBank sourceRecBank = new PairBank(source.getCollection().getMemLength(), sourceRec, 2, MemoryBankAdapter.defaultCacheLevel);
+						sourceKernel.getValue().kernelEvaluate(sourceRecBank, source.getCollection(), WaveOutput.timelineScalar.getValue(), new Scalar(source.getSampleRate()));
+						sourceRec.set(0, 1, source.getCollection().getMemLength() + 1);
 
 						ScalarBank raw = new ScalarBank(getCount());
-						playbackKernel.getValue().kernelEvaluate(raw, WaveOutput.timeline.getValue(), grain, playbackRate, sourceRec);
+						playbackKernel.getValue().kernelEvaluate(raw, WaveOutput.timelineScalar.getValue(), grain, playbackRate, sourceRec);
 
 						ScalarBank result = new ScalarBank(getCount());
 						double amp = gp.getAmp().apply(params);
 						double phase = gp.getPhase().apply(params);
 						double wavelength = ampModWavelengthMin + Math.abs(gp.getWavelength().apply(params)) * (ampModWavelengthMax - ampModWavelengthMin);
-						modKernel.getValue().kernelEvaluate(result, WaveOutput.timeline.getValue(), raw, new Scalar(phase), new Scalar(wavelength), new Scalar(amp));
+						modKernel.getValue().kernelEvaluate(result, WaveOutput.timelineScalar.getValue(), raw, new Scalar(phase), new Scalar(wavelength), new Scalar(amp));
 
 						results.add(result);
 
@@ -197,7 +194,7 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 				ScalarProducer sum = scalarAdd(Input.generateArguments(2 * getCount(), 0, results.size())).multiply(gain / count);
 
 				if (WaveOutput.enableVerbose) System.out.println("GranularSynthesizer: Summing grains...");
-				sum.get().kernelEvaluate(providers.get(i).get().getWave(), results.stream().toArray(MemoryBank[]::new));
+				sum.get().kernelEvaluate(providers.get(i).get().getCollection(), results.stream().toArray(MemoryBank[]::new));
 				if (WaveOutput.enableVerbose) System.out.println("GranularSynthesizer: Done");
 			}
 		});

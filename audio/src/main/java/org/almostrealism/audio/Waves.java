@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.almostrealism.relation.Producer;
-import org.almostrealism.CodeFeatures;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.computations.ScalarChoice;
@@ -30,7 +29,8 @@ import org.almostrealism.audio.data.SegmentList;
 import org.almostrealism.audio.data.WaveDataProviderList;
 import org.almostrealism.audio.filter.EnvelopeProvider;
 import org.almostrealism.audio.sequence.TempoAware;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.Frequency;
@@ -104,19 +104,19 @@ public class Waves implements TempoAware, CellFeatures {
 		getChildren().forEach(c -> c.setBpm(bpm));
 	}
 
-	public ScalarTemporalCellAdapter getChoiceCell(int src, Producer<Scalar> decision,
-												   Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z,
-												   Producer<Scalar> offset, Producer<Scalar> duration) {
+	public CollectionTemporalCellAdapter getChoiceCell(int src, Producer<Scalar> decision,
+													   Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z,
+													   Producer<Scalar> offset, Producer<Scalar> duration) {
 		SegmentList segments = getSegments(src, x, y, z);
 
-		Map<ScalarBank, List<Segment>> segmentsByBank = segments.getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
+		Map<PackedCollection<?>, List<Segment>> segmentsByBank = segments.getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
 		if (segmentsByBank.size() > 1) {
 			throw new UnsupportedOperationException("More than one root ScalarBank for Waves instance");
 		} else if (segmentsByBank.size() <= 0) {
 			return silent();
 		}
 
-		ScalarBank source = segmentsByBank.keySet().iterator().next();
+		PackedCollection<?> source = segmentsByBank.keySet().iterator().next();
 
 		int count = segments.getSegments().size();
 		ScalarBank positions = new ScalarBank(count);
@@ -140,7 +140,7 @@ public class Waves implements TempoAware, CellFeatures {
 		if (isLeaf()) {
 			WaveDataProviderList provider = source.create(x, y, z);
 			return new SegmentList(provider.getProviders()
-					.stream().map(p -> new Segment(sourceName, p.get().getWave(), pos, len))
+					.stream().map(p -> new Segment(sourceName, p.get().getCollection(), pos, len))
 					.collect(Collectors.toList()), provider.setup());
 		} else {
 			List<SegmentList> lists = getChildren().stream().map(c -> c.getSegments(src, x, y, z)).collect(Collectors.toList());
@@ -222,7 +222,7 @@ public class Waves implements TempoAware, CellFeatures {
 					w.getChoices().getChoices().addAll(getChoices().getChoices());
 					return w;
 				})
-				.filter(w -> w.getSegments(0, null, null, null).getSegments().get(0).range().length().getValue() > (silenceThreshold * frames))
+				.filter(w -> w.getSegments(0, null, null, null).getSegments().get(0).range().length() > (silenceThreshold * frames))
 				.forEach(w -> waves.getChildren().add(w));
 		return waves;
 	}

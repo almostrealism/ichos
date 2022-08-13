@@ -127,11 +127,11 @@ public class AdjustmentLayerOrganSystemFactoryTest extends GeneticTemporalFactor
 	@Test
 	public void compare() {
 		dc(() -> {
-			ReceptorCell outa = (ReceptorCell) o(1, i -> new File("layered-organ-factory-comp-a.wav")).get(0);
+			ReceptorCell outa = (ReceptorCell) o(1, i -> new File("results/layered-organ-factory-comp-a.wav")).get(0);
 			Cells organa = cells(samples(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), outa);
 			organa.reset();
 
-			ReceptorCell outb = (ReceptorCell) o(1, i -> new File("layered-organ-factory-comp-b.wav")).get(0);
+			ReceptorCell outb = (ReceptorCell) o(1, i -> new File("results/layered-organ-factory-comp-b.wav")).get(0);
 			Cells organb = layeredOrgan(samples(2, 2), null, outb); // TODO
 			organb.reset();
 
@@ -148,7 +148,7 @@ public class AdjustmentLayerOrganSystemFactoryTest extends GeneticTemporalFactor
 
 	@Test
 	public void layered() {
-		ReceptorCell out = (ReceptorCell) o(1, i -> new File("layered-organ-factory-test.wav")).get(0);
+		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/layered-organ-factory-test.wav")).get(0);
 		Cells organ = layeredOrgan(samples(2, 2), null, out); // TODO
 		organ.reset();
 
@@ -162,7 +162,7 @@ public class AdjustmentLayerOrganSystemFactoryTest extends GeneticTemporalFactor
 
 	@Test
 	public void layeredRandom() {
-		ReceptorCell out = (ReceptorCell) o(1, i -> new File("layered-organ-factory-rand-test.wav")).get(0);
+		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/layered-organ-factory-rand-test.wav")).get(0);
 		Cells organ = randomLayeredOrgan(samples(2, 2), null, out); // TODO
 		organ.reset();
 

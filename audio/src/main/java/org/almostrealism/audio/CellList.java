@@ -20,8 +20,9 @@ import io.almostrealism.code.ProducerComputation;
 import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.temporal.DefaultWaveCellData;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.hardware.OperationList;
@@ -44,9 +45,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
+public class CellList extends ArrayList<Cell<PackedCollection<?>>> implements Cells {
 	private List<CellList> parents;
-	private List<Receptor<Scalar>> roots;
+	private List<Receptor<PackedCollection<?>>> roots;
 	private List<Setup> setups;
 	private TemporalList requirements;
 	private List<Runnable> finals;
@@ -65,7 +66,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList addSetup(Setup setup) { this.setups.add(setup); return this; }
 
-	public void addRoot(Cell<Scalar> c) {
+	public void addRoot(Cell<PackedCollection<?>> c) {
 		roots.add(c);
 		add(c);
 	}
@@ -80,7 +81,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return this;
 	}
 
-	public CellList map(IntFunction<Cell<Scalar>> dest) {
+	public CellList map(IntFunction<Cell<PackedCollection<?>>> dest) {
 		return map(this, dest);
 	}
 
@@ -88,13 +89,13 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return cells(this, cells);
 	}
 
-	public CellList[] branch(IntFunction<Cell<Scalar>>... dest) {
+	public CellList[] branch(IntFunction<Cell<PackedCollection<?>>>... dest) {
 		return branch(this, dest);
 	}
 
-	public CellList poly(IntFunction<ProducerComputation<Scalar>> decision) {
+	public CellList poly(IntFunction<ProducerComputation<PackedCollection<?>>> decision) {
 		CellList l = poly(1, () -> null, decision,
-				stream().map(c -> (Function<DefaultWaveCellData, ScalarTemporalCellAdapter>) data -> (ScalarTemporalCellAdapter) c).toArray(Function[]::new));
+				stream().map(c -> (Function<DefaultWaveCellData, CollectionTemporalCellAdapter>) data -> (CollectionTemporalCellAdapter) c).toArray(Function[]::new));
 		// TODO  By dropping the parent, we may be losing necessary dependencies
 		// TODO  However, if it is included, operations will be invoked multiple times
 		// TODO  Since the new polymorphic cells delegate to the operations of the
@@ -111,11 +112,11 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return grid(this, duration, segments, choices);
 	}
 
-	public CellList grid(double duration, int segments, IntFunction<Producer<Scalar>> choices) {
+	public CellList grid(double duration, int segments, IntFunction<Producer<PackedCollection<?>>> choices) {
 		return grid(this, duration, segments, choices);
 	}
 
-	public CellList f(IntFunction<Factor<Scalar>> filter) {
+	public CellList f(IntFunction<Factor<PackedCollection<?>>> filter) {
 		return f(this, filter);
 	}
 
@@ -123,31 +124,31 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public CellList d(IntFunction<Producer<Scalar>> delay, IntFunction<Producer<Scalar>> scale) { return d(this, delay, scale); }
 
-	public CellList m(IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
+	public CellList m(IntFunction<Cell<PackedCollection<?>>> adapter, IntFunction<Gene<PackedCollection<?>>> transmission) {
 		return m(this, adapter, transmission);
 	}
 
-	public CellList m(List<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+	public CellList m(List<Cell<PackedCollection<?>>> adapter, List<Cell<PackedCollection<?>>> destinations, IntFunction<Gene<PackedCollection<?>>> transmission) {
 		return m(this, adapter, destinations, transmission);
 	}
 
-	public CellList mself(List<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
+	public CellList mself(List<Cell<PackedCollection<?>>> adapter, IntFunction<Gene<PackedCollection<?>>> transmission) {
 		return mself(this, adapter, transmission);
 	}
 
-	public CellList m(IntFunction<Cell<Scalar>> adapter, List<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+	public CellList m(IntFunction<Cell<PackedCollection<?>>> adapter, List<Cell<PackedCollection<?>>> destinations, IntFunction<Gene<PackedCollection<?>>> transmission) {
 		return m(this, adapter, destinations, transmission);
 	}
 
-	public CellList mself(IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission) {
+	public CellList mself(IntFunction<Cell<PackedCollection<?>>> adapter, IntFunction<Gene<PackedCollection<?>>> transmission) {
 		return mself(this, adapter, transmission);
 	}
 
-	public CellList mself(IntFunction<Cell<Scalar>> adapter, IntFunction<Gene<Scalar>> transmission, IntFunction<Cell<Scalar>> passthrough) {
+	public CellList mself(IntFunction<Cell<PackedCollection<?>>> adapter, IntFunction<Gene<PackedCollection<?>>> transmission, IntFunction<Cell<PackedCollection<?>>> passthrough) {
 		return mself(this, adapter, transmission, passthrough);
 	}
 
-	public CellList m(IntFunction<Cell<Scalar>> adapter, IntFunction<Cell<Scalar>> destinations, IntFunction<Gene<Scalar>> transmission) {
+	public CellList m(IntFunction<Cell<PackedCollection<?>>> adapter, IntFunction<Cell<PackedCollection<?>>> destinations, IntFunction<Gene<PackedCollection<?>>> transmission) {
 		return m(this, adapter, destinations, transmission);
 	}
 
@@ -173,8 +174,8 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 
 	public List<Runnable> getFinals() { return finals; }
 
-	public Collection<Cell<Scalar>> getAll() {
-		List<Cell<Scalar>> all = new ArrayList<>();
+	public Collection<Cell<PackedCollection<?>>> getAll() {
+		List<Cell<PackedCollection<?>>> all = new ArrayList<>();
 		parents.stream().map(CellList::getAll).flatMap(Collection::stream).forEach(c -> append(all, c));
 		forEach(c -> append(all, c));
 
@@ -208,8 +209,8 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		return all;
 	}
 
-	public Collection<Receptor<Scalar>> getAllRoots() {
-		List<Receptor<Scalar>> all = new ArrayList<>();
+	public Collection<Receptor<PackedCollection<?>>> getAllRoots() {
+		List<Receptor<PackedCollection<?>>> all = new ArrayList<>();
 		parents.stream().map(CellList::getAllRoots).flatMap(Collection::stream).forEach(c -> append(all, c));
 		roots.forEach(c -> append(all, c));
 
@@ -226,7 +227,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 	@Override
 	public Supplier<Runnable> tick() {
 		OperationList tick = new OperationList("CellList Tick");
-		getAllRoots().stream().map(r -> r.push(v(0.0))).forEach(tick::add);
+		getAllRoots().stream().map(r -> r.push(c(0.0))).forEach(tick::add);
 		tick.add(getAllTemporals().tick());
 		return tick;
 	}
@@ -239,7 +240,7 @@ public class CellList extends ArrayList<Cell<Scalar>> implements Cells {
 		requirements.reset();
 	}
 
-	public static Collector<Cell<Scalar>, ?, CellList> collector() {
+	public static Collector<Cell<PackedCollection<?>>, ?, CellList> collector() {
 		return Collectors.toCollection(CellList::new);
 	}
 }

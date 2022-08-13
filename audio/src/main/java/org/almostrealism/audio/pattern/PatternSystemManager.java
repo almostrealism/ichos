@@ -59,7 +59,7 @@ public class PatternSystemManager implements CodeFeatures {
 
 		updateDestination(destination, intermediateDestination);
 
-		KernelizedEvaluable<PackedCollection> scale = multiply(new TraversalPolicy(1),
+		KernelizedEvaluable<PackedCollection<?>> scale = _multiply(
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
 
 		OperationList generate = new OperationList();

@@ -22,6 +22,8 @@ import org.almostrealism.algebra.ScalarProducer;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.sources.SineWaveCell;
+import org.almostrealism.collect.CollectionProducer;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.hardware.mem.MemoryBankAdapter;
 import org.almostrealism.hardware.OperationList;
@@ -54,8 +56,9 @@ public class AdjustableDelayCellTest extends SineWaveCellTest {
 	}
 
 	public OperationList computation(AdjustableDelayCell delay) {
-		Scalar multiplier = new Scalar(0.1);
-		ScalarProducer product = v(1.0).multiply(p(multiplier));
+		PackedCollection multiplier = new PackedCollection(1);
+		multiplier.setMem(0.1);
+		CollectionProducer product = c(1.0)._multiply(p(multiplier));
 
 		OperationList ops = new OperationList("Delay Push and Tick");
 		ops.add(delay.push(product));
@@ -121,12 +124,12 @@ public class AdjustableDelayCellTest extends SineWaveCellTest {
 		SineWaveCell cell = cell();
 		cell.setReceptor(delay);
 
-		WaveOutput output = new WaveOutput(new File("health/adjustable-delay-cell-test.wav"));
+		WaveOutput output = new WaveOutput(new File("results/adjustable-delay-cell-test.wav"));
 
 		cell.setReceptor(delay);
 		delay.setReceptor(output);
 
-		Runnable push = cell.push(v(0.0)).get();
+		Runnable push = cell.push(c(0.0)).get();
 		Runnable tick = cell.tick().get();
 		IntStream.range(0, SineWaveCellTest.DURATION_FRAMES).forEach(i -> {
 			push.run();

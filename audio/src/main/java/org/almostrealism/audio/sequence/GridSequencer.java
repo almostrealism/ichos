@@ -33,6 +33,7 @@ import org.almostrealism.audio.data.ParameterizedWaveDataProviderFactory;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.data.WaveDataProvider;
 import org.almostrealism.audio.data.WaveDataProviderList;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.Frequency;
@@ -93,7 +94,7 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 
 	@Override
 	public WaveDataProviderList create(Producer<Scalar> x, Producer<Scalar> y, Producer<Scalar> z, List<Frequency> playbackRates) {
-		ScalarBank export = WaveData.allocate(getCount());
+		PackedCollection<?> export = WaveData.allocateCollection(getCount());
 		WaveData destination = new WaveData(export, OutputLine.sampleRate);
 
 		Evaluable<Scalar> evX = x.get();
@@ -111,7 +112,7 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 
 			for (WaveDataProvider p : provider.getProviders()) {
 				try {
-					cells = cells.and(w(v(bpm.l(1)), p.get()));
+					cells = cells.and(w(c(bpm.l(1)), p.get()));
 				} catch (Exception e) {
 					System.out.println("Skipping invalid sample: " + e.getMessage());
 				}
@@ -120,9 +121,10 @@ public class GridSequencer implements ParameterizedWaveDataProviderFactory, Temp
 
 		cells = cells
 				.grid(bpm.l(getStepSize() * getStepCount()), getStepCount(),
-						(IntFunction<Producer<Scalar>>) i -> () -> args -> {
+						(IntFunction<Producer<PackedCollection<?>>>) i -> () -> args -> {
 							ParameterSet params = new ParameterSet(evX.evaluate().getValue(), evY.evaluate().getValue(), evZ.evaluate().getValue());
-							Scalar s = new Scalar(sequence.apply(i).apply(params));
+							PackedCollection s = new PackedCollection(1);
+							s.setMem(sequence.apply(i).apply(params));
 							return s;
 						})
 				.sum().map(i -> new ReceptorCell<>(output));

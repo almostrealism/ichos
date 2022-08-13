@@ -16,6 +16,7 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.audio.data.WaveData;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.graph.temporal.WaveCellData;
 import org.almostrealism.hardware.ctx.ContextSpecific;
@@ -177,20 +178,28 @@ public class WavFile {
 		return wavFile;
 	}
 
-	public static ScalarBank channel(double[][] data, int chan) {
+	public static PackedCollection<?> channel(double[][] data, int chan) {
 		// System.out.println("WavFile: Allocating " + data[chan].length / OutputLine.sampleRate + " seconds");
 
-		ScalarBank waveform = Optional.ofNullable(WaveData.getHeap())
-				.map(h -> h.allocate(data[chan].length)).orElseGet(() -> new ScalarBank(data[chan].length));
+		PackedCollection<?> waveform = Optional.ofNullable(WaveData.getCollectionHeap())
+				.map(h -> h.allocate(data[chan].length)).orElseGet(() -> new PackedCollection(data[chan].length));
 
 		for (int i = 0; i < data[chan].length; i++) {
-			waveform.set(i, data[chan][i]);
+			waveform.setMem(i, data[chan][i]);
 		}
 
 		return waveform;
 	}
 
-	public static ScalarBank channel(int[][] data, int chan) {
+	public static PackedCollection<?> channel(int[][] data, int chan) {
+		PackedCollection<?> waveform = new PackedCollection(data[chan].length);
+
+		int index = 0;
+		for (double frame : data[chan]) waveform.setMem(index++, frame);
+		return waveform;
+	}
+
+	public static ScalarBank channelScalar(int[][] data, int chan) {
 		ScalarBank waveform = new ScalarBank(data[chan].length);
 
 		int index = 0;
@@ -669,14 +678,14 @@ public class WavFile {
 	}
 
 
-	public static Function<WaveCellData, WaveCell> load(File f, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) throws IOException {
+	public static Function<WaveCellData, WaveCell> load(File f, double amplitude, Producer<PackedCollection<?>> offset, Producer<PackedCollection<?>> repeat) throws IOException {
 		WaveData waveform = WaveData.load(f);
-		return data -> new WaveCell(data, waveform.getWave(), waveform.getSampleRate(), amplitude, offset,
-				repeat, Ops.ops().v(0.0), Ops.ops().v(waveform.getWave().getCount()));
+		return data -> new WaveCell(data, waveform.getCollection(), waveform.getSampleRate(), amplitude, (Producer) offset,
+				(Producer) repeat, Ops.ops().v(0.0), Ops.ops().v(waveform.getCollection().getMemLength()));
 	}
 
-	public static Function<WaveCellData, WaveCell> load(WaveData w, double amplitude, Producer<Scalar> offset, Producer<Scalar> repeat) throws IOException {
-		return data -> new WaveCell(data, w.getWave(), w.getSampleRate(), amplitude, offset,
-				repeat, Ops.ops().v(0.0), Ops.ops().v(w.getWave().getCount()));
+	public static Function<WaveCellData, WaveCell> load(WaveData w, double amplitude, Producer<PackedCollection<?>> offset, Producer<PackedCollection<?>> repeat) throws IOException {
+		return data -> new WaveCell(data, w.getCollection(), w.getSampleRate(), amplitude, (Producer) offset,
+				(Producer) repeat, Ops.ops().v(0.0), Ops.ops().v(w.getCollection().getMemLength()));
 	}
 }

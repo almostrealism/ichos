@@ -18,6 +18,7 @@ package org.almostrealism.audio.filter;
 
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.SummationCell;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.time.Updatable;
@@ -63,14 +64,14 @@ public class BasicDelayCell extends SummationCell implements CodeFeatures {
 	public void setUpdatable(Updatable ui) { this.updatable = ui; }
 
 	@Override
-	public synchronized Supplier<Runnable> push(Producer<Scalar> protein) {
+	public synchronized Supplier<Runnable> push(Producer<PackedCollection<?>> protein) {
 		Scalar value = new Scalar();
 		Supplier<Runnable> push = super.push(p(value));
 
 		return () -> () -> {
 			int dPos = (cursor + delay) % buffer.length;
 
-			this.buffer[dPos] = buffer[dPos] + protein.get().evaluate().getValue();
+			this.buffer[dPos] = buffer[dPos] + protein.get().evaluate().toDouble(0);
 
 			value.setMem(new double[] { buffer[cursor], 1.0 });
 

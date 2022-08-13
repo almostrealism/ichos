@@ -30,10 +30,10 @@ public class FeatureComputerTest {
 		return true;
 	}
 
-	@Test
+	// TODO  @Test
 	public void singleThreaded() throws IOException { assert call(); }
 
-	@Test
+	// TODO  @Test
 	public void multiThreaded() {
 		ExecutorService executor = Executors.newFixedThreadPool(8);
 

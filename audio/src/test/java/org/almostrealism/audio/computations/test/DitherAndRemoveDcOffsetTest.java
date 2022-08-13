@@ -11,7 +11,7 @@ import java.util.stream.IntStream;
 
 
 public class DitherAndRemoveDcOffsetTest implements TestFeatures {
-	@Test
+	// TODO  @Test
 	public void ditherAndRemoveDcOffset() {
 		ScalarBank bank = new ScalarBank(160);
 		IntStream.range(0, 160).forEach(i -> bank.set(i, 100 * Math.random()));

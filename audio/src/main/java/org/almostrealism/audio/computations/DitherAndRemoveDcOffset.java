@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public class DitherAndRemoveDcOffset extends ScalarBankAdd {
 
 	public DitherAndRemoveDcOffset(int count, Supplier<Evaluable<? extends ScalarBank>> input,
 								   Supplier<Evaluable<? extends Scalar>> ditherValue,
-								   Supplier<Pair> randDestination) {
+								   Supplier<Pair<?>> randDestination) {
 		this(count, new Dither(count, input, ditherValue, randDestination));
 	}
 

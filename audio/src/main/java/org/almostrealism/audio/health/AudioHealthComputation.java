@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package org.almostrealism.audio.health;
 
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.heredity.TemporalCellular;
 import org.almostrealism.optimize.HealthComputation;
@@ -24,7 +25,7 @@ import org.almostrealism.optimize.HealthComputation;
 import java.util.List;
 
 public interface AudioHealthComputation<T extends TemporalCellular> extends HealthComputation<T, AudioHealthScore> {
-	Receptor<Scalar> getOutput();
+	Receptor<PackedCollection<?>> getOutput();
 
-	List<? extends Receptor<Scalar>> getMeasures();
+	List<? extends Receptor<PackedCollection<?>>> getMeasures();
 }

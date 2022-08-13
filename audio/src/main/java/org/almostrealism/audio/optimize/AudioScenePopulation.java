@@ -21,12 +21,13 @@ import java.util.List;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.Cells;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.heredity.Genome;
 import org.almostrealism.optimize.Population;
 import org.almostrealism.CodeFeatures;
 
-public class AudioScenePopulation<G> implements Population<G, Scalar, Cells>, CodeFeatures {
+public class AudioScenePopulation<G> implements Population<G, PackedCollection<?>, Cells>, CodeFeatures {
 	private AudioScene<?> scene;
 
 	private List<Genome<G>> pop;
@@ -39,7 +40,7 @@ public class AudioScenePopulation<G> implements Population<G, Scalar, Cells>, Co
 	}
 
 	@Override
-	public void init(Genome<G> templateGenome, List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output) {
+	public void init(Genome<G> templateGenome, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		enableGenome(templateGenome);
 		this.cells = scene.getCells(measures, output);
 		disableGenome();

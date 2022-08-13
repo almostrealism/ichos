@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package org.almostrealism.audio;
 
-import org.almostrealism.algebra.Scalar;
+import org.almostrealism.collect.PackedCollection;
 
 public interface OutputLine {
 	int sampleRate = 44100;
@@ -34,8 +34,8 @@ public interface OutputLine {
 	void write(double d[][]);
 
 	/**
-	 * Write one sample, coercing the {@link Scalar} value into whatever
+	 * Write one sample, coercing the {@link PackedCollection} value into whatever
 	 * necessary to get one sample worth of bytes.
 	 */
-	void write(Scalar sample);
+	void write(PackedCollection<?> sample);
 }

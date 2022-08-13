@@ -2,6 +2,7 @@ package org.almostrealism.audio.line;
 
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.Source;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.time.Temporal;
@@ -21,11 +22,11 @@ import java.util.function.Supplier;
  * @author  Michael Murray
  */
 public class SourceToLineWriter implements Temporal {
-	private Source<Scalar> source;
+	private Source<PackedCollection<?>> source;
 	private OutputLine line;
 	private List<Temporal> dependencies;
 
-	public SourceToLineWriter(Source<Scalar> source, OutputLine line) {
+	public SourceToLineWriter(Source<PackedCollection<?>> source, OutputLine line) {
 		this.source = source;
 		this.line = line;
 		this.dependencies = new ArrayList<>();
@@ -49,10 +50,10 @@ public class SourceToLineWriter implements Temporal {
 
 		dependencies.stream().map(Temporal::tick).forEach(tick::add);
 
-		Producer<Scalar> next = source.next();
+		Producer<PackedCollection<?>> next = source.next();
 
 		tick.add(() -> () -> {
-			Scalar n = next.get().evaluate();
+			PackedCollection<?> n = next.get().evaluate();
 			if (n == null) {
 				throw new RuntimeException("No next value from source");
 			}

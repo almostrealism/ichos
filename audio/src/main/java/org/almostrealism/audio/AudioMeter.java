@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,7 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarFeatures;
 import org.almostrealism.audio.computations.ClipCounter;
 import org.almostrealism.audio.computations.SilenceDurationComputation;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.Receptor;
 import io.almostrealism.relation.Producer;
 import io.almostrealism.relation.Provider;
@@ -34,8 +35,8 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class AudioMeter implements Receptor<Scalar>, Lifecycle, ScalarFeatures, PairFeatures {
-	private Receptor<Scalar> forwarding;
+public class AudioMeter implements Receptor<PackedCollection<?>>, Lifecycle, ScalarFeatures, PairFeatures {
+	private Receptor<PackedCollection<?>> forwarding;
 	
 	private Scalar clipCount = new Scalar();
 	private Pair clipSettings = new Pair(-1.0, 1.0);
@@ -49,8 +50,8 @@ public class AudioMeter implements Receptor<Scalar>, Lifecycle, ScalarFeatures, 
 		listeners = new ArrayList<>();
 	}
 
-	public void setForwarding(Receptor<Scalar> r) { this.forwarding = r; }
-	public Receptor<Scalar> getForwarding() { return this.forwarding; }
+	public void setForwarding(Receptor<PackedCollection<?>> r) { this.forwarding = r; }
+	public Receptor<PackedCollection<?>> getForwarding() { return this.forwarding; }
 
 	public void setSilenceValue(double value) { this.silenceValue.setA(value); }
 	
@@ -70,7 +71,7 @@ public class AudioMeter implements Receptor<Scalar>, Lifecycle, ScalarFeatures, 
 	}
 
 	@Override
-	public Supplier<Runnable> push(Producer<Scalar> protein) {
+	public Supplier<Runnable> push(Producer<PackedCollection<?>> protein) {
 		OperationList push = new OperationList("AudioMeter Push");
 		push.add(new ClipCounter(() -> new Provider<>(clipCount), v(clipSettings), protein));
 		push.add(new SilenceDurationComputation(() -> new Provider<>(silenceDuration), v(silenceValue), protein));

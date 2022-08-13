@@ -75,7 +75,7 @@ public class SplitRadixFFTTest {
 		return compute(index < 0, input, null);
 	}
 
-	@Test
+	// TODO  @Test
 	public void fft() {
 		compute(-1, new double[32]).run();
 	}
@@ -85,7 +85,7 @@ public class SplitRadixFFTTest {
 	// 15 - FFT required 3171 msec on average
 	// 20 - FFT required 5010 msec on average
 	// 40 - FFT required 11976 msec on average
-	@Test
+	// TODO @Test
 	public void fftThreads() throws InterruptedException {
 		int threads = 15;
 		int count = 100 * threads;

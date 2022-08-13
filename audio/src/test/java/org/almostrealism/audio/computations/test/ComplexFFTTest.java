@@ -106,12 +106,12 @@ public class ComplexFFTTest implements TestFeatures {
 		return compute(index < 1, index < 10);
 	}
 
-	@Test
+	// TODO  @Test
 	public void fft() {
 		compute(0).run();
 	}
 
-	@Test
+	// TODO  @Test
 	public void fftThreads() throws InterruptedException {
 		int threads = 50;
 		int count = 10 * threads;
@@ -164,7 +164,7 @@ public class ComplexFFTTest implements TestFeatures {
 		return kernelCompute(index < 1, index < 0);
 	}
 
-	@Test
+	// TODO  @Test
 	public void fftKernelThreads() throws InterruptedException {
 		int threads = 50;
 		int count = 10 * threads;

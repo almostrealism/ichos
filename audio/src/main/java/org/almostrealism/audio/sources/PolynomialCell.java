@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@ import io.almostrealism.relation.Evaluable;
 import org.almostrealism.audio.filter.Envelope;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.data.PolymorphicAudioData;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.hardware.HardwareFeatures;
 import io.almostrealism.relation.Producer;
@@ -30,7 +31,7 @@ import org.almostrealism.CodeFeatures;
 import java.util.function.Supplier;
 
 // TODO  Reimplement as a function of org.almostrealism.graph.TimeCell
-public class PolynomialCell extends ScalarTemporalCellAdapter implements CodeFeatures, HardwareFeatures {
+public class PolynomialCell extends CollectionTemporalCellAdapter implements CodeFeatures, HardwareFeatures {
 	private Envelope env;
 	private final PolynomialCellData data;
 
@@ -55,8 +56,8 @@ public class PolynomialCell extends ScalarTemporalCellAdapter implements CodeFea
 	}
 
 	@Override
-	public Supplier<Runnable> push(Producer<Scalar> protein) {
-		Scalar value = new Scalar();
+	public Supplier<Runnable> push(Producer<PackedCollection<?>> protein) {
+		PackedCollection<?> value = new PackedCollection<>(1);
 		OperationList push = new OperationList("PolynomialCell Push");
 		push.add(new PolynomialCellPush(data, env == null ? v(1.0) :
 				env.getScale(data::getWavePosition), value));

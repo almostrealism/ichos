@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +20,14 @@ package org.almostrealism.audio.computations;
 import io.almostrealism.code.HybridScope;
 import io.almostrealism.scope.Scope;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
 import io.almostrealism.relation.Producer;
 
 import java.util.function.Consumer;
 
 public class SilenceDurationComputation extends DynamicOperationComputationAdapter {
-	public SilenceDurationComputation(Producer<Scalar> silenceDuration, Producer<Scalar> silenceSettings, Producer<Scalar> value) {
+	public SilenceDurationComputation(Producer<Scalar> silenceDuration, Producer<Scalar> silenceSettings, Producer<PackedCollection<?>> value) {
 		super(new Producer[] { silenceDuration, silenceSettings, value });
 	}
 

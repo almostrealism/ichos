@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import io.almostrealism.relation.Producer;
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.ValueSequenceData;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
 import org.almostrealism.CodeFeatures;
 
@@ -37,7 +38,8 @@ public abstract class ValueSequenceComputation extends DynamicOperationComputati
 	protected HybridScope scope;
 	protected final boolean repeat;
 
-	public ValueSequenceComputation(ValueSequenceData data, Producer<Scalar> durationFrames, Scalar output, boolean repeat, Producer<Scalar>... choices) {
+	public ValueSequenceComputation(ValueSequenceData data, Producer<Scalar> durationFrames, PackedCollection<?> output,
+									boolean repeat, Producer<PackedCollection<?>>... choices) {
 		super(inputArgs(data, durationFrames, output, choices));
 		this.repeat = repeat;
 	}
@@ -60,7 +62,7 @@ public abstract class ValueSequenceComputation extends DynamicOperationComputati
 	@Override
 	public Scope getScope() { return scope; }
 
-	private static Supplier[] inputArgs(ValueSequenceData data, Producer<Scalar> durationFrames, Scalar output, Producer<Scalar>... choices) {
+	private static Supplier[] inputArgs(ValueSequenceData data, Producer<Scalar> durationFrames, PackedCollection<?> output, Producer<PackedCollection<?>>... choices) {
 		Supplier args[] = new Supplier[4 + choices.length];
 		args[0] = () -> new Provider<>(output);
 		args[1] = data::getWavePosition;

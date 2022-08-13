@@ -19,6 +19,7 @@ package org.almostrealism.audio.optimize;
 import org.almostrealism.audio.health.AudioHealthScore;
 import org.almostrealism.audio.health.StableDurationHealthComputation;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.heredity.Genome;
 import org.almostrealism.heredity.GenomeBreeder;
 import org.almostrealism.optimize.HealthComputation;
@@ -44,7 +45,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class AudioPopulationOptimizer<O extends Temporal> extends PopulationOptimizer<Scalar, Scalar, O, AudioHealthScore> implements Runnable {
+public class AudioPopulationOptimizer<O extends Temporal> extends PopulationOptimizer<PackedCollection<?>, PackedCollection<?>, O, AudioHealthScore> implements Runnable {
 	public static final boolean enableWavOutput = true;
 	public static boolean enableIsolatedContext = false;
 
@@ -54,20 +55,20 @@ public class AudioPopulationOptimizer<O extends Temporal> extends PopulationOpti
 
 	private Runnable cycleListener;
 
-	public AudioPopulationOptimizer(Function<List<Genome<Scalar>>, Population> children,
-									Supplier<GenomeBreeder<Scalar>> breeder, Supplier<Supplier<Genome<Scalar>>> generator, String file) {
+	public AudioPopulationOptimizer(Function<List<Genome<PackedCollection<?>>>, Population> children,
+									Supplier<GenomeBreeder<PackedCollection<?>>> breeder, Supplier<Supplier<Genome<PackedCollection<?>>>> generator, String file) {
 		this(children, breeder, generator, file, 100);
 	}
 
-	public AudioPopulationOptimizer(Function<List<Genome<Scalar>>, Population> children,
-									Supplier<GenomeBreeder<Scalar>> breeder, Supplier<Supplier<Genome<Scalar>>> generator,
+	public AudioPopulationOptimizer(Function<List<Genome<PackedCollection<?>>>, Population> children,
+									Supplier<GenomeBreeder<PackedCollection<?>>> breeder, Supplier<Supplier<Genome<PackedCollection<?>>>> generator,
 									String file, int iterationsPerRun) {
 		this(AudioPopulationOptimizer::healthComputation, children, breeder, generator, file, iterationsPerRun);
 	}
 
 	public AudioPopulationOptimizer(Supplier<HealthComputation<O, AudioHealthScore>> health,
-									Function<List<Genome<Scalar>>, Population> children,
-									Supplier<GenomeBreeder<Scalar>> breeder, Supplier<Supplier<Genome<Scalar>>> generator,
+									Function<List<Genome<PackedCollection<?>>>, Population> children,
+									Supplier<GenomeBreeder<PackedCollection<?>>> breeder, Supplier<Supplier<Genome<PackedCollection<?>>>> generator,
 									String file, int iterationsPerRun) {
 		super(health, children, breeder, generator);
 		this.file = file;
@@ -88,7 +89,7 @@ public class AudioPopulationOptimizer<O extends Temporal> extends PopulationOpti
 	}
 
 	public void readPopulation() throws FileNotFoundException {
-		List<Genome<Scalar>> genomes;
+		List<Genome<PackedCollection<?>>> genomes;
 
 		if (new File(file).exists()) {
 			genomes = read(new FileInputStream(file));

@@ -17,6 +17,7 @@
 package org.almostrealism.audio.test;
 
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.time.TemporalRunner;
 import org.almostrealism.audio.tone.DefaultKeyboardTuning;
 import org.almostrealism.audio.tone.WesternChromatic;
@@ -26,7 +27,7 @@ import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
 import org.almostrealism.audio.PolymorphicAudioCell;
 import org.almostrealism.audio.OutputLine;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.audio.sources.SineWaveCell;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.computations.DefaultEnvelopeComputation;
@@ -55,19 +56,19 @@ public class PolymorphicAudioCellTest implements CellFeatures, TestFeatures {
 	public static final boolean enableLoop = false;
 	private static final int DURATION_FRAMES = 10 * OutputLine.sampleRate;
 
-	protected Receptor<Scalar> loggingReceptor() {
-		return protein -> () -> () -> System.out.println(protein.get().evaluate());
+	protected Receptor<PackedCollection<?>> loggingReceptor() {
+		return protein -> () -> () -> System.out.println(protein.get().evaluate().toDouble(0));
 	}
 
-	protected Cell<Scalar> loggingCell() { return new ReceptorCell<>(loggingReceptor()); }
+	protected Cell<PackedCollection<?>> loggingCell() { return new ReceptorCell<>(loggingReceptor()); }
 
 	protected CellList cells(int count) {
-		return poly(count, PolymorphicAudioData::new, i -> v(0.5),
+		return poly(count, PolymorphicAudioData::new, i -> c(0.5),
 				new DefaultKeyboardTuning().getTone(WesternChromatic.F3),
 				new DefaultKeyboardTuning().getTone(WesternChromatic.G3));
 	}
 
-	protected ScalarTemporalCellAdapter cell() {
+	protected CollectionTemporalCellAdapter cell() {
 		SineWaveCell fcell = new SineWaveCell();
 		fcell.setFreq(new DefaultKeyboardTuning().getTone(WesternChromatic.F3).asHertz());
 		fcell.setNoteLength(600);
@@ -80,21 +81,21 @@ public class PolymorphicAudioCellTest implements CellFeatures, TestFeatures {
 		gcell.setAmplitude(0.1);
 		gcell.setEnvelope(DefaultEnvelopeComputation::new);
 
-		return new PolymorphicAudioCell(v(0.5), Arrays.asList(fcell, gcell));
+		return new PolymorphicAudioCell(c(0.5), Arrays.asList(fcell, gcell));
 	}
 
 	@Test
 	public void sineWave() {
-		ScalarTemporalCellAdapter cell = cell();
+		CollectionTemporalCellAdapter cell = cell();
 		cell.setReceptor(loggingReceptor());
-		Runnable push = cell.push(v(0.0)).get();
+		Runnable push = cell.push(c(0.0)).get();
 		IntStream.range(0, 100).forEach(i -> push.run());
 		// TODO  Add assertions
 	}
 
 	@Test
 	public void withOutput() {
-		WaveOutput output = new WaveOutput(new File("health/polymorphic-cell-test.wav"));
+		WaveOutput output = new WaveOutput(new File("results/polymorphic-cell-test.wav"));
 
 		CellList cells = cells(1);
 		cells.get(0).setReceptor(output);
@@ -103,10 +104,10 @@ public class PolymorphicAudioCellTest implements CellFeatures, TestFeatures {
 			TemporalRunner runner = new TemporalRunner(cells, DURATION_FRAMES);
 			runner.get().run();
 		} else {
-			ScalarTemporalCellAdapter cell = (ScalarTemporalCellAdapter) cells.get(0);
+			CollectionTemporalCellAdapter cell = (CollectionTemporalCellAdapter) cells.get(0);
 
 			OperationList list = new OperationList("PolymorphicAudioCell Push and Tick");
-			list.add(cell.push(v(0.0)));
+			list.add(cell.push(c(0.0)));
 			list.add(cell.tick());
 			Loop loop = (Loop) loop(list, enableLoop ? DURATION_FRAMES : 1);
 
@@ -128,19 +129,19 @@ public class PolymorphicAudioCellTest implements CellFeatures, TestFeatures {
 
 	@Test
 	public void comparison() {
-		WaveOutput output1 = new WaveOutput(new File("health/poly-comparison-a.wav"));
-		WaveOutput output2 = new WaveOutput(new File("health/poly-comparison-b.wav"));
+		WaveOutput output1 = new WaveOutput(new File("results/poly-comparison-a.wav"));
+		WaveOutput output2 = new WaveOutput(new File("results/poly-comparison-b.wav"));
 
 		CellList cells1 = cells(1);
 		CellList cells2 = cells(1);
 		cells1.get(0).setReceptor(output1);
 		cells2.get(0).setReceptor(output2);
-		ScalarTemporalCellAdapter cell1 = (ScalarTemporalCellAdapter) cells1.get(0);
-		ScalarTemporalCellAdapter cell2 = (ScalarTemporalCellAdapter) cells2.get(0);
+		CollectionTemporalCellAdapter cell1 = (CollectionTemporalCellAdapter) cells1.get(0);
+		CollectionTemporalCellAdapter cell2 = (CollectionTemporalCellAdapter) cells2.get(0);
 
 		/* One */
 		OperationList list1 = new OperationList("One");
-		list1.add(cell1.push(v(0.0)));
+		list1.add(cell1.push(c(0.0)));
 		list1.add(cell1.tick());
 		Loop loop1 = (Loop) loop(list1, DURATION_FRAMES);
 		Runnable setup1 = cells1.setup().get();
@@ -169,9 +170,9 @@ public class PolymorphicAudioCellTest implements CellFeatures, TestFeatures {
 
 	@Test
 	public void compareOneAndTwo() {
-		WaveOutput output1 = new WaveOutput(new File("health/multi-poly-comparison-a.wav"));
-		WaveOutput output2 = new WaveOutput(new File("health/multi-poly-comparison-b1.wav"));
-		WaveOutput output3 = new WaveOutput(new File("health/multi-poly-comparison-b2.wav"));
+		WaveOutput output1 = new WaveOutput(new File("results/multi-poly-comparison-a.wav"));
+		WaveOutput output2 = new WaveOutput(new File("results/multi-poly-comparison-b1.wav"));
+		WaveOutput output3 = new WaveOutput(new File("results/multi-poly-comparison-b2.wav"));
 
 		CellList cells1 = cells(1);
 		CellList cells2 = cells(2);
@@ -210,25 +211,25 @@ public class PolymorphicAudioCellTest implements CellFeatures, TestFeatures {
 		System.out.println("PolymorphicAudioCellTest: Done");
 	}
 
-	protected Gene<Scalar> identityGene() {
+	protected <T> Gene<T> identityGene() {
 		return new Gene<>() {
-			@Override public Factor<Scalar> valueAt(int index) { return new IdentityFactor<>(); }
+			@Override public Factor<T> valueAt(int index) { return new IdentityFactor<>(); }
 			@Override public int length() { return 1; }
 		};
 	}
 
-	protected void loggingCellPair(Cell<Scalar> input) {
-		List<Cell<Scalar>> cells = new ArrayList<>();
+	protected void loggingCellPair(Cell<PackedCollection<?>> input) {
+		List<Cell<PackedCollection<?>>> cells = new ArrayList<>();
 		cells.add(loggingCell());
 
-		MultiCell<Scalar> m = new MultiCell<>(cells, identityGene());
+		MultiCell<PackedCollection<?>> m = new MultiCell<>(cells, identityGene());
 		m.setName("LoggingMultiCell");
 		new CellPair<>(input, m, null, new IdentityFactor<>()).init();
 	}
 
 	@Test
 	public void withCellPair() {
-		ScalarTemporalCellAdapter cell = cell();
+		CollectionTemporalCellAdapter cell = cell();
 		loggingCellPair(cell);
 
 		Runnable push = cell.push(null).get();
@@ -240,7 +241,7 @@ public class PolymorphicAudioCellTest implements CellFeatures, TestFeatures {
 		BasicDelayCell delay = new BasicDelayCell(1);
 		delay.setReceptor(loggingReceptor());
 
-		ScalarTemporalCellAdapter cell = cell();
+		CollectionTemporalCellAdapter cell = cell();
 		cell.setReceptor(delay);
 
 		Runnable push = cell.push(null).get();

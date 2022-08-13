@@ -18,29 +18,28 @@ package org.almostrealism.audio.optimize;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.ScalarBank;
-import org.almostrealism.algebra.ScalarTable;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.WaveOutput;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.MemoryDataTemporalCellularChromosomeExpansion;
 import org.almostrealism.heredity.Chromosome;
 import org.almostrealism.heredity.Gene;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-public class WavCellChromosomeExpansion extends MemoryDataTemporalCellularChromosomeExpansion<ScalarBank, Scalar, Scalar> implements CellFeatures {
+public class WavCellChromosomeExpansion extends
+		MemoryDataTemporalCellularChromosomeExpansion<PackedCollection<PackedCollection<?>>, PackedCollection<?>, PackedCollection<?>> implements CellFeatures {
 
 	private int sampleRate;
 
-	public WavCellChromosomeExpansion(Chromosome<Scalar> source, int inputGenes, int inputFactors, int sampleRate) {
-		super(Scalar.class, source, 2, ScalarBank::new, ScalarTable::new, inputGenes, inputFactors);
+	public WavCellChromosomeExpansion(Chromosome<PackedCollection<?>> source, int inputGenes, int inputFactors, int sampleRate) {
+		super((Class) PackedCollection.class, source, 1, PackedCollection.bank(new TraversalPolicy(1)),
+				PackedCollection.table(new TraversalPolicy(1)), inputGenes, inputFactors);
 		this.sampleRate = sampleRate;
 	}
 
@@ -50,22 +49,22 @@ public class WavCellChromosomeExpansion extends MemoryDataTemporalCellularChromo
 	}
 
 	@Override
-	protected Cell<Scalar> cell(ScalarBank data) {
+	protected Cell<PackedCollection<?>> cell(PackedCollection<PackedCollection<?>> data) {
 		return new WaveCell(data, sampleRate);
 	}
 
 	@Override
-	protected Producer<ScalarBank> parameters(Gene<Scalar> gene) {
-		return scalars(IntStream.range(0, gene.length()).mapToObj(gene).map(f -> f.getResultant(v(1.0))).toArray(Producer[]::new));
+	protected Producer<PackedCollection<PackedCollection<?>>> parameters(Gene<PackedCollection<?>> gene) {
+		return c(IntStream.range(0, gene.length()).mapToObj(gene).map(f -> f.getResultant(c(1.0))).toArray(Producer[]::new));
 	}
 
 	@Override
-	protected Supplier<Scalar> value() {
+	protected Supplier<PackedCollection<?>> value() {
 		return Scalar::new;
 	}
 
 	@Override
-	protected BiFunction<Producer<Scalar>, Producer<Scalar>, Producer<Scalar>> combine() {
-		return this::scalarsMultiply;
+	protected BiFunction<Producer<PackedCollection<?>>, Producer<PackedCollection<?>>, Producer<PackedCollection<?>>> combine() {
+		return this::_multiply;
 	}
 }

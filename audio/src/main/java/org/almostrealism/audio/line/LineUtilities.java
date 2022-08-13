@@ -4,6 +4,7 @@ import org.almostrealism.audio.JavaAudioSample;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WavFile;
+import org.almostrealism.collect.PackedCollection;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -122,12 +123,12 @@ public class LineUtilities {
 	 * Converts the specified long value to the bytes of one frame,
 	 * depending on the frame size of the specified {@link AudioFormat}.
 	 */
-	public static byte[] toFrame(Scalar frame, AudioFormat format) {
+	public static byte[] toFrame(PackedCollection<?> frame, AudioFormat format) {
 		int frameSize = format.getFrameSize();
 
 		byte frameBytes[] = null;
 
-		double frameAsDouble = frame.getValue();
+		double frameAsDouble = frame.toDouble(0);
 
 		if (frameSize == 1) {
 			frameBytes = new byte[1];

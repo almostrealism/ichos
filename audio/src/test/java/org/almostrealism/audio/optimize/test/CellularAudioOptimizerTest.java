@@ -109,7 +109,7 @@ public class CellularAudioOptimizerTest extends AssignableGenomeTest {
 					StableDurationHealthComputation health = new StableDurationHealthComputation();
 					health.setMaxDuration(8);
 
-					health.setOutputFile(() -> "health/layered-organ-optimizer-test-" + index.incrementAndGet() + ".wav");
+					health.setOutputFile(() -> "results/layered-organ-optimizer-test-" + index.incrementAndGet() + ".wav");
 
 					System.out.println("Creating LayeredOrganPopulation...");
 					AudioScenePopulation<Scalar> pop =

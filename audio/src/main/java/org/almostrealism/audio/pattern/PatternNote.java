@@ -21,7 +21,6 @@ import io.almostrealism.code.CachedValue;
 import io.almostrealism.expression.Product;
 import io.almostrealism.relation.Evaluable;
 import io.almostrealism.relation.Producer;
-import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.Waves;
@@ -37,7 +36,6 @@ import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.PassThroughProducer;
 import org.almostrealism.hardware.ctx.ContextSpecific;
 import org.almostrealism.hardware.ctx.DefaultContextSpecific;
-import org.almostrealism.time.Frequency;
 import org.almostrealism.time.computations.Interpolate;
 
 import java.io.File;
@@ -45,7 +43,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PatternNote {
-	private static ContextSpecific<KernelizedEvaluable<PackedCollection>> interpolate;
+	private static ContextSpecific<KernelizedEvaluable<PackedCollection<?>>> interpolate;
 
 	static {
 		interpolate = new DefaultContextSpecific<>(() ->
@@ -132,7 +130,7 @@ public class PatternNote {
 				PackedCollection audio = getAudio();
 				PackedCollection dest = WaveData.allocateCollection((int) (r * audio.getMemLength()));
 
-				interpolate.getValue().kernelEvaluate(dest.traverse(1), audio.traverse(0), WaveOutput.timeline.getValue(), rate.traverse(0));
+				interpolate.getValue().kernelEvaluate(dest.traverse(1), audio.traverse(0), WaveOutput.timelineScalar.getValue(), rate.traverse(0));
 				return dest;
 			}));
 		}

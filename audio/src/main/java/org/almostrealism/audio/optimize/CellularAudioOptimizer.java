@@ -47,6 +47,7 @@ import org.almostrealism.audio.Waves;
 import org.almostrealism.audio.sequence.GridSequencer;
 import org.almostrealism.audio.tone.WesternChromatic;
 import org.almostrealism.audio.tone.WesternScales;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.heredity.Breeders;
 import org.almostrealism.hardware.Hardware;
@@ -83,10 +84,10 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		if (arg != null) STEMS = arg;
 	}
 
-	private AudioScenePopulation<Scalar> population;
+	private AudioScenePopulation<PackedCollection<?>> population;
 
 	public CellularAudioOptimizer(AudioScene<?> scene,
-								  Supplier<GenomeBreeder<Scalar>> breeder, Supplier<Supplier<Genome<Scalar>>> generator,
+								  Supplier<GenomeBreeder<PackedCollection<?>>> breeder, Supplier<Supplier<Genome<PackedCollection<?>>>> generator,
 								  int totalCycles) {
 		super(null, breeder, generator, "Population.xml", totalCycles);
 		setChildrenFunction(
@@ -103,14 +104,14 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 				});
 	}
 
-	public static Supplier<Supplier<Genome<Scalar>>> generator(int sources, int delayLayers) {
+	public static Supplier<Supplier<Genome<PackedCollection<?>>>> generator(int sources, int delayLayers) {
 		return generator(sources, delayLayers, new GeneratorConfiguration(sources));
 	}
 
-	public static Supplier<Supplier<Genome<Scalar>>> generator(int sources, int delayLayers, GeneratorConfiguration config) {
+	public static Supplier<Supplier<Genome<PackedCollection<?>>>> generator(int sources, int delayLayers, GeneratorConfiguration config) {
 		return () -> {
 			// Random genetic material generators
-			ChromosomeFactory<Scalar> generators = DefaultAudioGenome.generatorFactory(config.minChoice, config.maxChoice,
+			ChromosomeFactory<PackedCollection<?>> generators = DefaultAudioGenome.generatorFactory(config.minChoice, config.maxChoice,
 													config.offsetChoices, config.repeatChoices,
 													config.repeatSpeedUpDurationMin, config.repeatSpeedUpDurationMax);   // GENERATORS
 			RandomChromosomeFactory parameters = new RandomChromosomeFactory();   // PARAMETERS
@@ -276,7 +277,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		return build(generator(scene.getSourceCount(), scene.getDelayLayerCount()), scene, cycles);
 	}
 
-	public static CellularAudioOptimizer build(Supplier<Supplier<Genome<Scalar>>> generator, AudioScene<?> scene, int cycles) {
+	public static CellularAudioOptimizer build(Supplier<Supplier<Genome<PackedCollection<?>>>> generator, AudioScene<?> scene, int cycles) {
 		return new CellularAudioOptimizer(scene, () -> {
 			return new DefaultGenomeBreeder(
 					Breeders.of(Breeders.randomChoiceBreeder(),
@@ -331,8 +332,6 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		// HealthCallable.setComputeRequirements(ComputeRequirement.C);
 		// HealthCallable.setComputeRequirements(ComputeRequirement.PROFILING);
 		// Hardware.getLocalHardware().setMaximumOperationDepth(7);
-
-		WaveData.setHeap(() -> new ScalarBankHeap(5000 * OutputLine.sampleRate), ScalarBankHeap::destroy);
 
 		double bpm = 120.0; // 116.0;
 		int sourceCount = 6;

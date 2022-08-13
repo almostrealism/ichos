@@ -26,6 +26,7 @@ import org.almostrealism.audio.sources.SineWaveCell;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.computations.DefaultEnvelopeComputation;
 import org.almostrealism.audio.filter.BasicDelayCell;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.graph.ReceptorCell;
@@ -47,11 +48,11 @@ import java.util.stream.IntStream;
 public class SineWaveCellTest implements CellFeatures, TestFeatures {
 	protected static final int DURATION_FRAMES = 10 * OutputLine.sampleRate;
 
-	protected Receptor<Scalar> loggingReceptor() {
-		return protein -> () -> () -> System.out.println(protein.get().evaluate());
+	protected Receptor<PackedCollection<?>> loggingReceptor() {
+		return protein -> () -> () -> System.out.println(protein.get().evaluate().toDouble(0));
 	}
 
-	protected Cell<Scalar> loggingCell() { return new ReceptorCell<>(loggingReceptor()); }
+	protected Cell<PackedCollection<?>> loggingCell() { return new ReceptorCell<>(loggingReceptor()); }
 
 	protected SineWaveCell cell() {
 		SineWaveCell cell = new SineWaveCell();
@@ -66,19 +67,19 @@ public class SineWaveCellTest implements CellFeatures, TestFeatures {
 	public void sineWave() {
 		SineWaveCell cell = cell();
 		cell.setReceptor(loggingReceptor());
-		Runnable push = cell.push(v(0.0)).get();
+		Runnable push = cell.push(c(0.0)).get();
 		IntStream.range(0, 100).forEach(i -> push.run());
 		// TODO  Add assertions
 	}
 
 	@Test
 	public void withOutput() {
-		WaveOutput output = new WaveOutput(new File("health/sine-wave-cell-test.wav"));
+		WaveOutput output = new WaveOutput(new File("results/sine-wave-cell-test.wav"));
 
 		SineWaveCell cell = cell();
 		cell.setReceptor(output);
 
-		Runnable push = cell.push(v(0.0)).get();
+		Runnable push = cell.push(c(0.0)).get();
 		Runnable tick = cell.tick().get();
 		IntStream.range(0, DURATION_FRAMES).forEach(i -> {
 			push.run();
@@ -100,18 +101,18 @@ public class SineWaveCellTest implements CellFeatures, TestFeatures {
 		cells.reset();
 	}
 
-	protected Gene<Scalar> identityGene() {
+	protected Gene<PackedCollection<?>> identityGene() {
 		return new Gene<>() {
-			@Override public Factor<Scalar> valueAt(int index) { return new IdentityFactor<>(); }
+			@Override public Factor<PackedCollection<?>> valueAt(int index) { return new IdentityFactor<>(); }
 			@Override public int length() { return 1; }
 		};
 	}
 
-	protected void loggingCellPair(Cell<Scalar> input) {
-		List<Cell<Scalar>> cells = new ArrayList<>();
+	protected void loggingCellPair(Cell<PackedCollection<?>> input) {
+		List<Cell<PackedCollection<?>>> cells = new ArrayList<>();
 		cells.add(loggingCell());
 
-		MultiCell<Scalar> m = new MultiCell<>(cells, identityGene());
+		MultiCell<PackedCollection<?>> m = new MultiCell<>(cells, identityGene());
 		m.setName("LoggingMultiCell");
 		new CellPair<>(input, m, null, new IdentityFactor<>()).init();
 	}

@@ -22,13 +22,14 @@ import io.almostrealism.code.OperationMetadata;
 import io.almostrealism.scope.Scope;
 import org.almostrealism.algebra.Pair;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
 import io.almostrealism.relation.Producer;
 
 import java.util.function.Consumer;
 
 public class ClipCounter extends DynamicOperationComputationAdapter {
-	public ClipCounter(Producer<Scalar> clipCount, Producer<Pair> clipSettings, Producer<Scalar> value) {
+	public ClipCounter(Producer<Scalar> clipCount, Producer<Pair<?>> clipSettings, Producer<PackedCollection<?>> value) {
 		super(new Producer[] { clipCount, clipSettings, value });
 	}
 
@@ -37,7 +38,7 @@ public class ClipCounter extends DynamicOperationComputationAdapter {
 		HybridScope<Void> scope = new HybridScope<>(this);
 		scope.setMetadata(new OperationMetadata(getFunctionName(), "ClipCounter"));
 
-		String value = getArgument(2, 2).valueAt(0).getExpression();
+		String value = getArgument(2, 1).valueAt(0).getExpression();
 		String min = getArgument(1, 2).valueAt(0).getExpression();
 		String max = getArgument(1, 2).valueAt(1).getExpression();
 		String count = getArgument(0, 2).valueAt(0).getExpression();

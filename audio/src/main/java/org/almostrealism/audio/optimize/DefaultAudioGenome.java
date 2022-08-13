@@ -21,9 +21,12 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarProducer;
+import org.almostrealism.algebra.ScalarProducerBase;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.filter.AudioPassFilter;
+import org.almostrealism.collect.CollectionProducer;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.heredity.AssignableGenome;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.ArrayListChromosome;
@@ -42,7 +45,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
+public class DefaultAudioGenome implements Genome<PackedCollection<?>>, Setup, CellFeatures {
 	public static final int GENERATORS = 0;
 	public static final int PARAMETERS = 1;
 	public static final int VOLUME = 2;
@@ -116,7 +119,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 	public int count() { return length; }
 
 	@Override
-	public Chromosome<Scalar> valueAt(int pos) {
+	public Chromosome<PackedCollection<?>> valueAt(int pos) {
 		if (pos == GENERATORS) {
 			return generatorChromosome;
 		} else if (pos == VOLUME) {
@@ -161,19 +164,20 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 	@Override
 	public String toString() { return data.toString(); }
 
-	public static double valueForFactor(Factor<Scalar> value) {
+	public static double valueForFactor(Factor<PackedCollection<?>> value) {
 		if (value instanceof ScaleFactor) {
 			return ((ScaleFactor) value).getScaleValue();
 		} else {
-			return value.getResultant(Ops.ops().v(1.0)).get().evaluate().getValue();
+			return value.getResultant(Ops.ops().c(1.0)).get().evaluate().toDouble(0);
 		}
 	}
 
-	public static double valueForFactor(Factor<Scalar> value, double exp, double multiplier) {
+	public static double valueForFactor(Factor<PackedCollection<?>> value, double exp, double multiplier) {
 		if (value instanceof ScaleFactor) {
 			return HeredityFeatures.getInstance().oneToInfinity(((ScaleFactor) value).getScaleValue(), exp) * multiplier;
 		} else {
-			return HeredityFeatures.getInstance().oneToInfinity(value, exp).get().evaluate().getValue() * multiplier;
+			double v = value.getResultant(Ops.ops().c(1.0)).get().evaluate().toDouble(0);
+			return HeredityFeatures.getInstance().oneToInfinity(v, exp) * multiplier;
 		}
 	}
 
@@ -181,7 +185,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return ((Math.log(beats) / Math.log(2)) / 16) + 0.5;
 	}
 
-	public static double[] repeatForFactor(Factor<Scalar> f) {
+	public static double[] repeatForFactor(Factor<PackedCollection<?>> f) {
 		double v = 16 * (valueForFactor(f) - 0.5);
 
 		if (v == 0) {
@@ -199,8 +203,8 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return HeredityFeatures.getInstance().invertOneToInfinity(seconds, 60, 3);
 	}
 
-	public static double repeatSpeedUpDurationForFactor(Factor<Scalar> f) {
-		return HeredityFeatures.getInstance().oneToInfinity(f, 3).get().evaluate().getValue() * 60;
+	public static double repeatSpeedUpDurationForFactor(Factor<PackedCollection<?>> f) {
+		return valueForFactor(f, 3, 60);
 	}
 
 	public static double factorForPeriodicAdjustmentDuration(double seconds) {
@@ -211,8 +215,8 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return HeredityFeatures.getInstance().invertOneToInfinity(seconds, 60, 3);
 	}
 
-	public static double polyFilterUpDurationForFactor(Factor<Scalar> factor) {
-		return HeredityFeatures.getInstance().oneToInfinity(factor, 3).get().evaluate().getValue() * 60;
+	public static double polyFilterUpDurationForFactor(Factor<PackedCollection<?>> f) {
+		return valueForFactor(f, 3, 60);
 	}
 
 	public static double factorForPolyAdjustmentExponent(double exp) {
@@ -231,7 +235,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return HeredityFeatures.getInstance().invertOneToInfinity(seconds, 60, 3);
 	}
 
-	public static double delayForFactor(Factor<Scalar> f) {
+	public static double delayForFactor(Factor<PackedCollection<?>> f) {
 		return valueForFactor(f, 3, 60);
 	}
 
@@ -239,7 +243,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return HeredityFeatures.getInstance().invertOneToInfinity(seconds, 60, 3);
 	}
 
-	public static double speedUpDurationForFactor(Factor<Scalar> f) {
+	public static double speedUpDurationForFactor(Factor<PackedCollection<?>> f) {
 		return valueForFactor(f, 3, 60);
 	}
 
@@ -247,7 +251,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return HeredityFeatures.getInstance().invertOneToInfinity(decimal, 10, 0.5);
 	}
 
-	public static double speedUpPercentageForFactor(Factor<Scalar> f) {
+	public static double speedUpPercentageForFactor(Factor<PackedCollection<?>> f) {
 		return valueForFactor(f, 0.5, 10);
 	}
 
@@ -255,7 +259,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return HeredityFeatures.getInstance().invertOneToInfinity(seconds, 60, 3);
 	}
 
-	public static double slowDownDurationForFactor(Factor<Scalar> f) {
+	public static double slowDownDurationForFactor(Factor<PackedCollection<?>> f) {
 		return valueForFactor(f, 3, 60);
 	}
 
@@ -263,7 +267,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return decimal;
 	}
 
-	public static double slowDownPercentageForFactor(Factor<Scalar> f) {
+	public static double slowDownPercentageForFactor(Factor<PackedCollection<?>> f) {
 		return valueForFactor(f);
 	}
 
@@ -271,7 +275,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return HeredityFeatures.getInstance().invertOneToInfinity(seconds, 60, 3);
 	}
 
-	public static double polySpeedUpDurationForFactor(Factor<Scalar> f) {
+	public static double polySpeedUpDurationForFactor(Factor<PackedCollection<?>> f) {
 		return valueForFactor(f, 3, 60);
 	}
 
@@ -279,7 +283,7 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return HeredityFeatures.getInstance().invertOneToInfinity(exp, 10, 1);
 	}
 
-	public static double polySpeedUpExponentForFactor(Factor<Scalar> f) {
+	public static double polySpeedUpExponentForFactor(Factor<PackedCollection<?>> f) {
 		return valueForFactor(f, 1, 10);
 	}
 
@@ -287,26 +291,26 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		return hertz / 20000;
 	}
 
-	public static double filterFrequencyForFactor(Factor<Scalar> f) {
+	public static double filterFrequencyForFactor(Factor<PackedCollection<?>> f) {
 		return valueForFactor(f) * 20000;
 	}
 
 	protected class GeneratorChromosome extends WavCellChromosomeExpansion {
 		public GeneratorChromosome(int index) {
 			super(data.valueAt(index), data.length(index), 4, sampleRate);
-			setTransform(0, g -> g.valueAt(0).getResultant(v(1.0)));
-			setTransform(1, g -> g.valueAt(1).getResultant(v(1.0)));
-			setTransform(2, g -> g.valueAt(2).getResultant(v(1.0)));
-			setTransform(3, g -> oneToInfinity(g.valueAt(3), 3.0).multiply(60.0));
-			addFactor(g -> g.valueAt(0).getResultant(v(1.0)));
-			addFactor(g -> g.valueAt(1).getResultant(v(1.0)));
+			setTransform(0, g -> g.valueAt(0).getResultant(c(1.0)));
+			setTransform(1, g -> g.valueAt(1).getResultant(c(1.0)));
+			setTransform(2, g -> g.valueAt(2).getResultant(c(1.0)));
+			setTransform(3, g -> oneToInfinity(g.valueAt(3), 3.0)._multiply(c(60.0)));
+			addFactor(g -> g.valueAt(0).getResultant(c(1.0)));
+			addFactor(g -> g.valueAt(1).getResultant(c(1.0)));
 			addFactor((p, in) -> {
-				ScalarProducer repeat = scalar(p, 2);
-				ScalarProducer speedUpDuration = scalar(p, 3);
+				CollectionProducer repeat = c(p, 2);
+				CollectionProducer speedUpDuration = c(p, 3);
 
-				ScalarProducer initial = pow(v(2.0), v(16).multiply(v(-0.5).add(repeat)));
+				CollectionProducer initial = _pow(c(2.0), c(16)._multiply(c(-0.5)._add(repeat)));
 
-				return initial.divide(pow(v(2.0), floor(speedUpDuration.pow(-1.0).multiply(in))));
+				return initial._divide(_pow(c(2.0), _floor(speedUpDuration._pow(c(-1.0))._multiply(in))));
 				// return initial;
 			});
 		}
@@ -318,26 +322,26 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		public AdjustmentChromosome(int index, double min, double max, boolean relative) {
 			super(data.valueAt(index), data.length(index), 6, sampleRate);
 			this.relative = relative;
-			setTransform(0, g -> oneToInfinity(g.valueAt(0), 3.0).multiply(60.0));
-			setTransform(1, g -> oneToInfinity(g.valueAt(1), 3.0).multiply(60.0));
-			setTransform(2, g -> oneToInfinity(g.valueAt(2), 1.0).multiply(10.0));
-			setTransform(3, g -> oneToInfinity(g.valueAt(3), 1.0).multiply(10.0));
-			setTransform(4, g -> g.valueAt(4).getResultant(v(1.0)));
-			setTransform(5, g -> oneToInfinity(g.valueAt(5), 3.0).multiply(60.0));
+			setTransform(0, g -> oneToInfinity(g.valueAt(0), 3.0)._multiply(c(60.0)));
+			setTransform(1, g -> oneToInfinity(g.valueAt(1), 3.0)._multiply(c(60.0)));
+			setTransform(2, g -> oneToInfinity(g.valueAt(2), 1.0)._multiply(c(10.0)));
+			setTransform(3, g -> oneToInfinity(g.valueAt(3), 1.0)._multiply(c(10.0)));
+			setTransform(4, g -> g.valueAt(4).getResultant(c(1.0)));
+			setTransform(5, g -> oneToInfinity(g.valueAt(5), 3.0)._multiply(c(60.0)));
 			addFactor((p, in) -> {
-				ScalarProducer periodicWavelength = scalar(p, 0);
-				ScalarProducer periodicAmp = v(1.0);
-				ScalarProducer polyWaveLength = scalar(p, 1);
-				ScalarProducer polyExp = scalar(p, 2);
-				ScalarProducer initial = scalar(p, 3);
-				ScalarProducer scale = scalar(p, 4);
-				ScalarProducer offset = scalar(p, 5);
+				CollectionProducer periodicWavelength = c(p, 0);
+				CollectionProducer periodicAmp = c(1.0);
+				CollectionProducer polyWaveLength = c(p, 1);
+				CollectionProducer polyExp = c(p, 2);
+				CollectionProducer initial = c(p, 3);
+				CollectionProducer scale = c(p, 4);
+				CollectionProducer offset = c(p, 5);
 
 //				return sinw(in, periodicWavelength, periodicAmp).pow(2.0)
 //						.multiply(polyWaveLength.pow(-1.0).multiply(in).pow(polyExp));
-				if (relative) scale = scale.multiply(initial);
-				ScalarProducer pos = scalarSubtract(in, offset);
-				return bound(pos.greaterThan(v(0.0), polyWaveLength.pow(-1.0).multiply(pos).pow(polyExp).multiply(scale).add(initial), initial), min, max);
+				if (relative) scale = scale._multiply(initial);
+				CollectionProducer pos = _subtract(in, offset);
+				return _bound(pos._greaterThan(c(0.0), polyWaveLength._pow(c(-1.0))._multiply(pos)._pow(polyExp)._multiply(scale)._add(initial), initial), min, max);
 				// return bound(polyWaveLength.pow(-1.0).multiply(pos).pow(polyExp).multiply(scale).add(initial), min, max);
 			});
 		}
@@ -346,29 +350,29 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 	public class DelayChromosome extends WavCellChromosomeExpansion {
 		public DelayChromosome(int index) {
 			super(data.valueAt(index), data.length(index), 7, sampleRate);
-			setTransform(0, g -> oneToInfinity(g.valueAt(0).getResultant(v(1.0)), 3.0).multiply(v(60.0)));
-			setTransform(1, g -> oneToInfinity(g.valueAt(1).getResultant(v(1.0)), 3.0).multiply(v(60.0)));
-			setTransform(2, g -> oneToInfinity(g.valueAt(2).getResultant(v(1.0)), 0.5).multiply(v(10.0)));
-			setTransform(3, g -> oneToInfinity(g.valueAt(3).getResultant(v(1.0)), 3.0).multiply(v(60.0)));
-			setTransform(4, g -> g.valueAt(4).getResultant(v(1.0)));
-			setTransform(5, g -> oneToInfinity(g.valueAt(5).getResultant(v(1.0)), 3.0).multiply(v(60.0)));
-			setTransform(6, g -> oneToInfinity(g.valueAt(6).getResultant(v(1.0)), 1.0).multiply(v(10.0)));
-			addFactor(g -> g.valueAt(0).getResultant(v(1.0)));
+			setTransform(0, g -> oneToInfinity(g.valueAt(0).getResultant(c(1.0)), 3.0)._multiply(c(60.0)));
+			setTransform(1, g -> oneToInfinity(g.valueAt(1).getResultant(c(1.0)), 3.0)._multiply(c(60.0)));
+			setTransform(2, g -> oneToInfinity(g.valueAt(2).getResultant(c(1.0)), 0.5)._multiply(c(10.0)));
+			setTransform(3, g -> oneToInfinity(g.valueAt(3).getResultant(c(1.0)), 3.0)._multiply(c(60.0)));
+			setTransform(4, g -> g.valueAt(4).getResultant(c(1.0)));
+			setTransform(5, g -> oneToInfinity(g.valueAt(5).getResultant(c(1.0)), 3.0)._multiply(c(60.0)));
+			setTransform(6, g -> oneToInfinity(g.valueAt(6).getResultant(c(1.0)), 1.0)._multiply(c(10.0)));
+			addFactor(g -> g.valueAt(0).getResultant(c(1.0)));
 			addFactor((p, in) -> {
-				ScalarProducer speedUpWavelength = scalar(p, 1).multiply(2.0);
-				ScalarProducer speedUpAmp = scalar(p, 2);
-				ScalarProducer slowDownWavelength = scalar(p, 3).multiply(2.0);
-				ScalarProducer slowDownAmp = scalar(p, 4);
-				ScalarProducer polySpeedUpWaveLength = scalar(p, 5);
-				ScalarProducer polySpeedUpExp = scalar(p, 6);
-				return v(1.0).add(sinw(in, speedUpWavelength, speedUpAmp).pow(2.0))
-						.multiply(v(1.0).subtract(sinw(in, slowDownWavelength, slowDownAmp).pow(2.0)))
-						.multiply(v(1.0).add(polySpeedUpWaveLength.pow(-1.0).multiply(in).pow(polySpeedUpExp)));
+				CollectionProducer speedUpWavelength = c(p, 1)._multiply(c(2.0));
+				CollectionProducer speedUpAmp = c(p, 2);
+				CollectionProducer slowDownWavelength = c(p, 3)._multiply(c(2.0));
+				CollectionProducer slowDownAmp = c(p, 4);
+				CollectionProducer polySpeedUpWaveLength = c(p, 5);
+				CollectionProducer polySpeedUpExp = c(p, 6);
+				return c(1.0)._add(_sinw(in, speedUpWavelength, speedUpAmp)._pow(c(2.0)))
+						._multiply(c(1.0)._subtract(_sinw(in, slowDownWavelength, slowDownAmp)._pow(c(2.0))))
+						._multiply(c(1.0)._add(polySpeedUpWaveLength._pow(c(-1.0))._multiply(in)._pow(polySpeedUpExp)));
 			});
 		}
 	}
 
-	protected class FixedFilterChromosome implements Chromosome<Scalar> {
+	protected class FixedFilterChromosome implements Chromosome<PackedCollection<?>> {
 		private final int index;
 
 		public FixedFilterChromosome(int index) {
@@ -381,12 +385,12 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		}
 
 		@Override
-		public Gene<Scalar> valueAt(int pos) {
+		public Gene<PackedCollection<?>> valueAt(int pos) {
 			return new FixedFilterGene(index, pos);
 		}
 	}
 
-	protected class FixedFilterGene implements Gene<Scalar> {
+	protected class FixedFilterGene implements Gene<PackedCollection<?>> {
 		private final int chromosome;
 		private final int index;
 
@@ -399,28 +403,28 @@ public class DefaultAudioGenome implements Genome<Scalar>, Setup, CellFeatures {
 		public int length() { return 1; }
 
 		@Override
-		public Factor<Scalar> valueAt(int pos) {
-			Producer<Scalar> lowFrequency = scalarsMultiply(v(maxFrequency), data.valueAt(chromosome, index, 0).getResultant(v(1.0)));
-			Producer<Scalar> highFrequency = scalarsMultiply(v(maxFrequency), data.valueAt(chromosome, index, 1).getResultant(v(1.0)));
+		public Factor<PackedCollection<?>> valueAt(int pos) {
+			Producer<PackedCollection<?>> lowFrequency = _multiply(c(maxFrequency), data.valueAt(chromosome, index, 0).getResultant(c(1.0)));
+			Producer<PackedCollection<?>> highFrequency = _multiply(c(maxFrequency), data.valueAt(chromosome, index, 1).getResultant(c(1.0)));
 			return new AudioPassFilter(sampleRate, lowFrequency, v(defaultResonance), true)
 					.andThen(new AudioPassFilter(sampleRate, highFrequency, v(defaultResonance), false));
 		}
 	}
 
-	public static ChromosomeFactory<Scalar> generatorFactory(IntToDoubleFunction choiceMin, IntToDoubleFunction choiceMax,
-															 double offsetChoices[], double repeatChoices[],
-															 double repeatSpeedUpDurationMin, double repeatSpeedUpDurationMax) {
+	public static ChromosomeFactory<PackedCollection<?>> generatorFactory(IntToDoubleFunction choiceMin, IntToDoubleFunction choiceMax,
+																	   double offsetChoices[], double repeatChoices[],
+																	   double repeatSpeedUpDurationMin, double repeatSpeedUpDurationMax) {
 		return new ChromosomeFactory<>() {
 			private int genes;
 
 			@Override
-			public ChromosomeFactory<Scalar> setChromosomeSize(int genes, int factors) {
+			public ChromosomeFactory<PackedCollection<?>> setChromosomeSize(int genes, int factors) {
 				this.genes = genes;
 				return this;
 			}
 
 			@Override
-			public Chromosome<Scalar> generateChromosome(double arg) {
+			public Chromosome<PackedCollection<?>> generateChromosome(double arg) {
 				return IntStream.range(0, genes)
 						.mapToObj(i -> IntStream.range(0, 4)
 								.mapToObj(j -> new ScaleFactor(value(i, j)))

@@ -19,8 +19,8 @@ package org.almostrealism.audio;
 import io.almostrealism.code.ProducerComputation;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.PolymorphicAudioData;
-import org.almostrealism.graph.temporal.DefaultWaveCellData;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,18 +28,18 @@ import java.util.function.Function;
 
 public class PolymorphicAudioCell extends AudioCellChoiceAdapter {
 
-	public PolymorphicAudioCell(PolymorphicAudioData data, ProducerComputation<Scalar> decision,
-								Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>... choices) {
+	public PolymorphicAudioCell(PolymorphicAudioData data, ProducerComputation<PackedCollection<?>> decision,
+								Function<PolymorphicAudioData, ? extends CollectionTemporalCellAdapter>... choices) {
 		this(data, decision, Arrays.asList(choices));
 	}
 
-	public PolymorphicAudioCell(PolymorphicAudioData data, ProducerComputation<Scalar> decision,
-								List<Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>> choices) {
+	public PolymorphicAudioCell(PolymorphicAudioData data, ProducerComputation<PackedCollection<?>> decision,
+								List<Function<PolymorphicAudioData, ? extends CollectionTemporalCellAdapter>> choices) {
 		super(decision, i -> data, choices, false);
 	}
 
-	public PolymorphicAudioCell(ProducerComputation<Scalar> decision,
-								List<ScalarTemporalCellAdapter> choices) {
+	public PolymorphicAudioCell(ProducerComputation<PackedCollection<?>> decision,
+								List<CollectionTemporalCellAdapter> choices) {
 		super(decision, choices, false);
 	}
 }

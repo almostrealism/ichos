@@ -21,7 +21,8 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.SamplingFeatures;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.data.ValueSequenceData;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.hardware.OperationList;
 
 import java.util.List;
@@ -30,16 +31,16 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class ValueSequenceCell extends ScalarTemporalCellAdapter implements SamplingFeatures {
+public class ValueSequenceCell extends CollectionTemporalCellAdapter implements SamplingFeatures {
 	private ValueSequenceData data;
-	private List<Producer<Scalar>> values;
+	private List<Producer<PackedCollection<?>>> values;
 	private Producer<Scalar> durationFrames;
 
-	public ValueSequenceCell(IntFunction<Producer<Scalar>> values, Producer<Scalar> duration, int steps) {
+	public ValueSequenceCell(IntFunction<Producer<PackedCollection<?>>> values, Producer<Scalar> duration, int steps) {
 		this(new PolymorphicAudioData(), values, duration, steps);
 	}
 
-	public ValueSequenceCell(ValueSequenceData data, IntFunction<Producer<Scalar>> values, Producer<Scalar> duration, int steps) {
+	public ValueSequenceCell(ValueSequenceData data, IntFunction<Producer<PackedCollection<?>>> values, Producer<Scalar> duration, int steps) {
 		this.data = data;
 		this.values = IntStream.range(0, steps).mapToObj(values).collect(Collectors.toList());
 		this.durationFrames = toFrames(duration);
@@ -47,8 +48,8 @@ public class ValueSequenceCell extends ScalarTemporalCellAdapter implements Samp
 	}
 
 	@Override
-	public Supplier<Runnable> push(Producer<Scalar> protein) {
-		Scalar value = new Scalar();
+	public Supplier<Runnable> push(Producer<PackedCollection<?>> protein) {
+		PackedCollection value = new PackedCollection<>(1);
 		OperationList push = new OperationList("ValueSequenceCell Push");
 		push.add(new ValueSequencePush(data, durationFrames, value, values.toArray(Producer[]::new)));
 		push.add(super.push(p(value)));

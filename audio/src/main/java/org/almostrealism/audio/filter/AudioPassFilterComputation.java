@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import io.almostrealism.code.ScopeInputManager;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.AudioFilterData;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
 import org.almostrealism.CodeFeatures;
 
@@ -29,7 +30,7 @@ import java.util.function.Supplier;
 public class AudioPassFilterComputation extends DynamicOperationComputationAdapter implements CodeFeatures {
 	private boolean high;
 
-	public AudioPassFilterComputation(AudioFilterData data, Producer<Scalar> frequency, Producer<Scalar> resonance, Producer<Scalar> input, boolean high) {
+	public AudioPassFilterComputation(AudioFilterData data, Producer<PackedCollection<?>> frequency, Producer<Scalar> resonance, Producer<PackedCollection<?>> input, boolean high) {
 		super(data::getOutput,
 				(Supplier) frequency,
 				(Supplier) resonance,
@@ -49,8 +50,8 @@ public class AudioPassFilterComputation extends DynamicOperationComputationAdapt
 		this.high = high;
 	}
 
-	public ArrayVariable getOutput() { return getArgument(0, 2); }
-	public ArrayVariable getFrequency() { return getArgument(1, 2); }
+	public ArrayVariable getOutput() { return getArgument(0, 1); }
+	public ArrayVariable getFrequency() { return getArgument(1, 1); }
 	public ArrayVariable getResonance() { return getArgument(2, 2); }
 	public ArrayVariable getSampleRate() { return getArgument(3, 2); }
 	public ArrayVariable getC() { return getArgument(4, 2); }
@@ -64,7 +65,7 @@ public class AudioPassFilterComputation extends DynamicOperationComputationAdapt
 	public ArrayVariable getOutputHistory0() { return getArgument(12, 2); }
 	public ArrayVariable getOutputHistory1() { return getArgument(13, 2); }
 	public ArrayVariable getOutputHistory2() { return getArgument(14, 2); }
-	public ArrayVariable getInput() { return getArgument(15, 2); }
+	public ArrayVariable getInput() { return getArgument(15, 1); }
 
 	protected String output() { return getOutput().ref(0); }
 	protected String frequency() { return getFrequency().ref(0); }

@@ -15,7 +15,6 @@ import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.MemoryBank;
-import org.almostrealism.time.CursorPair;
 import org.almostrealism.time.Frequency;
 import org.junit.Test;
 
@@ -44,7 +43,7 @@ public class GrainTest implements CellFeatures {
 
 		ScalarBank result = new ScalarBank(10 * OutputLine.sampleRate);
 		System.out.println("GrainTest: Evaluating timeline kernel...");
-		source.getData().valueAt(cursor).get().kernelEvaluate(result, new MemoryBank[] { WaveOutput.timeline.getValue(), grain });
+		source.getData().valueAt(cursor).get().kernelEvaluate(result, new MemoryBank[] { WaveOutput.timelineScalar.getValue(), grain });
 		System.out.println("GrainTest: Timeline kernel evaluated");
 
 		System.out.println("GrainTest: Rendering grains...");

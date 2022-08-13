@@ -33,6 +33,7 @@ import org.almostrealism.audio.sources.SineWaveCell;
 import org.almostrealism.audio.sequence.ValueSequenceCell;
 import org.almostrealism.audio.sequence.ValueSequencePush;
 import org.almostrealism.audio.sequence.ValueSequenceTick;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.DynamicAcceleratedOperation;
@@ -53,7 +54,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 	public void valueSequencePush() {
 		PolymorphicAudioData data = new PolymorphicAudioData();
 		Scalar out = new Scalar();
-		ValueSequencePush push = new ValueSequencePush(data, v(4), out, v(1.0), v(2.0));
+		ValueSequencePush push = new ValueSequencePush(data, c(4), out, c(1.0), c(2.0));
 		data.setWavePosition(3);
 
 		DynamicAcceleratedOperation op = (DynamicAcceleratedOperation) push.get();
@@ -65,7 +66,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 	@Test
 	public void valueSequenceTick() {
 		PolymorphicAudioData data = new PolymorphicAudioData();
-		ValueSequenceTick tick = new ValueSequenceTick(data, v(4), v(1.0), v(2.0));
+		ValueSequenceTick tick = new ValueSequenceTick(data, c(4), c(1.0), c(2.0));
 		data.setWaveLength(1.0);
 
 		DynamicAcceleratedOperation op = (DynamicAcceleratedOperation) tick.get();
@@ -75,11 +76,11 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 
 	@Test
 	public void valueSequenceCell() {
-		ValueSequenceCell cell = new ValueSequenceCell(i -> v(i + 1), v(0.1), 2);
+		ValueSequenceCell cell = new ValueSequenceCell(i -> c(i + 1), c(0.1), 2);
 		cell.setReceptor(loggingReceptor());
 
 		cell.setup().get().run();
-		Runnable push = cell.push(v(0.0)).get();
+		Runnable push = cell.push(c(0.0)).get();
 		Runnable tick = cell.tick().get();
 
 		IntStream.range(0, OutputLine.sampleRate / 10).forEach(i -> {
@@ -90,7 +91,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 
 	@Test
 	public void valueSequenceCsv() {
-		CellList cells = seq(i -> v(i + 1), v(0.1), 2).csv(i -> new File("results/value-sequence-test.csv"));
+		CellList cells = seq(i -> c(i + 1), c(0.1), 2).csv(i -> new File("results/value-sequence-test.csv"));
 
 		TemporalRunner runner = new TemporalRunner(cells, OutputLine.sampleRate / 10);
 		runner.get().run();
@@ -101,7 +102,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 	public void valueSequenceAssign() {
 		Scalar out = new Scalar();
 
-		CellList cells = seq(i -> v(i + 1), v(0.1), 2);
+		CellList cells = seq(i -> c(i + 1), c(0.1), 2);
 		cells.get(0).setReceptor(a(p(out)));
 
 		TemporalRunner runner = new TemporalRunner(cells, OutputLine.sampleRate / 10);
@@ -126,13 +127,13 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 
 		Scalar out = new Scalar();
 
-		ValueSequenceCell seq = (ValueSequenceCell) seq(i -> v(0.25 + i * 0.5), v(2), 2).get(0);
+		ValueSequenceCell seq = (ValueSequenceCell) seq(i -> c(0.25 + i * 0.5), c(2), 2).get(0);
 		seq.setReceptor(a(p(out)));
 
 		CellList cells = new CellList();
 		cells.addRoot(seq);
 		cells = new CellList(cells);
-		cells.addRoot(new DynamicAudioCell(v(1).multiply(p(out)), Arrays.asList(data -> cell1, data -> cell2)));
+		cells.addRoot(new DynamicAudioCell(c(1)._multiply(p(out)), Arrays.asList(data -> cell1, data -> cell2)));
 		cells = cells.o(i -> new File("results/seq-dynamic-test.wav"));
 
 		TemporalRunner runner = new TemporalRunner(cells, 4 * OutputLine.sampleRate);
@@ -159,7 +160,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		int count = 32;
 
 		CellList cells =
-				silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
+				silence().and(w(c(bpm(128).l(0.5)), c(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
 						.gr(bpm(128).l(count), count * 2, i -> i % 2 == 0 ? 0 : 1)
 				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
 				.sum().o(i -> new File("results/sample-seq-test.wav"));
@@ -171,7 +172,7 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 	public void stems() {
 		int count = 212;
 
-		Producer<Scalar> one = v(1.0);
+		Producer<PackedCollection<?>> one = c(1.0);
 
 		CellList cells = cells(
 //				silence().and(w(one, "Library/BD 909 Color 06.wav"))
@@ -190,11 +191,11 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		int count = 32;
 
 		CellList cells = cells(
-					silence().and(w(v(bpm(128).l(1)), "Library/BD 909 Color 06.wav"))
+					silence().and(w(c(bpm(128).l(1)), "Library/BD 909 Color 06.wav"))
 						.gr(bpm(128).l(count), count, i -> 1),
-					silence().and(w(v(bpm(128).l(1)), "Library/Snare Perc DD.wav"))
+					silence().and(w(c(bpm(128).l(1)), "Library/Snare Perc DD.wav"))
 						.gr(bpm(128).l(count), count, i -> i % 2 == 0 ? 0 : 1),
-					silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
+					silence().and(w(c(bpm(128).l(0.5)), c(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
 						.gr(bpm(128).l(count), count * 2, i -> i % 2 == 0 ? 0 : 1))
 				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
 				.sum().o(i -> new File("results/mix-test.wav"));
@@ -211,11 +212,11 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		ParameterFunctionSequence snareSeq = ParameterFunctionSequence.random(32);
 
 		CellList cells = cells(
-				silence().and(w(v(bpm(128).l(1)), "Library/BD 909 Color 06.wav"))
+				silence().and(w(c(bpm(128).l(1)), "Library/BD 909 Color 06.wav"))
 						.gr(bpm(128).l(count), count, i -> 1),
-				silence().and(w(v(bpm(128).l(1)), "Library/Snare Perc DD.wav"))
+				silence().and(w(c(bpm(128).l(1)), "Library/Snare Perc DD.wav"))
 						.gr(bpm(128).l(count), count, i -> (int) (Math.max(0, snareSeq.apply(i).apply(params)) * 2)),
-				silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
+				silence().and(w(c(bpm(128).l(0.5)), c(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
 						.gr(bpm(128).l(count), count * 2, i -> (int) (Math.max(0, hatSeq.apply(i).apply(params)) * 2)))
 				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
 				.sum().o(i -> new File("results/param-mix-test.wav"));
@@ -232,11 +233,11 @@ public class SequenceTest implements CellFeatures, TestFeatures {
 		WaveOutput output = new WaveOutput();
 
 		CellList cells = cells(
-				silence().and(w(v(bpm(128).l(1)), "Library/BD 909 Color 06.wav"))
+				silence().and(w(c(bpm(128).l(1)), "Library/BD 909 Color 06.wav"))
 						.gr(bpm(128).l(count), count, i -> 1),
-				silence().and(w(v(bpm(128).l(1)), "Library/Snare Perc DD.wav"))
+				silence().and(w(c(bpm(128).l(1)), "Library/Snare Perc DD.wav"))
 						.gr(bpm(128).l(count), count, i -> i % 2 == 0 ? 0 : 1),
-				silence().and(w(v(bpm(128).l(0.5)), v(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
+				silence().and(w(c(bpm(128).l(0.5)), c(bpm(128).l(1)), "Library/GT_HAT_31.wav"))
 						.gr(bpm(128).l(count), count * 2, i -> i % 2 == 0 ? 0 : 1))
 				.f(i -> i == 0 ? new ScaleFactor(0.5) : new ScaleFactor(0.1))
 				.sum().map(i -> new ReceptorCell<>(output));

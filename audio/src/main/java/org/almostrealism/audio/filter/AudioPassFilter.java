@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,36 +21,38 @@ import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.AudioFilterData;
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.heredity.TemporalFactor;
 import org.almostrealism.CodeFeatures;
 
 import java.util.function.Supplier;
 
-public class AudioPassFilter implements TemporalFactor<Scalar>, Lifecycle, CodeFeatures {
+public class AudioPassFilter implements TemporalFactor<PackedCollection<?>>, Lifecycle, CodeFeatures {
 	private AudioFilterData data;
-	private Producer<Scalar> frequency, resonance;
-	private Producer<Scalar> input;
+	private Producer<PackedCollection<?>> frequency;
+	private Producer<Scalar> resonance;
+	private Producer<PackedCollection<?>> input;
 
 	private boolean high;
 
-	public AudioPassFilter(int sampleRate, Producer<Scalar> frequency, Producer<Scalar> resonance, boolean high) {
+	public AudioPassFilter(int sampleRate, Producer<PackedCollection<?>> frequency, Producer<Scalar> resonance, boolean high) {
 		this(sampleRate, new PolymorphicAudioData(), frequency, resonance, high);
 	}
 
-	public AudioPassFilter(int sampleRate, AudioFilterData data, Producer<Scalar> frequency, Producer<Scalar> resonance, boolean high) {
+	public AudioPassFilter(int sampleRate, AudioFilterData data, Producer<PackedCollection<?>> frequency, Producer<Scalar> resonance, boolean high) {
 		this.data = data;
-		this.frequency = bound(frequency, 0.0, 20000);
+		this.frequency = _bound(frequency, 0.0, 20000);
 		this.resonance = resonance;
 		this.high = high;
 		setSampleRate(sampleRate);
 	}
 
-	public Producer<Scalar> getFrequency() {
+	public Producer<PackedCollection<?>> getFrequency() {
 		return frequency;
 	}
 
-	public void setFrequency(Producer<Scalar> frequency) {
+	public void setFrequency(Producer<PackedCollection<?>> frequency) {
 		this.frequency = frequency;
 	}
 
@@ -75,7 +77,7 @@ public class AudioPassFilter implements TemporalFactor<Scalar>, Lifecycle, CodeF
 	}
 
 	@Override
-	public Producer<Scalar> getResultant(Producer<Scalar> value) {
+	public Producer<PackedCollection<?>> getResultant(Producer<PackedCollection<?>> value) {
 		if (input != null && input != value) {
 			throw new UnsupportedOperationException("WARN: AudioPassFilter cannot be reused");
 		}

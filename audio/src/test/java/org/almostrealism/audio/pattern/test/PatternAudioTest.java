@@ -33,6 +33,6 @@ public class PatternAudioTest {
 	public void noteAudio() {
 		PatternNote note = new PatternNote("Library/Monarch_C1.wav", WesternChromatic.C1);
 		note.setTuning(new DefaultKeyboardTuning());
-		new WaveData(note.getAudio(WesternChromatic.C2).get().evaluate(), OutputLine.sampleRate).save(new File("output/Monarch_C2.wav"));
+		new WaveData(note.getAudio(WesternChromatic.C2).get().evaluate(), OutputLine.sampleRate).save(new File("results/Monarch_C2.wav"));
 	}
 }

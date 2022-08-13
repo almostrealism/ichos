@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,13 @@ import io.almostrealism.scope.ArrayVariable;
 import io.almostrealism.relation.Producer;
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.hardware.DynamicOperationComputationAdapter;
 
 import java.util.function.Supplier;
 
 public abstract class ExponentialComputation extends DynamicOperationComputationAdapter {
-	public ExponentialComputation(ExponentialCellData data, Producer<Scalar> envelope, Scalar output) {
+	public ExponentialComputation(ExponentialCellData data, Producer<Scalar> envelope, PackedCollection<?> output) {
 		super(() -> new Provider<>(output),
 				data::getNotePosition,
 				data::getNoteLength,
@@ -35,7 +36,7 @@ public abstract class ExponentialComputation extends DynamicOperationComputation
 				(Supplier) envelope);
 	}
 
-	public ArrayVariable getOutput() { return getArgument(0, 2); }
+	public ArrayVariable getOutput() { return getArgument(0, 1); }
 	public ArrayVariable getNotePosition() { return getArgument(1, 2); }
 	public ArrayVariable getNoteLength() { return getArgument(2, 2); }
 	public ArrayVariable getInputScale() { return getArgument(3, 2); }

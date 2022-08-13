@@ -18,6 +18,7 @@ package org.almostrealism.audio.optimize.test;
 
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.DesirablesProvider;
+import org.almostrealism.audio.RoutingChoices;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.filter.test.AdjustableDelayCellTest;
 import io.almostrealism.cycle.Setup;
@@ -26,6 +27,8 @@ import org.almostrealism.Ops;
 import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.Waves;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.collect.PackedCollectionHeap;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.temporal.WaveCell;
@@ -94,6 +97,10 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 			AudioScene<?> scene = new AudioScene<>(null, 120, sources, delayLayers, OutputLine.sampleRate);
 			scene.getWaves().getChildren().add(Waves.loadAudio(new File(sampleFile1)));
 			scene.getWaves().getChildren().add(Waves.loadAudio(new File(sampleFile2)));
+
+			RoutingChoices r = new RoutingChoices(0, 1);
+			scene.getWaves().setChoices(r);
+			scene.getWaves().getChildren().forEach(c -> c.setChoices(r));
 			return scene;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -110,8 +117,11 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		}
 	}
 
-	protected DefaultAudioGenome genome(boolean filter) {
-		ArrayListChromosome<Scalar> generators = new ArrayListChromosome();
+	protected Genome<PackedCollection<?>> genome(boolean filter) {
+		Genome<PackedCollection<?>> g = CellularAudioOptimizer.generator(2, 2).get().get();
+		if (g != null) return g;
+
+		ArrayListChromosome<PackedCollection<?>> generators = new ArrayListChromosome();
 		generators.add(g(0.2, 0.5,
 				DefaultAudioGenome.factorForRepeat(1),
 				DefaultAudioGenome.factorForRepeatSpeedUpDuration(180)));
@@ -129,7 +139,13 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 						DefaultAudioGenome.factorForPolyAdjustmentDuration(180),
 						DefaultAudioGenome.factorForPolyAdjustmentDuration(1.0))).forEach(mainFilterUp::add);
 
-		ArrayListChromosome<Scalar> wetIn = new ArrayListChromosome<>();
+		ArrayListChromosome<PackedCollection<?>> mainFilterDown = new ArrayListChromosome<>();
+		IntStream.range(0, 2).mapToObj(i ->
+				g(DefaultAudioGenome.factorForPeriodicAdjustmentDuration(360),
+						DefaultAudioGenome.factorForPolyAdjustmentDuration(360),
+						DefaultAudioGenome.factorForPolyAdjustmentDuration(1.0))).forEach(mainFilterDown::add);
+
+		ArrayListChromosome<PackedCollection<?>> wetIn = new ArrayListChromosome<>();
 		IntStream.range(0, 2).mapToObj(i ->
 				g(DefaultAudioGenome.factorForPeriodicAdjustmentDuration(10),
 						DefaultAudioGenome.factorForPolyAdjustmentDuration(10),
@@ -173,6 +189,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 
 		ArrayListGenome genome = new ArrayListGenome();
 		genome.add(generators);
+		genome.add(c(g(0.0, 0.0, 0.0), g(0.0, 0.0, 0.0)));
 		genome.add(volume);
 		genome.add(mainFilterUp);
 		genome.add(wetIn);
@@ -180,10 +197,9 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		genome.add(transmission);
 		genome.add(c(g(0.0, 0.5)));
 		genome.add(filters);
+		genome.add(mainFilterDown);
 
-		DefaultAudioGenome organGenome = new DefaultAudioGenome(2, 2);
-		organGenome.assignTo(genome);
-		return organGenome;
+		return genome;
 	}
 
 	protected Cells cells(AudioScene<?> scene, List<? extends Receptor<Scalar>> measures, Receptor<Scalar> meter) {
@@ -239,7 +255,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		Cells organ = cells(samples(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out);
 		organ.reset();
 
-		DefaultAudioGenome genome = genome(enableFilter);
+		Genome<PackedCollection<?>> genome = genome(enableFilter);
 
 		List<TemporalFactor<Scalar>> temporals = new ArrayList<>();
 

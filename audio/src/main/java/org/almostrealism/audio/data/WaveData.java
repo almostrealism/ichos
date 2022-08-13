@@ -34,16 +34,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class WaveData {
-	private static ContextSpecific<ScalarBankHeap> heap;
 	private static ContextSpecific<PackedCollectionHeap> collectionHeap;
-
-	// TODO
-	private static ContextSpecific<KernelizedEvaluable<PackedCollection>> collect;
-
-	static {
-	}
-
-	private ScalarBank wave;
 
 	private PackedCollection collection;
 	private int sampleRate;
@@ -51,50 +42,9 @@ public class WaveData {
 	public WaveData(PackedCollection wave, int sampleRate) {
 		this.collection = wave;
 		this.sampleRate = sampleRate;
-		this.wave = allocate(wave.getMemLength());
-	}
-
-	@Deprecated
-	public WaveData(ScalarBank wave, int sampleRate) {
-		this.wave = wave;
-		this.sampleRate = sampleRate;
-	}
-
-	@JsonIgnore
-	@Deprecated
-	public ScalarBank getWave() {
-		if (collection != null) {
-			long start = System.currentTimeMillis();
-
-			double data[] = collection.toArray(0, collection.getMemLength());
-			for (int i = 0; i < this.wave.getCount(); i++) {
-				this.wave.set(i, data[i], 1.0);
-			}
-
-			System.out.println("WaveData: Imported collection in " + (System.currentTimeMillis() - start) + "ms");
-		}
-
-		return wave;
-	}
-
-	@Deprecated
-	public void setWave(ScalarBank wave) {
-		this.wave = wave;
 	}
 
 	public PackedCollection getCollection() {
-		if (collection == null) {
-			long start = System.currentTimeMillis();
-
-			collection = allocateCollection(wave.getCount());
-			double data[] = wave.toArray(0, wave.getMemLength());
-			for (int i = 0; i < collection.getMemLength(); i++) {
-				collection.setMem(i, data[2 * i]);
-			}
-
-			System.out.println("WaveData: Exported collection in " + (System.currentTimeMillis() - start) + "ms");
-		}
-
 		return collection;
 	}
 
@@ -119,7 +69,7 @@ public class WaveData {
 	}
 
 	public void save(File file) {
-		ScalarBank w = getWave();
+		PackedCollection w = getCollection();
 
 		int frames = w.getCount();
 
@@ -133,7 +83,7 @@ public class WaveData {
 		}
 
 		for (int i = 0; i < frames; i++) {
-			double value = w.get(i).getValue();
+			double value = w.toArray(i, 1)[0];
 
 			try {
 				wav.writeFrames(new double[][]{{value}, {value}}, 1);
@@ -163,15 +113,6 @@ public class WaveData {
 		return new WaveData(WavFile.channel(wave, channel), (int) w.getSampleRate());
 	}
 
-	@Deprecated
-	public static ScalarBankHeap getHeap() { return heap == null ? null : heap.getValue(); }
-
-	@Deprecated
-	public static void setHeap(Supplier<ScalarBankHeap> create, Consumer<ScalarBankHeap> destroy) {
-		heap = new DefaultContextSpecific<>(create, destroy);
-		heap.init();
-	}
-
 	public static PackedCollectionHeap getCollectionHeap() { return collectionHeap == null ? null : collectionHeap.getValue(); }
 
 	public static void setCollectionHeap(Supplier<PackedCollectionHeap> create, Consumer<PackedCollectionHeap> destroy) {
@@ -180,13 +121,7 @@ public class WaveData {
 	}
 
 	public static void dropHeap() {
-		heap = null;
 		collectionHeap = null;
-	}
-
-	@Deprecated
-	public static ScalarBank allocate(int count) {
-		return Optional.ofNullable(getHeap()).map(h -> h.allocate(count)).orElse(new ScalarBank(count));
 	}
 
 	public static PackedCollection allocateCollection(int count) {

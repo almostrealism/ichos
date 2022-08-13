@@ -20,6 +20,7 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
@@ -129,23 +130,23 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	@Override
 	public Waves getWaves() { return sources; }
 
-	public Cells getCells(List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output) {
+	public Cells getCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		sources.setBpm(getBPM());
 
-		BiFunction<Gene<Scalar>, Gene<Scalar>, IntFunction<Cell<Scalar>>> generator = (g, p) -> channel -> {
-			Producer<Scalar> duration = g.valueAt(2).getResultant(v(bpm(getBeatPerMinute()).l(1)));
+		BiFunction<Gene<PackedCollection<?>>, Gene<PackedCollection<?>>, IntFunction<Cell<PackedCollection<?>>>> generator = (g, p) -> channel -> {
+			Producer<PackedCollection<?>> duration = g.valueAt(2).getResultant(c(bpm(getBeatPerMinute()).l(1)));
 
-			Producer<Scalar> x = p.valueAt(0).getResultant(v(1.0));
-			Producer<Scalar> y = p.valueAt(1).getResultant(v(1.0));
-			Producer<Scalar> z = p.valueAt(2).getResultant(v(1.0));
+			Producer<PackedCollection<?>> x = p.valueAt(0).getResultant(c(1.0));
+			Producer<PackedCollection<?>> y = p.valueAt(1).getResultant(c(1.0));
+			Producer<PackedCollection<?>> z = p.valueAt(2).getResultant(c(1.0));
 
 			if (sourceOverride == null) {
 				return getWaves().getChoiceCell(channel,
-						g.valueAt(0).getResultant(Ops.ops().v(1.0)),
-						x, y, z, g.valueAt(1).getResultant(duration),
-						enableRepeat ? duration : null);
+						(Producer) g.valueAt(0).getResultant(Ops.ops().c(1.0)),
+						(Producer) x, (Producer) y, (Producer) z, (Producer) g.valueAt(1).getResultant(duration),
+						enableRepeat ? (Producer) duration : null);
 			} else {
-				return sourceOverride.getChoiceCell(channel, g.valueAt(0).getResultant(Ops.ops().v(1.0)),
+				return sourceOverride.getChoiceCell(channel, (Producer) g.valueAt(0).getResultant(Ops.ops().c(1.0)),
 						v(0.0), v(0.0), v(0.0), v(0.0), null);
 			}
 		};
@@ -163,8 +164,8 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 		if (enableMainFilterUp) {
 			// Apply dynamic high pass filters
 			cells = cells.map(fc(i -> {
-				TemporalFactor<Scalar> f = (TemporalFactor<Scalar>) genome.valueAt(DefaultAudioGenome.MAIN_FILTER_UP, i, 0);
-				return hp(scalarsMultiply(v(20000), f.getResultant(v(1.0))), v(DefaultAudioGenome.defaultResonance));
+				TemporalFactor<PackedCollection<?>> f = (TemporalFactor<PackedCollection<?>>) genome.valueAt(DefaultAudioGenome.MAIN_FILTER_UP, i, 0);
+				return hp(_multiply(c(20000), f.getResultant(c(1.0))), v(DefaultAudioGenome.defaultResonance));
 			}));
 		}
 
@@ -198,8 +199,8 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 			int delayLayers = genome.valueAt(DefaultAudioGenome.PROCESSORS).length();
 			CellList delays = IntStream.range(0, delayLayers)
 					.mapToObj(i -> new AdjustableDelayCell(OutputLine.sampleRate,
-							genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 0).getResultant(v(1.0)),
-							genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 1).getResultant(v(1.0))))
+							(Producer) genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 0).getResultant(c(1.0)),
+							(Producer) genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 1).getResultant(c(1.0))))
 					.collect(CellList.collector());
 
 			// Route each line to each delay layer
@@ -219,8 +220,8 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 				if (enableMasterFilterDown) {
 					// Apply dynamic low pass filter
 					main = main.map(fc(i -> {
-						TemporalFactor<Scalar> f = (TemporalFactor<Scalar>) genome.valueAt(DefaultAudioGenome.MASTER_FILTER_DOWN, i, 0);
-						return lp(scalarsMultiply(v(20000), f.getResultant(v(1.0))), v(DefaultAudioGenome.defaultResonance));
+						TemporalFactor<PackedCollection<?>> f = (TemporalFactor<PackedCollection<?>>) genome.valueAt(DefaultAudioGenome.MASTER_FILTER_DOWN, i, 0);
+						return lp(_multiply(c(20000), f.getResultant(c(1.0))), v(DefaultAudioGenome.defaultResonance));
 //							return lp(scalarsMultiply(v(20000), v(1.0)), v(DefaultAudioGenome.defaultResonance));
 					}));
 				}
@@ -244,7 +245,7 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	 * it is clear who bears the responsibility for invoking {@link org.almostrealism.time.Temporal#tick()}
 	 * and it doesn't get invoked multiple times.
 	 */
-	private Factor<Scalar> factor(Factor<Scalar> f) {
+	private Factor<PackedCollection<?>> factor(Factor<PackedCollection<?>> f) {
 		return v -> f.getResultant(v);
 	}
 
@@ -254,16 +255,16 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	 * the first delay based on the wet level, and
 	 * delivers nothing to the others.
 	 */
-	private Gene<Scalar> delayGene(int delays, Gene<Scalar> wet) {
-		ArrayListGene<Scalar> gene = new ArrayListGene<>();
+	private Gene<PackedCollection<?>> delayGene(int delays, Gene<PackedCollection<?>> wet) {
+		ArrayListGene<PackedCollection<?>> gene = new ArrayListGene<>();
 
 		if (enableWetInAdjustment) {
 			gene.add(factor(wet.valueAt(0)));
 		} else {
-			gene.add(p -> v(0.2).multiply(p));
+			gene.add(p -> c(0.2)._multiply(p));
 		}
 
-		IntStream.range(0, delays - 1).forEach(i -> gene.add(p -> v(0.0)));
+		IntStream.range(0, delays - 1).forEach(i -> gene.add(p -> c(0.0)));
 		return gene;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,26 +21,27 @@ import java.util.Iterator;
 import java.util.function.Supplier;
 
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.graph.ScalarCachedStateCell;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.CollectionCachedStateCell;
 import org.almostrealism.graph.Source;
 import org.almostrealism.graph.SummationCell;
 import org.almostrealism.time.Temporal;
 import org.almostrealism.hardware.OperationList;
 
-public class Mixer extends ArrayList<Source<Scalar>> implements Temporal {
+public class Mixer extends ArrayList<Source<PackedCollection<?>>> implements Temporal {
 	private SummationCell sum;
 
-	private ScalarCachedStateCell channels[] = new ScalarCachedStateCell[24];
+	private CollectionCachedStateCell channels[] = new CollectionCachedStateCell[24];
 	
 	public Mixer(SummationCell receptor) {
 		this.sum = receptor;
 
 		for (int i = 0; i < channels.length; i++) {
-			channels[i] = new ScalarCachedStateCell();
+			channels[i] = new CollectionCachedStateCell();
 		}
 	}
 
-	public ScalarCachedStateCell getChannel(int i) {
+	public CollectionCachedStateCell getChannel(int i) {
 		return channels[i];
 	}
 	
@@ -50,7 +51,7 @@ public class Mixer extends ArrayList<Source<Scalar>> implements Temporal {
 		stream().map(s -> sum.push(s.next())).forEach(tick::add);
 
 		tick.add(() -> () -> {
-			Iterator<Source<Scalar>> itr = iterator();
+			Iterator<Source<PackedCollection<?>>> itr = iterator();
 			while (itr.hasNext()) if (itr.next().isDone()) itr.remove();
 		});
 		

@@ -18,22 +18,24 @@ package org.almostrealism.audio.data;
 
 import io.almostrealism.cycle.Setup;
 import org.almostrealism.algebra.ScalarBank;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.hardware.OperationList;
 
 import java.util.function.Supplier;
 
 public class Segment implements Setup {
 	private String sourceText;
-	private ScalarBank source;
+	private PackedCollection<?> source;
 	private int pos, len;
 
 	private Supplier<Runnable> setup;
 
-	public Segment(String sourceText, ScalarBank source, int pos, int len) {
+	public Segment(String sourceText, PackedCollection<?> source, int pos, int len) {
 		this(sourceText, source, pos, len, new OperationList());
 	}
 
-	public Segment(String sourceText, ScalarBank source, int pos, int len, Supplier<Runnable> setup) {
+	public Segment(String sourceText, PackedCollection<?> source, int pos, int len, Supplier<Runnable> setup) {
 		if (len == -1) {
 			pos = 0;
 			len = source.getCount();
@@ -51,10 +53,10 @@ public class Segment implements Setup {
 	}
 
 	public String getSourceText() { return sourceText; }
-	public ScalarBank getSource() { return source; }
+	public PackedCollection<?> getSource() { return source; }
 	public int getPosition() { return pos; }
 	public int getLength() { return len; }
-	public ScalarBank range() { return source.range(pos, len); }
+	public PackedCollection<?> range() { return source.range(new TraversalPolicy(len), pos); }
 
 	public Supplier<Runnable> setup() { return setup; }
 }

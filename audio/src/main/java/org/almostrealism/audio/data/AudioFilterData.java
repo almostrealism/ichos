@@ -18,6 +18,7 @@ package org.almostrealism.audio.data;
 
 import io.almostrealism.relation.Provider;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.temporal.BaseAudioData;
 
 public interface AudioFilterData extends BaseAudioData {
@@ -32,7 +33,7 @@ public interface AudioFilterData extends BaseAudioData {
 	default Scalar a3() { return get(6); }
 	default Scalar b1() { return get(7); }
 	default Scalar b2() { return get(8); }
-	default Scalar output() { return get(9); }
+	default PackedCollection<?> output() { return get(9); }
 	default Scalar inputHistory0() { return get(10); }
 	default Scalar inputHistory1() { return get(11); }
 	default Scalar outputHistory0() { return get(12); }
@@ -54,7 +55,7 @@ public interface AudioFilterData extends BaseAudioData {
 	default Provider<Scalar> getA3() { return new Provider<>(a3()); }
 	default Provider<Scalar> getB1() { return new Provider<>(b1()); }
 	default Provider<Scalar> getB2() { return new Provider<>(b2()); }
-	default Provider<Scalar> getOutput() { return new Provider<>(output()); }
+	default Provider<PackedCollection<?>> getOutput() { return new Provider<>(output()); }
 	default Provider<Scalar> getInputHistory0() { return new Provider<>(inputHistory0()); }
 	default Provider<Scalar> getInputHistory1() { return new Provider<>(inputHistory1()); }
 	default Provider<Scalar> getOutputHistory0() { return new Provider<>(outputHistory0()); }
@@ -68,7 +69,7 @@ public interface AudioFilterData extends BaseAudioData {
 		a3().setValue(0.0);
 		b1().setValue(0.0);
 		b2().setValue(0.0);
-		output().setValue(0.0);
+		output().setMem(0, 0.0);
 		inputHistory0().setValue(0.0);
 		inputHistory1().setValue(0.0);
 		outputHistory0().setValue(0.0);

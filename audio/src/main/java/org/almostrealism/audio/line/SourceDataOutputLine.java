@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package org.almostrealism.audio.line;
 
-import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.OutputLine;
+import org.almostrealism.collect.PackedCollection;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.SourceDataLine;
@@ -43,11 +43,11 @@ public class SourceDataOutputLine implements OutputLine {
 
 	/**
 	 * Converts the specified sample to a frame using
-	 * {@link LineUtilities#toFrame(Scalar, AudioFormat)}
+	 * {@link LineUtilities#toFrame(PackedCollection, AudioFormat)}
 	 * and writes those bytes using {@link #write(byte[])}.
 	 */
 	@Override
-	public void write(Scalar sample) {
+	public void write(PackedCollection<?> sample) {
 		write(LineUtilities.toFrame(sample, line.getFormat()));
 	}
 }

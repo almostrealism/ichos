@@ -20,62 +20,57 @@ import io.almostrealism.code.Computation;
 import io.almostrealism.code.ProducerComputation;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.ScalarBank;
-import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.algebra.computations.Switch;
 import org.almostrealism.audio.data.PolymorphicAudioData;
 import org.almostrealism.audio.data.WaveData;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.graph.Cell;
-import org.almostrealism.hardware.ctx.ContextSpecific;
 import org.almostrealism.hardware.OperationList;
-import org.almostrealism.hardware.ctx.DefaultContextSpecific;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter implements CellFeatures {
+public abstract class AudioCellChoiceAdapter extends CollectionTemporalCellAdapter implements CellFeatures {
 
-	private ProducerComputation<Scalar> decision;
-	private final List<ScalarTemporalCellAdapter> cells;
+	private ProducerComputation<PackedCollection<?>> decision;
+	private final List<CollectionTemporalCellAdapter> cells;
 	private final boolean parallel;
 
-	private final ScalarBank storage;
+	private final PackedCollection<PackedCollection<?>> storage;
 
-	public AudioCellChoiceAdapter(ProducerComputation<Scalar> decision,
+	public AudioCellChoiceAdapter(ProducerComputation<PackedCollection<?>> decision,
 								  IntFunction<PolymorphicAudioData> data,
-								  List<Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>> choices,
+								  List<Function<PolymorphicAudioData, ? extends CollectionTemporalCellAdapter>> choices,
 								  boolean parallel) {
 		this(decision, IntStream.range(0, choices.size())
 			.mapToObj(i -> choices.get(i).apply(data.apply(i)))
 			.collect(Collectors.toList()), parallel);
 	}
 
-	public AudioCellChoiceAdapter(ProducerComputation<Scalar> decision,
-								  List<ScalarTemporalCellAdapter> choices,
+	public AudioCellChoiceAdapter(ProducerComputation<PackedCollection<?>> decision,
+								  List<CollectionTemporalCellAdapter> choices,
 								  boolean parallel) {
 		this.decision = decision;
 		this.cells = choices;
 		this.parallel = parallel;
 
 		if (parallel) {
-			storage = WaveData.allocate(choices.size());
+			storage = WaveData.allocateCollection(choices.size()).traverse(1);
 			initParallel();
 		} else {
-			storage = WaveData.allocate(1);
+			storage = WaveData.allocateCollection(1).traverse(1);
 			cells.forEach(cell -> cell.setReceptor(a(p(storage.get(0)))));
 		}
 	}
 
-	public void setDecision(ProducerComputation<Scalar> decision) {
+	public void setDecision(ProducerComputation<PackedCollection<?>> decision) {
 		this.decision = decision;
 	}
 
@@ -84,15 +79,15 @@ public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter i
 				c.setReceptor(a(indexes(c).mapToObj(storage::get).map(this::p).toArray(Supplier[]::new))));
 	}
 
-	private IntStream indexes(ScalarTemporalCellAdapter c) {
+	private IntStream indexes(CollectionTemporalCellAdapter c) {
 		return IntStream.range(0, cells.size()).filter(i -> cells.get(i) == c);
 	}
 
-	protected Set<ScalarTemporalCellAdapter> getCellSet() {
-		HashSet<ScalarTemporalCellAdapter> set = new HashSet<>();
+	protected Set<CollectionTemporalCellAdapter> getCellSet() {
+		HashSet<CollectionTemporalCellAdapter> set = new HashSet<>();
 
-		n: for (ScalarTemporalCellAdapter n : cells) {
-			for (ScalarTemporalCellAdapter c : set) {
+		n: for (CollectionTemporalCellAdapter n : cells) {
+			for (CollectionTemporalCellAdapter c : set) {
 				if (c == n) continue n;
 			}
 
@@ -133,7 +128,7 @@ public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter i
 	}
 
 	@Override
-	public Supplier<Runnable> push(Producer<Scalar> protein) {
+	public Supplier<Runnable> push(Producer<PackedCollection<?>> protein) {
 		OperationList push = new OperationList("AudioCellChoiceAdapter Push");
 
 		if (parallel) {
@@ -154,10 +149,10 @@ public abstract class AudioCellChoiceAdapter extends ScalarTemporalCellAdapter i
 	@Override
 	public Supplier<Runnable> tick() {
 		if (parallel) {
-			return getCellSet().stream().map(ScalarTemporalCellAdapter::tick).collect(OperationList.collector());
+			return getCellSet().stream().map(CollectionTemporalCellAdapter::tick).collect(OperationList.collector());
 		} else {
 			return new Switch(decision,
-					cells.stream().map(ScalarTemporalCellAdapter::tick).map(v -> (Computation) v)
+					cells.stream().map(CollectionTemporalCellAdapter::tick).map(v -> (Computation) v)
 							.collect(Collectors.toList()));
 		}
 	}

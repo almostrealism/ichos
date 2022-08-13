@@ -18,6 +18,7 @@ package org.almostrealism.audio.filter.test;
 
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.time.TemporalRunner;
 import org.almostrealism.audio.health.StableDurationHealthComputation;
 import org.almostrealism.audio.DefaultDesirablesProvider;
@@ -144,19 +145,19 @@ public class AssignableGenomeTest implements CellFeatures {
 		return genome;
 	}
 
-	protected Temporal organ(DefaultAudioGenome genome, List<Receptor<Scalar>> measures, Receptor<Scalar> meter) {
+	protected Temporal organ(DefaultAudioGenome genome, List<Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> meter) {
 		genome.assignTo(genome(0.0, 0.0, false));
 		return scene().getCells(measures, meter);
 	}
 
-	protected Cells cells(Receptor<Scalar> meter) {
+	protected Cells cells(Receptor<PackedCollection<?>> meter) {
 		DefaultDesirablesProvider<WesternChromatic> provider = new DefaultDesirablesProvider<>(120, WesternScales.major(WesternChromatic.G3, 1));
 
 		CellList cells =
 					w(provider.getFrequencies().iterator().next(), provider.getFrequencies().iterator().next())
 							.d(i -> v(1.0))
-							.mself(fc(i -> new AudioPassFilter(OutputLine.sampleRate, v(0.0), v(0.1), true)
-										.andThen(new AudioPassFilter(OutputLine.sampleRate, v(20000), v(0.1), false))),
+							.mself(fc(i -> new AudioPassFilter(OutputLine.sampleRate, c(0.0), v(0.1), true)
+										.andThen(new AudioPassFilter(OutputLine.sampleRate, c(20000), v(0.1), false))),
 									i -> {
 										if (i == 0) {
 											return g(0.0, 1.0);
@@ -173,7 +174,7 @@ public class AssignableGenomeTest implements CellFeatures {
 	public void cellExamples() {
 		AcceleratedTimeSeries.defaultCacheLevel = CacheLevel.ALL;
 
-		ReceptorCell out = (ReceptorCell) o(1, i -> new File("assignable-genome-cells-example.wav")).get(0);
+		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/assignable-genome-cells-example.wav")).get(0);
 
 		Cells organ = cells(out);
 
@@ -193,7 +194,7 @@ public class AssignableGenomeTest implements CellFeatures {
 
 	@Test
 	public void examples() {
-		ReceptorCell out = (ReceptorCell) o(1, i -> new File("assignable-genome-example.wav")).get(0);
+		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/assignable-genome-example.wav")).get(0);
 
 		DefaultAudioGenome genome = new DefaultAudioGenome(2, 2);
 		Temporal organ = organ(genome, null, out); // TODO
@@ -232,7 +233,7 @@ public class AssignableGenomeTest implements CellFeatures {
 		CellList organ = (CellList) organ(genome, null, health.getOutput()); // TODO
 
 		genome.assignTo(genome1());
-		health.setOutputFile("health/genome1.wav");
+		health.setOutputFile("results/genome1.wav");
 		((Lifecycle) organ).reset();
 		health.setTarget(organ);
 		health.computeHealth();
@@ -247,13 +248,13 @@ public class AssignableGenomeTest implements CellFeatures {
 		CellList organ = (CellList) organ(genome, null, health.getOutput()); // TODO
 
 		genome.assignTo(genome(0.4, 0.8, false));
-		health.setOutputFile("health/assignable-genome-test-noadjust-1.wav");
+		health.setOutputFile("results/assignable-genome-test-noadjust-1.wav");
 		organ.reset();
 		health.setTarget(organ);
 		health.computeHealth();
 
 		genome.assignTo(genome(0.8, 0.8, false));
-		health.setOutputFile("health/assignable-genome-test-noadjust-2.wav");
+		health.setOutputFile("results/assignable-genome-test-noadjust-2.wav");
 		organ.reset();
 		health.setTarget(organ);
 		health.computeHealth();
@@ -268,13 +269,13 @@ public class AssignableGenomeTest implements CellFeatures {
 		CellList organ = (CellList) organ(genome, null, health.getOutput()); // TODO
 
 		genome.assignTo(genome(0.4, 0.8, true));
-		health.setOutputFile("health/assignable-genome-test-adjust-1.wav");
+		health.setOutputFile("results/assignable-genome-test-adjust-1.wav");
 		organ.reset();
 		health.setTarget(organ);
 		health.computeHealth();
 
 		genome.assignTo(genome(0.8, 0.8, true));
-		health.setOutputFile("health/assignable-genome-test-adjust-2.wav");
+		health.setOutputFile("results/assignable-genome-test-adjust-2.wav");
 		organ.reset();
 		health.setTarget(organ);
 		health.computeHealth();

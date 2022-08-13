@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -19,21 +19,21 @@ package org.almostrealism.audio;
 import io.almostrealism.code.ProducerComputation;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.PolymorphicAudioData;
-import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.audio.data.PolymorphicAudioDataBank;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 
 import java.util.List;
 import java.util.function.Function;
 
 public class DynamicAudioCell extends AudioCellChoiceAdapter {
-	public DynamicAudioCell(ProducerComputation<Scalar> decision,
-								List<Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>> choices) {
+	public DynamicAudioCell(ProducerComputation<PackedCollection<?>> decision,
+								List<Function<PolymorphicAudioData, ? extends CollectionTemporalCellAdapter>> choices) {
 		this(new PolymorphicAudioDataBank(choices.size()), decision, choices);
 	}
 
-	public DynamicAudioCell(PolymorphicAudioDataBank data, ProducerComputation<Scalar> decision,
-							List<Function<PolymorphicAudioData, ? extends ScalarTemporalCellAdapter>> choices) {
+	public DynamicAudioCell(PolymorphicAudioDataBank data, ProducerComputation<PackedCollection<?>> decision,
+							List<Function<PolymorphicAudioData, ? extends CollectionTemporalCellAdapter>> choices) {
 		super(decision, data::get, choices, true);
 	}
 }

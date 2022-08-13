@@ -16,7 +16,9 @@
 
 package org.almostrealism.audio.health.test;
 
+import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.audio.AudioScene;
+import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.health.SilenceDurationHealthComputation;
 import org.almostrealism.audio.health.StableDurationHealthComputation;
 import org.almostrealism.audio.optimize.AudioPopulationOptimizer;
@@ -60,10 +62,10 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 
 	@Test
 	public void cells() {
-		WaveOutput output1 = new WaveOutput(new File("health/health-test-firstcell.wav"));
-		WaveOutput output2 = new WaveOutput(new File("health/health-test-lastcell.wav"));
-		// WaveOutput output3 = new WaveOutput(new File("health/health-test-firstcell-processed.wav"));
-		// WaveOutput output4 = new WaveOutput(new File("health/health-test-lastcell-processed.wav"));
+		WaveOutput output1 = new WaveOutput(new File("results/health-test-firstcell.wav"));
+		WaveOutput output2 = new WaveOutput(new File("results/health-test-lastcell.wav"));
+		// WaveOutput output3 = new WaveOutput(new File("results/health-test-firstcell-processed.wav"));
+		// WaveOutput output4 = new WaveOutput(new File("results/health-test-lastcell-processed.wav"));
 
 		CellList organ = (CellList) cells(notes(), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), null);
 		((CellAdapter) organ.get(0)).setMeter(output1);
@@ -94,7 +96,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 		dc(() -> {
 			StableDurationHealthComputation health = new StableDurationHealthComputation();
 			health.setMaxDuration(8);
-			health.setOutputFile(() -> "health/simple-organ-notes-test" + index.incrementAndGet() + ".wav");
+			health.setOutputFile(() -> "results/simple-organ-notes-test" + index.incrementAndGet() + ".wav");
 
 			Cells organ = cells(notes(), health.getMeasures(), health.getOutput(), false);
 			organ.reset();
@@ -109,14 +111,12 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 
 	@Test
 	public void simpleOrganHealthSamples() {
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
+
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
-		health.setOutputFile("health/simple-organ-samples-test.wav");
+		health.setOutputFile("results/simple-organ-samples-test.wav");
 
 		Cells organ = cells(samples(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), health.getOutput());
-
-		health.setTarget(organ);
-		health.computeHealth();
-		health.reset();
 
 		health.setTarget(organ);
 		health.computeHealth();
@@ -133,7 +133,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 		StableDurationHealthComputation.setStandardDuration(150);
 
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
-		health.setOutputFile("health/layered-organ-samples-test.wav");
+		health.setOutputFile("results/layered-organ-samples-test.wav");
 
 		Cells organ = layeredOrgan(samples(2, 2), health.getMeasures(), health.getOutput());
 
@@ -150,7 +150,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 	public void layeredOrganHealthSamplesRand() {
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
 		health.setMaxDuration(8);
-		health.setOutputFile("health/layered-organ-samples-rand-test.wav");
+		health.setOutputFile("results/layered-organ-samples-rand-test.wav");
 
 		Cells organ = randomLayeredOrgan(samples(2, 2), health.getMeasures(), health.getOutput());
 		organ.reset();
@@ -175,7 +175,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 				StableDurationHealthComputation health = new StableDurationHealthComputation();
 				health.setMaxDuration(8);
 
-				health.setOutputFile(() -> "health/layered-organ-samples-pop-test-" + index.incrementAndGet() + ".wav");
+				health.setOutputFile(() -> "results/layered-organ-samples-pop-test-" + index.incrementAndGet() + ".wav");
 
 				System.out.println("Creating LayeredOrganPopulation...");
 				AudioScenePopulation<Scalar> pop =

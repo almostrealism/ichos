@@ -91,7 +91,7 @@ public class PeriodicCellAdjustmentTest implements TestFeatures {
 	public void healthTestNoAdjustment() {
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
 		health.setMaxDuration(8);
-		health.setOutputFile("health/periodic-test-noadjust.wav");
+		health.setOutputFile("results/periodic-test-noadjust.wav");
 
 		Cells organ = organ(false, health.getMeasures(), health.getOutput());
 		organ.reset();
@@ -103,7 +103,7 @@ public class PeriodicCellAdjustmentTest implements TestFeatures {
 	public void healthTestWithAdjustment() {
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
 		health.setMaxDuration(8);
-		health.setOutputFile("health/periodic-test-adjust.wav");
+		health.setOutputFile("results/periodic-test-adjust.wav");
 
 		Cells organ = organ(true, health.getMeasures(), health.getOutput());
 		organ.reset();

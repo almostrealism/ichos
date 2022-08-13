@@ -4,13 +4,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<properties>
-		<common.version>0.47</common.version>
+		<common.version>0.48</common.version>
 	</properties>
 
 	<groupId>org.almostrealism</groupId>
 	<artifactId>Ichos</artifactId>
 	<packaging>pom</packaging>
-	<version>1.35</version>
+	<version>1.36</version>
 
     <build>
 		<plugins>

@@ -18,14 +18,15 @@ package org.almostrealism.audio.sources;
 
 import org.almostrealism.audio.filter.Envelope;
 import org.almostrealism.audio.SamplingFeatures;
-import org.almostrealism.graph.temporal.ScalarTemporalCellAdapter;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.algebra.Scalar;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.hardware.OperationList;
 
 import java.util.function.Supplier;
 
-public class ExponentialCell extends ScalarTemporalCellAdapter implements SamplingFeatures {
+public class ExponentialCell extends CollectionTemporalCellAdapter implements SamplingFeatures {
 	private Envelope env;
 	private final ExponentialCellData data;
 
@@ -49,13 +50,13 @@ public class ExponentialCell extends ScalarTemporalCellAdapter implements Sampli
 	public Supplier<Runnable> setup() {
 		return () -> () -> {
 			data.setNoteLength(toFramesMilli(1000));
-			data.setDepth(ScalarTemporalCellAdapter.depth);
+			data.setDepth(CollectionTemporalCellAdapter.depth);
 		};
 	}
 
 	@Override
-	public Supplier<Runnable> push(Producer<Scalar> protein) {
-		Scalar value = new Scalar();
+	public Supplier<Runnable> push(Producer<PackedCollection<?>> protein) {
+		PackedCollection<?> value = new PackedCollection<>(1);
 		OperationList push = new OperationList("ExponentialCell Push");
 		push.add(new ExponentialCellPush(data, env == null ? v(1.0) :
 				env.getScale(data::getNotePosition), value));
