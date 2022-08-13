@@ -129,11 +129,11 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 				DefaultAudioGenome.factorForRepeat(1),
 				DefaultAudioGenome.factorForRepeatSpeedUpDuration(180)));
 
-		ArrayListChromosome<Scalar> volume = new ArrayListChromosome();
+		ArrayListChromosome<PackedCollection<?>> volume = new ArrayListChromosome();
 		volume.add(g(0.7, 1.0));
 		volume.add(g(2.5, 1.0));
 
-		ArrayListChromosome<Scalar> mainFilterUp = new ArrayListChromosome<>();
+		ArrayListChromosome<PackedCollection<?>> mainFilterUp = new ArrayListChromosome<>();
 		IntStream.range(0, 2).mapToObj(i ->
 				g(DefaultAudioGenome.factorForPeriodicAdjustmentDuration(10),
 						DefaultAudioGenome.factorForPolyAdjustmentDuration(180),
@@ -202,16 +202,16 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		return genome;
 	}
 
-	protected Cells cells(AudioScene<?> scene, List<? extends Receptor<Scalar>> measures, Receptor<Scalar> meter) {
+	protected Cells cells(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> meter) {
 		return cells(scene, measures, meter, enableFilter);
 	}
 
-	protected Cells cells(AudioScene<?> scene, List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output, boolean filter) {
+	protected Cells cells(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output, boolean filter) {
 		scene.getGenome().assignTo(genome(filter));
 		return scene.getCells(measures, output);
 	}
 
-	public Cells randomOrgan(AudioScene<?> scene, List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output) {
+	public Cells randomOrgan(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		CellularAudioOptimizer.GeneratorConfiguration conf = new CellularAudioOptimizer.GeneratorConfiguration();
 		conf.minDelay = delay;
 		conf.maxDelay = delay;
@@ -228,8 +228,8 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		DefaultAudioGenome sog = new DefaultAudioGenome(2, 2);
 		sog.assignTo(g);
 
-		System.out.println("0, 0, 2 = " + sog.valueAt(DefaultAudioGenome.GENERATORS, 0).valueAt(2).getResultant(v(1.0)).get().evaluate());
-		System.out.println("0, 1, 2 = " + sog.valueAt(DefaultAudioGenome.GENERATORS, 1).valueAt(2).getResultant(v(1.0)).get().evaluate());
+		System.out.println("0, 0, 2 = " + sog.valueAt(DefaultAudioGenome.GENERATORS, 0).valueAt(2).getResultant(c(1.0)).get().evaluate());
+		System.out.println("0, 1, 2 = " + sog.valueAt(DefaultAudioGenome.GENERATORS, 1).valueAt(2).getResultant(c(1.0)).get().evaluate());
 
 		scene.getGenome().assignTo(sog);
 		return scene.getCells(measures, output);
@@ -241,7 +241,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		AudioScene.enableEfxFilters = false;
 		AudioScene.enableEfx = false;
 
-		WaveData.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/genetic-factory-test.wav")).get(0);
 		Cells organ = cells(sources(), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out, false);
 		organ.sec(6).get().run();
@@ -257,18 +257,18 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 
 		Genome<PackedCollection<?>> genome = genome(enableFilter);
 
-		List<TemporalFactor<Scalar>> temporals = new ArrayList<>();
+		List<TemporalFactor<PackedCollection<?>>> temporals = new ArrayList<>();
 
-		Function<Gene<Scalar>, IntFunction<Cell<Scalar>>> generator = g -> channel -> {
-			TemporalFactor<Scalar> tf = (TemporalFactor<Scalar>) g.valueAt(2);
+		Function<Gene<PackedCollection<?>>, IntFunction<Cell<PackedCollection<?>>>> generator = g -> channel -> {
+			TemporalFactor<PackedCollection<?>> tf = (TemporalFactor<PackedCollection<?>>) g.valueAt(2);
 			temporals.add(tf);
 
-			Producer<Scalar> duration = tf.getResultant(v(bpm(scene.getBeatPerMinute()).l(1)));
+			Producer<PackedCollection<?>> duration = tf.getResultant(c(bpm(scene.getBeatPerMinute()).l(1)));
 
 			return scene.getWaves().getChoiceCell(channel,
-					g.valueAt(0).getResultant(Ops.ops().v(1.0)),
-					v(0.0), v(0.0), v(0.0),
-					g.valueAt(1).getResultant(duration), duration);
+					(Producer) g.valueAt(0).getResultant(Ops.ops().c(1.0)),
+					c(0.0), c(0.0), c(0.0),
+					(Producer) g.valueAt(1).getResultant(duration), (Producer) duration);
 		};
 
 		Supplier<Runnable> genomeSetup = genome instanceof Setup ? ((Setup) genome).setup() : () -> () -> { };
@@ -317,8 +317,8 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 					.toArray(TemporalFactor[]::new);
 		CellList delays = IntStream.range(0, delayLayers)
 					.mapToObj(i -> new AdjustableDelayCell(OutputLine.sampleRate,
-							genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 0).getResultant(v(1.0)),
-							genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 1).getResultant(v(1.0))))
+							(Producer) genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 0).getResultant(c(1.0)),
+							(Producer) genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 1).getResultant(c(1.0))))
 					.collect(CellList.collector());
 
 		// Route each line to each delay layer
@@ -347,7 +347,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 
 	@Test
 	public void comparisonOnce() {
-		WaveData.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		comparison(false);
 	}
 
@@ -379,11 +379,11 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		((WaveOutput) out.getReceptor()).write().get().run();
 	}
 
-	private Gene<Scalar> delayGene(int delays, Gene<Scalar> wet) {
-		ArrayListGene<Scalar> gene = new ArrayListGene<>();
+	private Gene<PackedCollection<?>> delayGene(int delays, Gene<PackedCollection<?>> wet) {
+		ArrayListGene<PackedCollection<?>> gene = new ArrayListGene<>();
 		gene.add(wet.valueAt(0));
 		// gene.add(new IdentityFactor<>());
-		IntStream.range(0, delays - 1).forEach(i -> gene.add(p -> v(0.0)));
+		IntStream.range(0, delays - 1).forEach(i -> gene.add(p -> c(0.0)));
 		return gene;
 	}
 }

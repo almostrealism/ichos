@@ -21,6 +21,7 @@ import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.health.StableDurationHealthComputation;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.Cells;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.hardware.mem.MemoryBankAdapter.CacheLevel;
 import org.almostrealism.heredity.ArrayListChromosome;
@@ -55,20 +56,20 @@ public class PeriodicCellAdjustmentTest implements TestFeatures {
 		return new AudioScene<>(null, 120, 2, 2, OutputLine.sampleRate);
 	}
 
-	protected Cells organ(boolean adjust, List<? extends Receptor<Scalar>> measures, Receptor<Scalar> output) {
-		ArrayListChromosome<Scalar> x = new ArrayListChromosome();
+	protected Cells organ(boolean adjust, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
+		ArrayListChromosome<PackedCollection<?>> x = new ArrayListChromosome();
 		x.add(new ArrayListGene<>(0.4, 0.6));
 		x.add(new ArrayListGene<>(0.8, 0.2));
 
-		ArrayListChromosome<Scalar> y = new ArrayListChromosome();
+		ArrayListChromosome<PackedCollection<?>> y = new ArrayListChromosome();
 		y.add(new ArrayListGene<>(1.0, 0.2));
 		y.add(new ArrayListGene<>(1.0, 0.2));
 
-		ArrayListChromosome<Scalar> z = new ArrayListChromosome();
+		ArrayListChromosome<PackedCollection<?>> z = new ArrayListChromosome();
 		z.add(new ArrayListGene<>(new ScaleFactor(0.0), new ScaleFactor(1.0)));
 		z.add(new ArrayListGene<>(new ScaleFactor(1.0), new ScaleFactor(0.0)));
 
-		ArrayListChromosome<Scalar> a = new ArrayListChromosome();
+		ArrayListChromosome<PackedCollection<?>> a = new ArrayListChromosome();
 
 		if (adjust) {
 			a.add(new ArrayListGene<>(0.1, 0.0, 1.0));

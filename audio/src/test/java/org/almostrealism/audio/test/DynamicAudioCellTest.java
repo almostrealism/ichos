@@ -52,11 +52,11 @@ import java.util.stream.IntStream;
 public class DynamicAudioCellTest implements CellFeatures, TestFeatures {
 	private static final int DURATION_FRAMES = 10 * OutputLine.sampleRate;
 
-	protected Receptor<Scalar> loggingReceptor() {
+	protected Receptor<PackedCollection<?>> loggingReceptor() {
 		return protein -> () -> () -> System.out.println(protein.get().evaluate());
 	}
 
-	protected Cell<Scalar> loggingCell() { return new ReceptorCell<>(loggingReceptor()); }
+	protected Cell<PackedCollection<?>> loggingCell() { return new ReceptorCell<>(loggingReceptor()); }
 
 	protected SineWaveCell choice(Scalar destination) {
 		SineWaveCell c = new SineWaveCell();
@@ -66,7 +66,7 @@ public class DynamicAudioCellTest implements CellFeatures, TestFeatures {
 		return c;
 	}
 
-	protected DynamicAudioCell cell(Scalar choice) {
+	protected DynamicAudioCell cell(PackedCollection<?> choice) {
 		DefaultKeyboardTuning tuning = new DefaultKeyboardTuning();
 
 		Function<PolymorphicAudioData, CollectionTemporalCellAdapter> cell1 = data -> {
@@ -87,14 +87,14 @@ public class DynamicAudioCellTest implements CellFeatures, TestFeatures {
 			return c;
 		};
 
-		return new DynamicAudioCell(v(1).add(p(choice)).divide(2.0), Arrays.asList(cell1, cell2));
+		return new DynamicAudioCell(c(1)._add(p(choice))._divide(c(2.0)), Arrays.asList(cell1, cell2));
 	}
 
 	@Test
 	public void sineWave() {
 		DynamicAudioCell cell = cell(new Scalar());
 		cell.setReceptor(loggingReceptor());
-		Runnable push = cell.push(v(0.0)).get();
+		Runnable push = cell.push(c(0.0)).get();
 		IntStream.range(0, 100).forEach(i -> push.run());
 		// TODO  Add assertions
 	}
@@ -112,9 +112,9 @@ public class DynamicAudioCellTest implements CellFeatures, TestFeatures {
 		cell.setup().get().run();
 
 		OperationList op = new OperationList("Chooser and Cells");
-		op.add(chooser.push(v(0.0)));
+		op.add(chooser.push(c(0.0)));
 		op.add(chooser.tick());
-		op.add(cell.push(v(0.0)));
+		op.add(cell.push(c(0.0)));
 		op.add(cell.tick());
 
 		AcceleratedComputationOperation o = (AcceleratedComputationOperation) loop(op, DURATION_FRAMES).get();
@@ -126,25 +126,25 @@ public class DynamicAudioCellTest implements CellFeatures, TestFeatures {
 		System.out.println("DynamicAudioCellTest: Done");
 	}
 
-	protected Gene<Scalar> identityGene() {
+	protected Gene<PackedCollection<?>> identityGene() {
 		return new Gene<>() {
-			@Override public Factor<Scalar> valueAt(int index) { return new IdentityFactor<>(); }
+			@Override public Factor<PackedCollection<?>> valueAt(int index) { return new IdentityFactor<>(); }
 			@Override public int length() { return 1; }
 		};
 	}
 
-	protected void loggingCellPair(Cell<Scalar> input) {
-		List<Cell<Scalar>> cells = new ArrayList<>();
+	protected void loggingCellPair(Cell<PackedCollection<?>> input) {
+		List<Cell<PackedCollection<?>>> cells = new ArrayList<>();
 		cells.add(loggingCell());
 
-		MultiCell<Scalar> m = new MultiCell<>(cells, identityGene());
+		MultiCell<PackedCollection<?>> m = new MultiCell<>(cells, identityGene());
 		m.setName("LoggingMultiCell");
 		new CellPair<>(input, m, null, new IdentityFactor<>()).init();
 	}
 
 	@Test
 	public void withCellPair() {
-		DynamicAudioCell cell = cell(new Scalar());
+		DynamicAudioCell cell = cell(new PackedCollection<>(1));
 		loggingCellPair(cell);
 
 		Runnable push = cell.push(null).get();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.almostrealism.audio.optimize.test;
 
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.time.TemporalRunner;
 import org.almostrealism.audio.optimize.CellularAudioOptimizer;
 import org.almostrealism.algebra.Scalar;
@@ -41,7 +42,7 @@ public class AdjustmentLayerOrganSystemFactoryTest extends GeneticTemporalFactor
 	protected Genome layeredOrganGenome() {
 		int dim = 2;
 
-		ArrayListChromosome<Scalar> generators = new ArrayListChromosome();
+		ArrayListChromosome<PackedCollection<?>> generators = new ArrayListChromosome();
 		generators.add(g(0.4, 0.6, DefaultAudioGenome.factorForRepeat(8),
 				DefaultAudioGenome.factorForRepeatSpeedUpDuration(180)));
 
@@ -50,19 +51,19 @@ public class AdjustmentLayerOrganSystemFactoryTest extends GeneticTemporalFactor
 					DefaultAudioGenome.factorForRepeatSpeedUpDuration(180)));
 		}
 
-		ArrayListChromosome<Scalar> volume = new ArrayListChromosome<>();
+		ArrayListChromosome<PackedCollection<?>> volume = new ArrayListChromosome<>();
 		IntStream.range(0, dim).mapToObj(i -> g(0.02, 0.01)).forEach(volume::add);
 
-		ArrayListChromosome<Scalar> mainFilterUp = new ArrayListChromosome<>();
+		ArrayListChromosome<PackedCollection<?>> mainFilterUp = new ArrayListChromosome<>();
 		IntStream.range(0, dim).mapToObj(i ->
 				g(DefaultAudioGenome.factorForPeriodicAdjustmentDuration(10),
 						DefaultAudioGenome.factorForPolyAdjustmentDuration(180),
 						DefaultAudioGenome.factorForPolyAdjustmentDuration(1.0))).forEach(mainFilterUp::add);
 
-		ArrayListChromosome<Scalar> wetIn = new ArrayListChromosome<>();
+		ArrayListChromosome<PackedCollection<?>> wetIn = new ArrayListChromosome<>();
 		IntStream.range(0, dim).mapToObj(i -> g(0.1, 0.0)).forEach(wetIn::add);
 
-		ArrayListChromosome<Scalar> processors = new ArrayListChromosome();
+		ArrayListChromosome<PackedCollection<?>> processors = new ArrayListChromosome();
 		processors.add(g(delayParam,
 				DefaultAudioGenome.factorForSpeedUpDuration(360),
 				DefaultAudioGenome.factorForSpeedUpPercentage(1.0),
@@ -78,7 +79,7 @@ public class AdjustmentLayerOrganSystemFactoryTest extends GeneticTemporalFactor
 				DefaultAudioGenome.factorForPolySpeedUpDuration(360),
 				DefaultAudioGenome.factorForPolySpeedUpExponent(1.0)));
 
-		ArrayListChromosome<Scalar> transmission = new ArrayListChromosome();
+		ArrayListChromosome<PackedCollection<?>> transmission = new ArrayListChromosome();
 
 		if (enableDelay) {
 			transmission.add(new ArrayListGene<>(0.0, feedbackParam));
@@ -112,13 +113,13 @@ public class AdjustmentLayerOrganSystemFactoryTest extends GeneticTemporalFactor
 		return genome;
 	}
 
-	protected Cells layeredOrgan(AudioScene<?> scene, List<? extends Receptor<Scalar>> measures, Receptor<Scalar> meter) {
+	protected Cells layeredOrgan(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> meter) {
 		DefaultAudioGenome organGenome = new DefaultAudioGenome(8, 2);
 		organGenome.assignTo(layeredOrganGenome());
 		return scene.getCells(measures, meter);
 	}
 
-	public Cells randomLayeredOrgan(AudioScene<?> scene,  List<? extends Receptor<Scalar>> measures, Receptor<Scalar> meter) {
+	public Cells randomLayeredOrgan(AudioScene<?> scene,  List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> meter) {
 		DefaultAudioGenome g = new DefaultAudioGenome(2, 2);
 		g.assignTo(CellularAudioOptimizer.generator(2, 2).get().get());
 		return scene.getCells(measures, meter);

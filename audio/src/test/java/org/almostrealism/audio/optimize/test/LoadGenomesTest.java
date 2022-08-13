@@ -16,7 +16,7 @@ public class LoadGenomesTest implements TestFeatures {
 		genome.setup().get().run();
 		for (int i = 0; i < 6; i++) {
 			System.out.println("Generator " + i + ": " +
-					genome.valueAt(DefaultAudioGenome.GENERATORS, i, 0).getResultant(v(1.0)).get().evaluate());
+					genome.valueAt(DefaultAudioGenome.GENERATORS, i, 0).getResultant(c(1.0)).get().evaluate().toDouble(0));
 		}
 	}
 }

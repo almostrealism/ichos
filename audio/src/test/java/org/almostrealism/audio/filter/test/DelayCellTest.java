@@ -4,6 +4,7 @@ import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
 import org.almostrealism.audio.sources.SineWaveCell;
+import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.hardware.AcceleratedComputationOperation;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.CellularTemporalFactor;
@@ -44,13 +45,13 @@ public class DelayCellTest implements CellFeatures {
 
 		Scalar v = new Scalar(0.0);
 
-		CellularTemporalFactor<Scalar> adjustment = generator.toFactor(() -> v, this::a);
+		CellularTemporalFactor<PackedCollection<?>> adjustment = generator.toFactor(() -> v, this::a);
 
 		CellList cells = w("Library/Snare Perc DD.wav");
 		cells.addRequirement(adjustment);
 
 		cells = cells
-				.d(i -> v(2.6), i -> v(2.0).add(adjustment.getResultant(v(1.0))))
+				.d(i -> v(2.6), i -> c(2.0)._add(adjustment.getResultant(c(1.0))))
 				.o(i -> new File("results/adjust-delay-cell-test.wav"));
 
 		Supplier<Runnable> r = cells.sec(7.5);

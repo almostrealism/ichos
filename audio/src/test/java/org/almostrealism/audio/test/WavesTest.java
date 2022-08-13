@@ -23,6 +23,7 @@ import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.Waves;
 import org.almostrealism.audio.data.WaveData;
+import org.almostrealism.collect.PackedCollectionHeap;
 import org.almostrealism.util.TestFeatures;
 import org.junit.Test;
 
@@ -34,7 +35,7 @@ import java.util.Set;
 public class WavesTest implements CellFeatures, TestFeatures {
 	@Test
 	public void splits() {
-		WaveData.setHeap(() -> new ScalarBankHeap(600 * OutputLine.sampleRate), ScalarBankHeap::destroy);
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 
 		Waves waves = new Waves();
 		waves.getChoices().getChoices().add(0);

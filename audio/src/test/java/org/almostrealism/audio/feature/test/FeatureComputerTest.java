@@ -69,7 +69,7 @@ public class FeatureComputerTest {
 		assert channelCount > 0;
 		int channel = 0;
 
-		ScalarBank waveform = WavFile.channel(wave, channel);
+		ScalarBank waveform = WavFile.channelScalar(wave, channel);
 		Tensor<Scalar> features = new Tensor<>();
 		double vtlnWarp = 1.0;
 		mfcc.computeFeatures(waveform, new Scalar(file.getSampleRate()), vtlnWarp, features);

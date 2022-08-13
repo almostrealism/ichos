@@ -19,7 +19,7 @@ public class SourceDataOutputLineTest {
 		File f = new File("Library/MD_SNARE_09.wav");
 
 		WaveData d = WaveData.load(f);
-		double data[] = d.getWave().toArray(0, d.getWave().getMemLength());
+		double data[] = d.getCollection().toArray(0, d.getCollection().getMemLength());
 
 		OutputLine line = LineUtilities.getLine();
 		line.write(new double[][] { data });
