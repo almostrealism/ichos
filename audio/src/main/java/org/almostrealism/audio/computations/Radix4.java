@@ -21,6 +21,7 @@ import org.almostrealism.algebra.PairBank;
 import org.almostrealism.algebra.PairProducer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarProducer;
+import org.almostrealism.algebra.ScalarProducerBase;
 import org.almostrealism.algebra.computations.ComplexFromAngle;
 import org.almostrealism.algebra.computations.PairFromPairBank;
 import org.almostrealism.algebra.computations.PairFromScalars;
@@ -41,13 +42,13 @@ public class Radix4 implements RadixComputationFactory, CodeFeatures {
 		Producer<Scalar> kProducer = v(k);
 		Producer<Scalar> nProducer = v(n);
 
-		ScalarProducer halfN = scalarsMultiply(nProducer, v(0.5));
-		ScalarProducer quarterN = scalarsMultiply(nProducer, v(0.25));
-		ScalarProducer tripleQuarterN = scalarsMultiply(nProducer, v(0.75));
+		ScalarProducerBase halfN = scalarsMultiply(nProducer, v(0.5));
+		ScalarProducerBase quarterN = scalarsMultiply(nProducer, v(0.25));
+		ScalarProducerBase tripleQuarterN = scalarsMultiply(nProducer, v(0.75));
 
-		ScalarProducer kPlusTripleQuarterN = scalarAdd(kProducer, tripleQuarterN);
-		ScalarProducer kPlusHalfN = scalarAdd(kProducer, halfN);
-		ScalarProducer kPlusQuarterN = scalarAdd(kProducer, quarterN);
+		ScalarProducerBase kPlusTripleQuarterN = scalarAdd(kProducer, tripleQuarterN);
+		ScalarProducerBase kPlusHalfN = scalarAdd(kProducer, halfN);
+		ScalarProducerBase kPlusQuarterN = scalarAdd(kProducer, quarterN);
 
 		PairProducer a = new PairFromPairBank(bank, kProducer);
 		PairProducer b = new PairFromPairBank(bank, kPlusQuarterN);
@@ -65,8 +66,8 @@ public class Radix4 implements RadixComputationFactory, CodeFeatures {
 			imaginaryTimesSub = new PairFromScalars(bMinusD.r(), bMinusD.l().minus());
 		}
 
-		ScalarProducer angleK = scalarsMultiply(angleProducer, kProducer);
-		ScalarProducer angleK3 = scalarsMultiply(angleK, v(3));
+		ScalarProducerBase angleK = scalarsMultiply(angleProducer, kProducer);
+		ScalarProducerBase angleK3 = scalarsMultiply(angleK, v(3));
 		PairProducer omega = new ComplexFromAngle(angleK);
 		PairProducer omegaToPowerOf3 = new ComplexFromAngle(angleK3);
 

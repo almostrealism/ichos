@@ -25,6 +25,7 @@ import org.almostrealism.algebra.PairBank;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarProducer;
+import org.almostrealism.algebra.ScalarProducerBase;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WaveOutput;
@@ -69,7 +70,7 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 		playbackKernel = new DefaultContextSpecific<>(() -> {
 			TraversalPolicy grainShape = new TraversalPolicy(3);
 			Producer<PackedCollection> g = Ops.ops().v(PackedCollection.class, 1, -1);
-			ScalarProducer pos = Ops.ops().scalar(grainShape, g, 0).add(
+			ScalarProducerBase pos = Ops.ops().scalar(grainShape, g, 0).add(
 							Ops.ops().mod(Ops.ops().scalar(grainShape, g, 2).multiply(Ops.ops().v(Scalar.class, 2, -1))
 									.multiply(Ops.ops().v(Scalar.class, 0)), Ops.ops().scalar(grainShape, g, 1)))
 					.multiply(OutputLine.sampleRate);
@@ -191,7 +192,7 @@ public class GranularSynthesizer implements ParameterizedWaveDataProviderFactory
 					}
 				}
 
-				ScalarProducer sum = scalarAdd(Input.generateArguments(2 * getCount(), 0, results.size())).multiply(gain / count);
+				ScalarProducerBase sum = scalarAdd(Input.generateArguments(2 * getCount(), 0, results.size())).multiply(gain / count);
 
 				if (WaveOutput.enableVerbose) System.out.println("GranularSynthesizer: Summing grains...");
 				sum.get().kernelEvaluate(providers.get(i).get().getCollection(), results.stream().toArray(MemoryBank[]::new));

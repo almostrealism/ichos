@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.almostrealism.algebra.PairBank;
 import org.almostrealism.algebra.PairProducer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarProducer;
+import org.almostrealism.algebra.ScalarProducerBase;
 import org.almostrealism.algebra.computations.ComplexFromAngle;
 import org.almostrealism.algebra.computations.PairFromPairBank;
 import org.almostrealism.CodeFeatures;
@@ -43,13 +44,13 @@ public class Radix2 implements RadixComputationFactory, CodeFeatures {
 		Producer<Scalar> kProducer = v(k);
 		Producer<Scalar> nProducer = v(n);
 
-		ScalarProducer halfN = scalarsMultiply(nProducer, v(0.5));
-		ScalarProducer quarterN = scalarsMultiply(nProducer, v(0.25));
-		ScalarProducer tripleQuarterN = scalarsMultiply(nProducer, v(0.75));
+		ScalarProducerBase halfN = scalarsMultiply(nProducer, v(0.5));
+		ScalarProducerBase quarterN = scalarsMultiply(nProducer, v(0.25));
+		ScalarProducerBase tripleQuarterN = scalarsMultiply(nProducer, v(0.75));
 
-		ScalarProducer kPlusTripleQuarterN = scalarAdd(kProducer, tripleQuarterN);
-		ScalarProducer kPlusHalfN = scalarAdd(kProducer, halfN);
-		ScalarProducer kPlusQuarterN = scalarAdd(kProducer, quarterN);
+		ScalarProducerBase kPlusTripleQuarterN = scalarAdd(kProducer, tripleQuarterN);
+		ScalarProducerBase kPlusHalfN = scalarAdd(kProducer, halfN);
+		ScalarProducerBase kPlusQuarterN = scalarAdd(kProducer, quarterN);
 
 		PairProducer a = new PairFromPairBank(bank, kProducer);
 		PairProducer b = new PairFromPairBank(bank, kPlusQuarterN);
@@ -62,7 +63,7 @@ public class Radix2 implements RadixComputationFactory, CodeFeatures {
 			return pairAdd(b, d);
 		}
 
-		ScalarProducer angleK = scalarsMultiply(angleProducer, kProducer);
+		ScalarProducerBase angleK = scalarsMultiply(angleProducer, kProducer);
 		PairProducer omega = new ComplexFromAngle(angleK);
 
 		if (kind == EVEN) {
