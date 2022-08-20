@@ -16,7 +16,6 @@
 
 package org.almostrealism.audio.health.test;
 
-import org.almostrealism.algebra.ScalarBankHeap;
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.health.SilenceDurationHealthComputation;
@@ -46,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 public class StableDurationHealthComputationTest extends AudioScenePopulationTest {
@@ -91,13 +89,13 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 	}
 
 	@Test
-	public void simpleOrganHealthNotes() {
+	public void cellsNotes() {
 		AtomicInteger index = new AtomicInteger();
 
 		dc(() -> {
 			StableDurationHealthComputation health = new StableDurationHealthComputation();
 			health.setMaxDuration(8);
-			health.setOutputFile(() -> "results/simple-organ-notes-test" + index.incrementAndGet() + ".wav");
+			health.setOutputFile(() -> "results/cells-notes-test" + index.incrementAndGet() + ".wav");
 
 			Cells organ = cells(notes(), health.getMeasures(), health.getOutput(), false);
 			organ.reset();
@@ -111,63 +109,35 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 	}
 
 	@Test
-	public void simpleOrganHealthSamples() {
-		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
-
-		StableDurationHealthComputation health = new StableDurationHealthComputation();
-		health.setOutputFile("results/simple-organ-samples-test.wav");
-
-		Cells organ = cells(samples(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), health.getOutput());
-
-		health.setTarget(organ);
-		health.computeHealth();
-		health.reset();
-	}
-
-	@Test
-	public void layeredOrganHealthSamples() {
+	public void smallCellsSamples() {
 		SilenceDurationHealthComputation.enableSilenceCheck = false;
 		AudioScene.enableMainFilterUp = true;
 		AudioScene.enableEfxFilters = false;
+
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 
 		Hardware.getLocalHardware().setMaximumOperationDepth(9);
 		StableDurationHealthComputation.setStandardDuration(150);
 
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
-		health.setOutputFile("results/layered-organ-samples-test.wav");
+		health.setOutputFile("results/small-cells-samples-test.wav");
 
-		Cells organ = layeredOrgan(samples(2, 2), health.getMeasures(), health.getOutput());
+		Cells organ = smallCells(samples(2, 2), health.getMeasures(), health.getOutput());
 
-		organ.reset();
-		health.setTarget(organ);
-		health.computeHealth();
-
-//		organ.reset();
-//		health.setTarget(organ);
-//		health.computeHealth();
-	}
-
-	@Test
-	public void layeredOrganHealthSamplesRand() {
-		StableDurationHealthComputation health = new StableDurationHealthComputation();
-		health.setMaxDuration(8);
-		health.setOutputFile("results/layered-organ-samples-rand-test.wav");
-
-		Cells organ = randomLayeredOrgan(samples(2, 2), health.getMeasures(), health.getOutput());
 		organ.reset();
 		health.setTarget(organ);
 		health.computeHealth();
 	}
 
 	@Test
-	public void layeredOrganHealthSamplesPopulation() throws FileNotFoundException {
+	public void samplesPopulationHealth() throws FileNotFoundException {
 		AudioScene<?> scene = samples(2, 2);
 
 		AtomicInteger index = new AtomicInteger();
 
 		List<Genome<Scalar>> genomes = new ArrayList<>();
-		genomes.add(layeredOrganGenome());
-		genomes.add(layeredOrganGenome());
+		genomes.add(genome());
+		genomes.add(genome());
 
 		AudioPopulationOptimizer.store(genomes, new FileOutputStream("Population.xml"));
 
@@ -176,9 +146,9 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 				StableDurationHealthComputation health = new StableDurationHealthComputation();
 				health.setMaxDuration(8);
 
-				health.setOutputFile(() -> "results/layered-organ-samples-pop-test-" + index.incrementAndGet() + ".wav");
+				health.setOutputFile(() -> "results/samples-pop-test-" + index.incrementAndGet() + ".wav");
 
-				System.out.println("Creating LayeredOrganPopulation...");
+				System.out.println("Creating AudioScenePopulation...");
 				AudioScenePopulation<Scalar> pop =
 						new AudioScenePopulation<>(null, AudioPopulationOptimizer.read(new FileInputStream("Population.xml")));
 				pop.init(pop.getGenomes().get(0), health.getMeasures(), health.getOutput());

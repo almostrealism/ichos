@@ -1,3 +1,19 @@
+/*
+ * Copyright 2022 Michael Murray
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.almostrealism.audio.filter.test;
 
 import org.almostrealism.algebra.Scalar;
@@ -20,6 +36,26 @@ public class DelayCellTest implements CellFeatures {
 		CellList c = w("Library/Snare Perc DD.wav")
 				.d(i -> v(2.0))
 				.o(i -> new File("results/delay-cell-test.wav"));
+		Supplier<Runnable> r = c.sec(6);
+		r.get().run();
+	}
+
+	@Test
+	public void delaySum() {
+		CellList c = w("Library/Snare Perc DD.wav", "Library/Snare Perc DD.wav")
+				.d(i -> i > 0 ? v(2.0) : v(1.0))
+				.sum()
+				.o(i -> new File("results/delay-cell-sum-test.wav"));
+		Supplier<Runnable> r = c.sec(6);
+		r.get().run();
+	}
+
+	@Test
+	public void delayScaleFactor() {
+		CellList c = w("Library/Snare Perc DD.wav")
+				.d(i -> v(2.0))
+				.map(fc(i -> sf(0.5)))
+				.o(i -> new File("results/delay-cell-scale-factor-test.wav"));
 		Supplier<Runnable> r = c.sec(6);
 		r.get().run();
 	}

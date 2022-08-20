@@ -4,6 +4,7 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.algebra.ScalarProducer;
+import org.almostrealism.algebra.ScalarProducerBase;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WaveOutput;
@@ -35,7 +36,7 @@ public class GrainTest implements CellFeatures {
 		TraversalPolicy grainShape = new TraversalPolicy(3);
 		Producer<PackedCollection> g = v(PackedCollection.class, 1, -1);
 
-		ScalarProducer pos = scalar(grainShape, g, 0).add(
+		ScalarProducerBase pos = scalar(grainShape, g, 0).add(
 				mod(scalar(grainShape, g, 2).multiply(
 						v(Scalar.class, 0)), scalar(grainShape, g, 1)))
 				.multiply(OutputLine.sampleRate);

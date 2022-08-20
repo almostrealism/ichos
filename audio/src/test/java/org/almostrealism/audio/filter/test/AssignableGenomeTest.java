@@ -18,10 +18,11 @@ package org.almostrealism.audio.filter.test;
 
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
+import org.almostrealism.audio.tone.DefaultKeyboardTuning;
 import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.time.Frequency;
 import org.almostrealism.time.TemporalRunner;
 import org.almostrealism.audio.health.StableDurationHealthComputation;
-import org.almostrealism.audio.DefaultDesirablesProvider;
 import org.almostrealism.audio.tone.WesternChromatic;
 import  org.almostrealism.audio.tone.WesternScales;
 import io.almostrealism.uml.Lifecycle;
@@ -63,15 +64,6 @@ public class AssignableGenomeTest implements CellFeatures {
 	}
 
 	protected AudioScene<?> scene() {
-//		DefaultDesirablesProvider<WesternChromatic> provider = new DefaultDesirablesProvider<>(120, WesternScales.major(WesternChromatic.G3, 1));
-
-		/*
-		TieredCellAdjustmentFactory<Scalar, Scalar> tca =
-				new TieredCellAdjustmentFactory<>(new DefaultCellAdjustmentFactory(Type.PERIODIC));
-		return new AdjustmentLayerOrganSystemFactory<>(tca, new GeneticTemporalFactoryFromDesirables().from(provider));
-		 */
-
-//		return new GeneticTemporalFactoryFromDesirables().from(provider);
 		return new AudioScene<>(null, 120, 2, 2, OutputLine.sampleRate);
 	}
 
@@ -151,10 +143,10 @@ public class AssignableGenomeTest implements CellFeatures {
 	}
 
 	protected Cells cells(Receptor<PackedCollection<?>> meter) {
-		DefaultDesirablesProvider<WesternChromatic> provider = new DefaultDesirablesProvider<>(120, WesternScales.major(WesternChromatic.G3, 1));
+		List<Frequency> frequencies = new DefaultKeyboardTuning().getTones(WesternScales.major(WesternChromatic.G3, 1));
 
 		CellList cells =
-					w(provider.getFrequencies().iterator().next(), provider.getFrequencies().iterator().next())
+					w(frequencies.iterator().next(), frequencies.iterator().next())
 							.d(i -> v(1.0))
 							.mself(fc(i -> new AudioPassFilter(OutputLine.sampleRate, c(0.0), v(0.1), true)
 										.andThen(new AudioPassFilter(OutputLine.sampleRate, c(20000), v(0.1), false))),

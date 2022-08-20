@@ -45,7 +45,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 @ModelEntity
-public class AudioScene<T extends ShadableSurface> implements DesirablesProvider, CellFeatures {
+public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public static final int mixdownDuration = 140;
 
 	public static final boolean enableRepeat = true;
@@ -107,10 +107,6 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 	public void addSourcesListener(Consumer<Waves> listener) { this.sourcesListener.add(listener); }
 	public void removeSourcesListener(Consumer<Waves> listener) { this.sourcesListener.remove(listener); }
 
-
-	@Override
-	public double getBeatPerMinute() { return bpm; }
-
 	public int getSourceCount() { return sourceCount; }
 
 	public int getDelayLayerCount() { return delayLayerCount; }
@@ -127,14 +123,13 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 		sourcesListener.forEach(l -> l.accept(sources));
 	}
 
-	@Override
 	public Waves getWaves() { return sources; }
 
 	public Cells getCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		sources.setBpm(getBPM());
 
 		BiFunction<Gene<PackedCollection<?>>, Gene<PackedCollection<?>>, IntFunction<Cell<PackedCollection<?>>>> generator = (g, p) -> channel -> {
-			Producer<PackedCollection<?>> duration = g.valueAt(2).getResultant(c(bpm(getBeatPerMinute()).l(1)));
+			Producer<PackedCollection<?>> duration = g.valueAt(2).getResultant(c(getTempo().l(1)));
 
 			Producer<PackedCollection<?>> x = p.valueAt(0).getResultant(c(1.0));
 			Producer<PackedCollection<?>> y = p.valueAt(1).getResultant(c(1.0));
@@ -142,11 +137,11 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 
 			if (sourceOverride == null) {
 				return getWaves().getChoiceCell(channel,
-						(Producer) g.valueAt(0).getResultant(Ops.ops().c(1.0)),
-						(Producer) x, (Producer) y, (Producer) z, (Producer) g.valueAt(1).getResultant(duration),
-						enableRepeat ? (Producer) duration : null);
+						toScalar(g.valueAt(0).getResultant(Ops.ops().c(1.0))),
+						toScalar(x), toScalar(y), toScalar(z), toScalar(g.valueAt(1).getResultant(duration)),
+						enableRepeat ? toScalar(duration) : null);
 			} else {
-				return sourceOverride.getChoiceCell(channel, (Producer) g.valueAt(0).getResultant(Ops.ops().c(1.0)),
+				return sourceOverride.getChoiceCell(channel, toScalar(g.valueAt(0).getResultant(Ops.ops().c(1.0))),
 						v(0.0), v(0.0), v(0.0), v(0.0), null);
 			}
 		};
@@ -199,8 +194,8 @@ public class AudioScene<T extends ShadableSurface> implements DesirablesProvider
 			int delayLayers = genome.valueAt(DefaultAudioGenome.PROCESSORS).length();
 			CellList delays = IntStream.range(0, delayLayers)
 					.mapToObj(i -> new AdjustableDelayCell(OutputLine.sampleRate,
-							(Producer) genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 0).getResultant(c(1.0)),
-							(Producer) genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 1).getResultant(c(1.0))))
+							toScalar(genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 0).getResultant(c(1.0))),
+							toScalar(genome.valueAt(DefaultAudioGenome.PROCESSORS, i, 1).getResultant(c(1.0)))))
 					.collect(CellList.collector());
 
 			// Route each line to each delay layer

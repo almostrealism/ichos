@@ -111,7 +111,7 @@ public class Waves implements TempoAware, CellFeatures {
 
 		Map<PackedCollection<?>, List<Segment>> segmentsByBank = segments.getSegments().stream().collect(Collectors.groupingBy(Segment::getSource));
 		if (segmentsByBank.size() > 1) {
-			throw new UnsupportedOperationException("More than one root ScalarBank for Waves instance");
+			throw new UnsupportedOperationException("More than one root PackedCollection for Waves instance");
 		} else if (segmentsByBank.size() <= 0) {
 			return silent();
 		}

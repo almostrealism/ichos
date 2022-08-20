@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Michael Murray
+ * Copyright 2022 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,18 @@
 package org.almostrealism.audio.optimize.test;
 
 import org.almostrealism.audio.AudioScene;
-import org.almostrealism.audio.DesirablesProvider;
 import org.almostrealism.audio.RoutingChoices;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.filter.test.AdjustableDelayCellTest;
 import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
-import org.almostrealism.algebra.ScalarBankHeap;
-import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.Waves;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.PackedCollectionHeap;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.graph.Cell;
-import org.almostrealism.graph.temporal.WaveCell;
+import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.heredity.TemporalFactor;
 import org.almostrealism.time.TemporalRunner;
@@ -62,7 +59,7 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCellTest implements CellFeatures {
+public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatures {
 	public static final boolean enableDelay = true;
 	public static final boolean enableFilter = true;
 
@@ -89,6 +86,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 	protected AudioScene<?> notes() {
 //		Scale<WesternChromatic> scale = Scale.of(WesternChromatic.G4, WesternChromatic.A3);
 //		return new DefaultDesirablesProvider<>(120, scale);
+		// TODO  Create Waves for the scene that replicates the above functionality
 		return new AudioScene<>(null, 120, 2, 2, OutputLine.sampleRate);
 	}
 
@@ -115,6 +113,18 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	@Test
+	public void sampleWaves() {
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
+
+		CollectionTemporalCellAdapter cell = samples(1, 1).getWaves()
+				.getChoiceCell(0, v(0.0), v(0.0), v(0.0), v(0.0), null, null);
+
+		CellList cells = cells(1, i -> cell);
+		Runnable r = cells.o(i -> new File("results/sample-waves-test.wav")).sec(6.0).get();
+		r.run();
 	}
 
 	protected Genome<PackedCollection<?>> genome(boolean filter) {
@@ -225,13 +235,10 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 		Genome g = CellularAudioOptimizer.generator(2, 2, conf).get().get();
 		System.out.println(g);
 
-		DefaultAudioGenome sog = new DefaultAudioGenome(2, 2);
-		sog.assignTo(g);
+		scene.getGenome().assignTo(g);
+		System.out.println("0, 0, 2 = " + scene.getGenome().valueAt(DefaultAudioGenome.GENERATORS, 0).valueAt(2).getResultant(c(1.0)).get().evaluate());
+		System.out.println("0, 1, 2 = " + scene.getGenome().valueAt(DefaultAudioGenome.GENERATORS, 1).valueAt(2).getResultant(c(1.0)).get().evaluate());
 
-		System.out.println("0, 0, 2 = " + sog.valueAt(DefaultAudioGenome.GENERATORS, 0).valueAt(2).getResultant(c(1.0)).get().evaluate());
-		System.out.println("0, 1, 2 = " + sog.valueAt(DefaultAudioGenome.GENERATORS, 1).valueAt(2).getResultant(c(1.0)).get().evaluate());
-
-		scene.getGenome().assignTo(sog);
 		return scene.getCells(measures, output);
 	}
 
@@ -263,7 +270,7 @@ public class GeneticTemporalFactoryFromDesirablesTest extends AdjustableDelayCel
 			TemporalFactor<PackedCollection<?>> tf = (TemporalFactor<PackedCollection<?>>) g.valueAt(2);
 			temporals.add(tf);
 
-			Producer<PackedCollection<?>> duration = tf.getResultant(c(bpm(scene.getBeatPerMinute()).l(1)));
+			Producer<PackedCollection<?>> duration = tf.getResultant(c(scene.getTempo().l(1)));
 
 			return scene.getWaves().getChoiceCell(channel,
 					(Producer) g.valueAt(0).getResultant(Ops.ops().c(1.0)),

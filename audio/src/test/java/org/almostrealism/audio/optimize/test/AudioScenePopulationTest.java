@@ -17,7 +17,6 @@
 package org.almostrealism.audio.optimize.test;
 
 import org.almostrealism.audio.AudioScene;
-import org.almostrealism.audio.DesirablesProvider;
 import org.almostrealism.audio.filter.test.AssignableGenomeTest;
 import org.almostrealism.time.TemporalRunner;
 import org.almostrealism.audio.health.StableDurationHealthComputation;

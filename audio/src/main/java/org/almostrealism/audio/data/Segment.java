@@ -46,7 +46,7 @@ public class Segment implements Setup {
 		}
 
 		this.sourceText = sourceText;
-		this.source = (ScalarBank) source.getRootDelegate();
+		this.source = (PackedCollection<?>) source.getRootDelegate();
 		this.pos = (source.getOffset() / 2) + pos;
 		this.len = len;
 		this.setup = setup;
