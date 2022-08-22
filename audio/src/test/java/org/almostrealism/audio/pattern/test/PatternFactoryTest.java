@@ -94,7 +94,7 @@ public class PatternFactoryTest implements CellFeatures {
 		});
 	}
 
-	public List<PatternFactoryChoice> createChoices() {
+	public static List<PatternFactoryChoice> createChoices() {
 		List<PatternFactoryChoice> choices = new ArrayList<>();
 
 		PatternFactoryChoice kick = new PatternFactoryChoice(new PatternElementFactory("Kicks", new PatternNote("Kit/Kick.wav")));

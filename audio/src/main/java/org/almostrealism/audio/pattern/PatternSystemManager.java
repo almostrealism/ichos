@@ -45,6 +45,10 @@ public class PatternSystemManager implements CodeFeatures {
 	private RootDelegateSegmentsAdd<PackedCollection> sum;
 	private OperationList runSum;
 
+	public PatternSystemManager() {
+		this(new ArrayList<>());
+	}
+
 	public PatternSystemManager(List<PatternFactoryChoice> choices) {
 		this.choices = choices;
 		this.patterns = new ArrayList<>();

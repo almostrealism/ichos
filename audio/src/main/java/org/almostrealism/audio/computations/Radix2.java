@@ -17,11 +17,7 @@
 package org.almostrealism.audio.computations;
 
 import io.almostrealism.relation.Producer;
-import org.almostrealism.algebra.PairBank;
-import org.almostrealism.algebra.PairProducer;
-import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.ScalarProducer;
-import org.almostrealism.algebra.ScalarProducerBase;
+import org.almostrealism.algebra.*;
 import org.almostrealism.algebra.computations.ComplexFromAngle;
 import org.almostrealism.algebra.computations.PairFromPairBank;
 import org.almostrealism.CodeFeatures;
@@ -39,7 +35,7 @@ public class Radix2 implements RadixComputationFactory, CodeFeatures {
 	}
 
 	@Override
-	public PairProducer build(Scalar angle, Scalar k, Scalar n, Producer<PairBank> bank, int length) {
+	public PairProducerBase build(Scalar angle, Scalar k, Scalar n, Producer<PairBank> bank, int length) {
 		Producer<Scalar> angleProducer = v(angle);
 		Producer<Scalar> kProducer = v(k);
 		Producer<Scalar> nProducer = v(n);

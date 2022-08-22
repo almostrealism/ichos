@@ -24,6 +24,7 @@ import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.audio.Waves;
+import org.almostrealism.audio.pattern.test.PatternFactoryTest;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.PackedCollectionHeap;
 import org.almostrealism.graph.AdjustableDelayCell;
@@ -88,6 +89,12 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 //		return new DefaultDesirablesProvider<>(120, scale);
 		// TODO  Create Waves for the scene that replicates the above functionality
 		return new AudioScene<>(null, 120, 2, 2, OutputLine.sampleRate);
+	}
+
+	protected AudioScene<?> pattern(int sources, int delayLayers) {
+		AudioScene<?> scene = new AudioScene<>(null, 120, sources, delayLayers, OutputLine.sampleRate);
+		scene.getPatternManager().getChoices().addAll(PatternFactoryTest.createChoices());
+		return scene;
 	}
 
 	protected AudioScene<?> samples(int sources, int delayLayers) {

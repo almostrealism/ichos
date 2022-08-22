@@ -20,6 +20,7 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
+import org.almostrealism.audio.pattern.PatternSystemManager;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.graph.Cell;
@@ -48,6 +49,7 @@ import java.util.stream.IntStream;
 public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public static final int mixdownDuration = 140;
 
+	public static final boolean enablePatternSystem = true;
 	public static final boolean enableRepeat = true;
 	public static boolean enableMainFilterUp = true;
 	public static boolean enableEfxFilters = true;
@@ -67,6 +69,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 
 	private Animation<T> scene;
 	private Waves sources;
+	private PatternSystemManager patterns;
 	private DefaultAudioGenome genome;
 
 	private List<Consumer<Frequency>> tempoListeners;
@@ -80,6 +83,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		this.tempoListeners = new ArrayList<>();
 		this.sourcesListener = new ArrayList<>();
 		this.genome = new DefaultAudioGenome(sources, delayLayers, sampleRate);
+		this.patterns = new PatternSystemManager();
 		initSources();
 	}
 
@@ -125,7 +129,21 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 
 	public Waves getWaves() { return sources; }
 
+	public PatternSystemManager getPatternManager() { return patterns; }
+
 	public Cells getCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
+		if (enablePatternSystem) {
+			return getPatternCells(measures, output);
+		} else {
+			return getWavesCells(measures, output);
+		}
+	}
+
+	public Cells getPatternCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
+		throw new UnsupportedOperationException();
+	}
+
+	private Cells getWavesCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		sources.setBpm(getBPM());
 
 		BiFunction<Gene<PackedCollection<?>>, Gene<PackedCollection<?>>, IntFunction<Cell<PackedCollection<?>>>> generator = (g, p) -> channel -> {

@@ -130,6 +130,22 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 	}
 
 	@Test
+	public void smallCellsPattern() {
+		SilenceDurationHealthComputation.enableSilenceCheck = false;
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
+		StableDurationHealthComputation.setStandardDuration(150);
+
+		StableDurationHealthComputation health = new StableDurationHealthComputation();
+		health.setOutputFile("results/small-cells-pattern-test.wav");
+
+		Cells organ = smallCells(pattern(2, 2), health.getMeasures(), health.getOutput());
+
+		organ.reset();
+		health.setTarget(organ);
+		health.computeHealth();
+	}
+
+	@Test
 	public void samplesPopulationHealth() throws FileNotFoundException {
 		AudioScene<?> scene = samples(2, 2);
 

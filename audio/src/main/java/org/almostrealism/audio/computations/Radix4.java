@@ -17,11 +17,7 @@
 package org.almostrealism.audio.computations;
 
 import io.almostrealism.relation.Producer;
-import org.almostrealism.algebra.PairBank;
-import org.almostrealism.algebra.PairProducer;
-import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.ScalarProducer;
-import org.almostrealism.algebra.ScalarProducerBase;
+import org.almostrealism.algebra.*;
 import org.almostrealism.algebra.computations.ComplexFromAngle;
 import org.almostrealism.algebra.computations.PairFromPairBank;
 import org.almostrealism.algebra.computations.PairFromScalars;
@@ -55,8 +51,8 @@ public class Radix4 implements RadixComputationFactory, CodeFeatures {
 		PairProducer c = new PairFromPairBank(bank, kPlusHalfN);
 		PairProducer d = new PairFromPairBank(bank, kPlusTripleQuarterN);
 
-		PairProducer bMinusD = pairSubtract(b, d);
-		PairProducer aMinusC = pairSubtract(a, c);
+		PairProducerBase bMinusD = pairSubtract(b, d);
+		PairProducerBase aMinusC = pairSubtract(a, c);
 
 		PairProducer imaginaryTimesSub;
 
