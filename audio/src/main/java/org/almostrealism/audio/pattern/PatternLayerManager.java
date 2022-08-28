@@ -27,6 +27,10 @@ import org.almostrealism.collect.computations.RootDelegateSegmentsAdd;
 import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.hardware.PassThroughProducer;
+import org.almostrealism.heredity.ConfigurableChromosome;
+import org.almostrealism.heredity.Gene;
+import org.almostrealism.heredity.SimpleChromosome;
+import org.almostrealism.heredity.SimpleGene;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +43,7 @@ public class PatternLayerManager implements CodeFeatures {
 	private boolean applyNoteDuration;
 
 	private List<PatternFactoryChoice> choices;
+	private SimpleChromosome chromosome;
 	private ParameterFunction factorySelection;
 
 	private List<PatternLayer> roots;
@@ -48,12 +53,14 @@ public class PatternLayerManager implements CodeFeatures {
 	private RootDelegateSegmentsAdd sum;
 	private OperationList runSum;
 
-	public PatternLayerManager(List<PatternFactoryChoice> choices, boolean applyNoteDuration, PackedCollection destination) {
+	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome,
+							   boolean applyNoteDuration, PackedCollection destination) {
 		this.duration = 1.0;
 		this.scale = 1.0;
 		this.applyNoteDuration = applyNoteDuration;
 
 		this.choices = choices;
+		this.chromosome = chromosome;
 		this.roots = new ArrayList<>();
 		if (destination != null) init(destination);
 	}
@@ -138,6 +145,7 @@ public class PatternLayerManager implements CodeFeatures {
 			});
 		}
 
+		SimpleGene g = chromosome.addGene(); // TODO  Gene needs to take the values of provided params
 		increment();
 	}
 
@@ -174,8 +182,14 @@ public class PatternLayerManager implements CodeFeatures {
 	}
 
 	public void sum(DoubleToIntFunction offsetForPosition, Scale<?> scale) {
+		List<PatternElement> elements = getAllElements();
+		if (elements.isEmpty()) {
+			System.out.println("PatternLayerManager: No pattern elements");
+			return;
+		}
+
 		sum.getInput().clear();
-		getAllElements().stream()
+		elements.stream()
 				.map(e -> e.getNoteDestinations(offsetForPosition, scale))
 				.flatMap(List::stream)
 				.forEach(sum.getInput()::add);

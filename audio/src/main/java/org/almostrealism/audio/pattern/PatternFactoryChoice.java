@@ -49,6 +49,7 @@ public class PatternFactoryChoice {
 		setMaxScale(maxScale);
 		setSeedUnits(1);
 		setSeedScale(0.25);
+		initSelectionFunctions();
 	}
 
 	public void initSelectionFunctions() {

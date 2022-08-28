@@ -18,7 +18,6 @@ package org.almostrealism.audio.computations;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.PairBank;
-import org.almostrealism.algebra.PairProducer;
 import org.almostrealism.algebra.PairProducerBase;
 import org.almostrealism.algebra.Scalar;
 

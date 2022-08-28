@@ -72,4 +72,14 @@ public class DefaultAudioGenomeTest implements HeredityFeatures, TestFeatures {
 			IntStream.range(0, 5 * OutputLine.sampleRate).forEach(i -> tick.run());
 		}
 	}
+
+	@Test
+	public void setup() {
+		IntStream.range(0, 10).forEach(i -> {
+			DefaultAudioGenome genome = new DefaultAudioGenome(2, 2, OutputLine.sampleRate);
+			genome.assignTo(CellularAudioOptimizer.generator(2, 2).get().get());
+			genome.setup().get().run();
+			System.out.println("DefaultAudioGenomeTest: Setup " + i + " complete");
+		});
+	}
 }

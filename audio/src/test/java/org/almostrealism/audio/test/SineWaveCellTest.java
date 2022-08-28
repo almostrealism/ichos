@@ -94,7 +94,7 @@ public class SineWaveCellTest implements CellFeatures, TestFeatures {
 
 	@Test
 	public void csv() {
-		CellList cells = w(new Frequency(1.0)).csv(i -> new File("sine-wave-cell-test.csv"));
+		CellList cells = w(new Frequency(1.0)).csv(i -> new File("results/sine-wave-cell-test.csv"));
 
 		TemporalRunner runner = new TemporalRunner(cells, OutputLine.sampleRate);
 		runner.get().run();

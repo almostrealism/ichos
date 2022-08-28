@@ -19,14 +19,20 @@ package org.almostrealism.audio;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.algebra.Scalar;
+import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
 import org.almostrealism.audio.pattern.PatternSystemManager;
+import org.almostrealism.audio.tone.DefaultKeyboardTuning;
+import org.almostrealism.audio.tone.KeyboardTuning;
+import org.almostrealism.audio.tone.Scale;
+import org.almostrealism.audio.tone.WesternChromatic;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.graph.temporal.WaveCell;
+import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.ArrayListGene;
 import org.almostrealism.heredity.Factor;
 import org.almostrealism.heredity.Gene;
@@ -66,10 +72,14 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	private double bpm;
 	private int sourceCount;
 	private int delayLayerCount;
+	private int measureSize = 4;
+	private int totalMeasures = 1;
 
 	private Animation<T> scene;
 	private Waves sources;
 	private PatternSystemManager patterns;
+	private PackedCollection<?> patternDestination;
+
 	private DefaultAudioGenome genome;
 
 	private List<Consumer<Frequency>> tempoListeners;
@@ -83,13 +93,23 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		this.tempoListeners = new ArrayList<>();
 		this.sourcesListener = new ArrayList<>();
 		this.genome = new DefaultAudioGenome(sources, delayLayers, sampleRate);
-		this.patterns = new PatternSystemManager();
 		initSources();
 	}
 
 	protected void initSources() {
 		sources = new Waves();
 		IntStream.range(0, sourceCount).forEach(sources.getChoices().getChoices()::add);
+
+		patterns = new PatternSystemManager();
+
+		patternDestination = new PackedCollection(getTotalSamples());
+		patterns.init(patternDestination, () -> WaveData.allocateCollection(getTotalSamples()));
+		patterns.setTuning(new DefaultKeyboardTuning());
+
+		addTempoListener(bpm -> {
+			patternDestination = new PackedCollection(getTotalSamples());
+			patterns.updateDestination(patternDestination, () -> WaveData.allocateCollection(getTotalSamples()));
+		});
 	}
 
 	public void setBPM(double bpm) {
@@ -100,6 +120,10 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public double getBPM() { return this.bpm; }
 
 	public Frequency getTempo() { return Frequency.forBPM(bpm); }
+
+	public void setTuning(KeyboardTuning tuning) {
+		patterns.setTuning(tuning);
+	}
 
 	public Animation<T> getScene() { return scene; }
 
@@ -114,6 +138,23 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public int getSourceCount() { return sourceCount; }
 
 	public int getDelayLayerCount() { return delayLayerCount; }
+
+	public int getMeasureSize() { return measureSize; }
+
+	public int getTotalMeasures() { return totalMeasures; }
+
+	public int getTotalBeats() { return totalMeasures * measureSize; }
+
+	public double getTotalDuration() { return getTempo().l(getTotalBeats()); }
+
+	public int getTotalSamples() { return (int) (getTotalDuration() * getSampleRate()); }
+
+	public int getSampleRate() { return OutputLine.sampleRate; }
+
+	public Scale<?> getScale() {
+		// TODO  This should be configurable
+		return Scale.of(WesternChromatic.G1);
+	}
 
 	public void setWaves(Waves waves) {
 		this.sources = waves;
@@ -140,7 +181,32 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	}
 
 	public Cells getPatternCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
-		throw new UnsupportedOperationException();
+		Supplier<Runnable> genomeSetup = genome.setup();
+
+		CellList cells = all(sourceCount, this::getPatternChannel).addSetup(() -> genomeSetup);
+
+		if (enableMainFilterUp) {
+			// Apply dynamic high pass filters
+			cells = cells.map(fc(i -> {
+				TemporalFactor<PackedCollection<?>> f = (TemporalFactor<PackedCollection<?>>) genome.valueAt(DefaultAudioGenome.MAIN_FILTER_UP, i, 0);
+				return hp(_multiply(c(20000), f.getResultant(c(1.0))), v(DefaultAudioGenome.defaultResonance));
+			}));
+		}
+
+		cells = cells
+				.addRequirements(genome.getTemporals().toArray(TemporalFactor[]::new));
+
+		return cells.sum().map(i -> new ReceptorCell<>(Receptor.to(output, measures.get(0), measures.get(1))));
+	}
+
+	private CellList getPatternChannel(int channel) {
+		PackedCollection<?> audio = WaveData.allocateCollection(getTotalSamples());
+
+		OperationList setup = new OperationList();
+		setup.add(() -> () -> patterns.sum(pos -> (int) (pos * getTotalSamples()), getScale()));
+		setup.add(() -> () -> audio.setMem(0, patternDestination, 0, patternDestination.getMemLength()));
+
+		return w(c(getTotalDuration()), new WaveData(audio, getSampleRate())).addSetup(() -> setup);
 	}
 
 	private Cells getWavesCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {

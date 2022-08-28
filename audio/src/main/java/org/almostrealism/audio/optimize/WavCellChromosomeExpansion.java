@@ -41,7 +41,7 @@ public class WavCellChromosomeExpansion extends
 	public WavCellChromosomeExpansion(Chromosome<PackedCollection<?>> source, int inputGenes, int inputFactors, int sampleRate) {
 		super((Class) PackedCollection.class, source, 1, PackedCollection.bank(new TraversalPolicy(1)),
 				PackedCollection.table(new TraversalPolicy(1), (delegateSpec, width) ->
-						(PackedCollection) new ScalarBank(width, delegateSpec.getDelegate(), delegateSpec.getOffset())),
+						new PackedCollection<>(new TraversalPolicy(width, 1), 1, delegateSpec.getDelegate(), delegateSpec.getOffset())),
 				inputGenes, inputFactors);
 		this.sampleRate = sampleRate;
 	}

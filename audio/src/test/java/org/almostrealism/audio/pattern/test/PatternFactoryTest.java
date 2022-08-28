@@ -36,6 +36,7 @@ import org.almostrealism.collect.PackedCollectionHeap;
 import org.almostrealism.collect.ProducerWithOffset;
 import org.almostrealism.collect.computations.RootDelegateSegmentsAdd;
 import org.almostrealism.hardware.cl.HardwareOperator;
+import org.almostrealism.heredity.SimpleChromosome;
 import org.almostrealism.time.Frequency;
 import org.junit.Test;
 
@@ -98,6 +99,7 @@ public class PatternFactoryTest implements CellFeatures {
 		List<PatternFactoryChoice> choices = new ArrayList<>();
 
 		PatternFactoryChoice kick = new PatternFactoryChoice(new PatternElementFactory("Kicks", new PatternNote("Kit/Kick.wav")));
+		kick.setSeed(true);
 		kick.setMinScale(0.25);
 		choices.add(kick);
 
@@ -151,7 +153,7 @@ public class PatternFactoryTest implements CellFeatures {
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
 
-		PatternLayerManager manager = new PatternLayerManager(readChoices(), false, destination);
+		PatternLayerManager manager = new PatternLayerManager(readChoices(), new SimpleChromosome(3), false, destination);
 		manager.setTuning(new DefaultKeyboardTuning());
 
 		System.out.println(PatternLayerManager.layerHeader());

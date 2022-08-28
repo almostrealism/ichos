@@ -26,6 +26,8 @@ import org.almostrealism.collect.computations.RootDelegateSegmentsAdd;
 import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.hardware.PassThroughProducer;
+import org.almostrealism.heredity.ConfigurableGenome;
+import org.almostrealism.heredity.Genome;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +39,7 @@ import java.util.stream.IntStream;
 public class PatternSystemManager implements CodeFeatures {
 	private List<PatternFactoryChoice> choices;
 	private List<PatternLayerManager> patterns;
+	private ConfigurableGenome genome;
 
 	private Supplier<PackedCollection> intermediateDestination;
 	private List<ProducerWithOffset<PackedCollection>> patternOutputs;
@@ -52,6 +55,8 @@ public class PatternSystemManager implements CodeFeatures {
 	public PatternSystemManager(List<PatternFactoryChoice> choices) {
 		this.choices = choices;
 		this.patterns = new ArrayList<>();
+		this.genome = new ConfigurableGenome();
+
 		this.patternOutputs = new ArrayList<>();
 	}
 
@@ -88,6 +93,19 @@ public class PatternSystemManager implements CodeFeatures {
 		return choices;
 	}
 
+	public Genome<Double> getParameters() { return genome.getParameters(); }
+
+	public void assignParameters(Genome<Double> parameters) {
+		clear();
+
+		genome.assignTo(parameters);
+
+		// TODO  Regenerate all patterns and layers from the new genome
+		IntStream.range(0, genome.count()).forEach(i -> {
+//			addPattern(genome.valueAt(i));
+		});
+	}
+
 	public void setTuning(KeyboardTuning tuning) {
 		getChoices().forEach(c -> c.setTuning(tuning));
 		patterns.forEach(l -> l.setTuning(tuning));
@@ -103,8 +121,8 @@ public class PatternSystemManager implements CodeFeatures {
 		PatternLayerManager pattern = new PatternLayerManager(
 				choices.stream()
 					.filter(c -> c.getFactory().isMelodic() == melodic)
-					.collect(Collectors.toList()), melodic,
-				out);
+					.collect(Collectors.toList()), genome.addSimpleChromosome(3),
+				melodic, out);
 		patterns.add(pattern);
 
 		return pattern;

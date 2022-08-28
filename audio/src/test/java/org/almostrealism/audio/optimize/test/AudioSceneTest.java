@@ -18,13 +18,17 @@ package org.almostrealism.audio.optimize.test;
 
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.RoutingChoices;
+import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.filter.test.AdjustableDelayCellTest;
 import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.audio.Waves;
+import org.almostrealism.audio.pattern.PatternLayer;
+import org.almostrealism.audio.pattern.PatternLayerManager;
 import org.almostrealism.audio.pattern.test.PatternFactoryTest;
+import org.almostrealism.audio.tone.DefaultKeyboardTuning;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.PackedCollectionHeap;
 import org.almostrealism.graph.AdjustableDelayCell;
@@ -94,6 +98,12 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 	protected AudioScene<?> pattern(int sources, int delayLayers) {
 		AudioScene<?> scene = new AudioScene<>(null, 120, sources, delayLayers, OutputLine.sampleRate);
 		scene.getPatternManager().getChoices().addAll(PatternFactoryTest.createChoices());
+		scene.setTuning(new DefaultKeyboardTuning());
+
+		PatternLayerManager layer = scene.getPatternManager().addPattern(false);
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
 		return scene;
 	}
 
