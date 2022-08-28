@@ -182,21 +182,8 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 
 	public Cells getPatternCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		Supplier<Runnable> genomeSetup = genome.setup();
-
 		CellList cells = all(sourceCount, this::getPatternChannel).addSetup(() -> genomeSetup);
-
-		if (enableMainFilterUp) {
-			// Apply dynamic high pass filters
-			cells = cells.map(fc(i -> {
-				TemporalFactor<PackedCollection<?>> f = (TemporalFactor<PackedCollection<?>>) genome.valueAt(DefaultAudioGenome.MAIN_FILTER_UP, i, 0);
-				return hp(_multiply(c(20000), f.getResultant(c(1.0))), v(DefaultAudioGenome.defaultResonance));
-			}));
-		}
-
-		cells = cells
-				.addRequirements(genome.getTemporals().toArray(TemporalFactor[]::new));
-
-		return cells.sum().map(i -> new ReceptorCell<>(Receptor.to(output, measures.get(0), measures.get(1))));
+		return cells(cells, measures, output);
 	}
 
 	private CellList getPatternChannel(int channel) {
@@ -239,6 +226,11 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 										.apply(i));
 
 		cells.addSetup(() -> genomeSetup);
+		return cells(cells, measures, output);
+	}
+
+	private CellList cells(CellList sources, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
+		CellList cells = sources;
 
 		if (enableMainFilterUp) {
 			// Apply dynamic high pass filters
