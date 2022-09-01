@@ -109,7 +109,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 	}
 
 	@Test
-	public void smallCellsSamples() {
+	public void cellsSamples() {
 		SilenceDurationHealthComputation.enableSilenceCheck = false;
 		AudioScene.enableMainFilterUp = true;
 		AudioScene.enableEfxFilters = false;
@@ -122,7 +122,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
 		health.setOutputFile("results/small-cells-samples-test.wav");
 
-		Cells organ = smallCells(samples(2, 2), health.getMeasures(), health.getOutput());
+		Cells organ = cells(samples(2, 2), health.getMeasures(), health.getOutput());
 
 		organ.reset();
 		health.setTarget(organ);
@@ -130,7 +130,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 	}
 
 	@Test
-	public void smallCellsPattern() {
+	public void cellsPattern() {
 		SilenceDurationHealthComputation.enableSilenceCheck = false;
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		StableDurationHealthComputation.setStandardDuration(150);
@@ -138,7 +138,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
 		health.setOutputFile("results/small-cells-pattern-test.wav");
 
-		Cells organ = smallCells(pattern(2, 2), health.getMeasures(), health.getOutput());
+		Cells organ = cells(pattern(5, 3), health.getMeasures(), health.getOutput());
 
 		organ.reset();
 		health.setTarget(organ);

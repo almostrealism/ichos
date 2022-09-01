@@ -172,6 +172,8 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 
 	public PatternSystemManager getPatternManager() { return patterns; }
 
+	public WaveData getPatternDestination() { return new WaveData(patternDestination, getSampleRate()); }
+
 	public Cells getCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		if (enablePatternSystem) {
 			return getPatternCells(measures, output);
@@ -190,10 +192,17 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		PackedCollection<?> audio = WaveData.allocateCollection(getTotalSamples());
 
 		OperationList setup = new OperationList();
-		setup.add(() -> () -> patterns.sum(pos -> (int) (pos * getTotalSamples()), getScale()));
+		setup.add(getPatternSetup());
 		setup.add(() -> () -> audio.setMem(0, patternDestination, 0, patternDestination.getMemLength()));
 
 		return w(c(getTotalDuration()), new WaveData(audio, getSampleRate())).addSetup(() -> setup);
+	}
+
+	public Supplier<Runnable> getPatternSetup() {
+		return () -> () -> {
+			patternDestination.clear();
+			patterns.sum(pos -> (int) (pos * getTotalSamples()), getScale());
+		};
 	}
 
 	private Cells getWavesCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {

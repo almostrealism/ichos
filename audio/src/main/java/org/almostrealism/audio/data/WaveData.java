@@ -71,7 +71,11 @@ public class WaveData {
 	public void save(File file) {
 		PackedCollection w = getCollection();
 
-		int frames = w.getCount();
+		// TODO  This actually *should* be getCount, but it is frequently
+		// TODO  wrong because the traversal axis is not set correctly.
+		// TODO  To support stereo or other multi-channel audio, we need
+		// TODO  to fix this.
+		int frames = w.getMemLength(); // w.getCount();
 
 		WavFile wav;
 

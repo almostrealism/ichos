@@ -113,13 +113,8 @@ public class AdjustmentLayerOrganSystemFactoryTest extends AudioSceneTest {
 		return genome;
 	}
 
-	protected Cells bigCells(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> meter) {
-		scene.getGenome().assignTo(CellularAudioOptimizer.generator(8, 2).get().get());
-		return scene.getCells(measures, meter);
-	}
-
-	public Cells smallCells(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> meter) {
-		scene.getGenome().assignTo(CellularAudioOptimizer.generator(2, 2).get().get());
+	public Cells cells(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> meter) {
+		scene.getGenome().assignTo(CellularAudioOptimizer.generator(scene.getSourceCount(), scene.getDelayLayerCount()).get().get());
 		return scene.getCells(measures, meter);
 	}
 
@@ -131,7 +126,7 @@ public class AdjustmentLayerOrganSystemFactoryTest extends AudioSceneTest {
 			organa.reset();
 
 			ReceptorCell outb = (ReceptorCell) o(1, i -> new File("results/layered-organ-factory-comp-b.wav")).get(0);
-			Cells organb = bigCells(samples(2, 2), null, outb); // TODO
+			Cells organb = cells(samples(2, 2), null, outb); // TODO
 			organb.reset();
 
 			Runnable organRunA = new TemporalRunner(organa, 8 * OutputLine.sampleRate).get();
@@ -148,7 +143,7 @@ public class AdjustmentLayerOrganSystemFactoryTest extends AudioSceneTest {
 	@Test
 	public void layered() {
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/layered-organ-factory-test.wav")).get(0);
-		Cells organ = bigCells(samples(2, 2), null, out); // TODO
+		Cells organ = cells(samples(2, 2), null, out); // TODO
 		organ.reset();
 
 		Runnable organRun = new TemporalRunner(organ, 8 * OutputLine.sampleRate).get();
@@ -162,7 +157,7 @@ public class AdjustmentLayerOrganSystemFactoryTest extends AudioSceneTest {
 	@Test
 	public void layeredRandom() {
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/layered-organ-factory-rand-test.wav")).get(0);
-		Cells organ = smallCells(samples(2, 2), null, out); // TODO
+		Cells organ = cells(samples(2, 2), null, out); // TODO
 		organ.reset();
 
 		Runnable organRun = new TemporalRunner(organ, 8 * OutputLine.sampleRate).get();
