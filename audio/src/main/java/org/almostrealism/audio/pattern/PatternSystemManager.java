@@ -93,10 +93,10 @@ public class PatternSystemManager implements CodeFeatures {
 		return choices;
 	}
 
-	public Genome<Double> getParameters() { return genome.getParameters(); }
+	public Genome<PackedCollection<?>> getParameters() { return genome.getParameters(); }
 
-	public void assignParameters(Genome<Double> parameters) {
-		clear();
+	public void assignParameters(Genome<PackedCollection<?>> parameters) {
+		// TODO  clear();
 
 		genome.assignTo(parameters);
 
@@ -134,6 +134,11 @@ public class PatternSystemManager implements CodeFeatures {
 	}
 
 	public void sum(DoubleToIntFunction offsetForPosition, Scale<?> scale) {
+		if (patterns.isEmpty()) {
+			System.out.println("PatternSystemManager: No patterns");
+			return;
+		}
+
 		patterns.forEach(p -> p.sum(offsetForPosition, scale));
 
 		sum.getInput().clear();

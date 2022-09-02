@@ -20,6 +20,7 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.WaveData;
+import org.almostrealism.audio.optimize.AudioSceneGenome;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
 import org.almostrealism.audio.pattern.PatternSystemManager;
 import org.almostrealism.audio.tone.DefaultKeyboardTuning;
@@ -36,6 +37,7 @@ import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.ArrayListGene;
 import org.almostrealism.heredity.Factor;
 import org.almostrealism.heredity.Gene;
+import org.almostrealism.heredity.Genome;
 import org.almostrealism.heredity.TemporalFactor;
 import org.almostrealism.space.ShadableSurface;
 import org.almostrealism.space.Animation;
@@ -128,6 +130,12 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public Animation<T> getScene() { return scene; }
 
 	public DefaultAudioGenome getGenome() { return genome; }
+
+	public void assignGenome(Genome<PackedCollection<?>> genome) {
+		AudioSceneGenome g = (AudioSceneGenome) genome;
+		this.patterns.assignParameters(g.getGenome());
+		this.genome.assignTo(g.getOldGenome());
+	}
 
 	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
 	public void removeTempoListener(Consumer<Frequency> listener) { this.tempoListeners.remove(listener); }

@@ -25,6 +25,7 @@ import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.audio.Waves;
+import org.almostrealism.audio.optimize.AudioSceneGenome;
 import org.almostrealism.audio.pattern.PatternLayer;
 import org.almostrealism.audio.pattern.PatternLayerManager;
 import org.almostrealism.audio.pattern.test.PatternFactoryTest;
@@ -146,7 +147,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 
 	protected Genome<PackedCollection<?>> genome(boolean filter) {
 		Genome<PackedCollection<?>> g = CellularAudioOptimizer.generator(2, 2).get().get();
-		if (g != null) return g;
+		if (g != null) return new AudioSceneGenome(null, g);
 
 		ArrayListChromosome<PackedCollection<?>> generators = new ArrayListChromosome();
 		generators.add(g(0.2, 0.5,
@@ -234,7 +235,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 	}
 
 	protected Cells cells(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output, boolean filter) {
-		scene.getGenome().assignTo(genome(filter));
+		scene.assignGenome(genome(filter));
 		return scene.getCells(measures, output);
 	}
 
@@ -252,7 +253,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		Genome g = CellularAudioOptimizer.generator(2, 2, conf).get().get();
 		System.out.println(g);
 
-		scene.getGenome().assignTo(g);
+		scene.assignGenome(new AudioSceneGenome(null, g));
 		System.out.println("0, 0, 2 = " + scene.getGenome().valueAt(DefaultAudioGenome.GENERATORS, 0).valueAt(2).getResultant(c(1.0)).get().evaluate());
 		System.out.println("0, 1, 2 = " + scene.getGenome().valueAt(DefaultAudioGenome.GENERATORS, 1).valueAt(2).getResultant(c(1.0)).get().evaluate());
 
@@ -279,7 +280,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		Cells organ = cells(samples(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out);
 		organ.reset();
 
-		Genome<PackedCollection<?>> genome = genome(enableFilter);
+		Genome<PackedCollection<?>> genome = ((AudioSceneGenome) genome(enableFilter)).getOldGenome();
 
 		List<TemporalFactor<PackedCollection<?>>> temporals = new ArrayList<>();
 

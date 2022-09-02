@@ -64,7 +64,7 @@ public class AudioScenePopulation<G> implements Population<G, PackedCollection<?
 		}
 
 		currentGenome = newGenome;
-		scene.getGenome().assignTo(currentGenome);
+		scene.assignGenome(currentGenome);
 	}
 
 	@Override

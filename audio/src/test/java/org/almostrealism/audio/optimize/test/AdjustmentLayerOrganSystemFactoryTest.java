@@ -17,6 +17,7 @@
 package org.almostrealism.audio.optimize.test;
 
 import org.almostrealism.audio.AudioScene;
+import org.almostrealism.audio.optimize.AudioSceneGenome;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.time.TemporalRunner;
@@ -114,7 +115,8 @@ public class AdjustmentLayerOrganSystemFactoryTest extends AudioSceneTest {
 	}
 
 	public Cells cells(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> meter) {
-		scene.getGenome().assignTo(CellularAudioOptimizer.generator(scene.getSourceCount(), scene.getDelayLayerCount()).get().get());
+		Genome<PackedCollection<?>> g = CellularAudioOptimizer.generator(scene.getSourceCount(), scene.getDelayLayerCount()).get().get();
+		scene.assignGenome(new AudioSceneGenome(null, g));
 		return scene.getCells(measures, meter);
 	}
 

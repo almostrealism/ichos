@@ -18,6 +18,7 @@ package org.almostrealism.audio.optimize;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,7 @@ import org.almostrealism.audio.AudioCellChoiceAdapter;
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.WaveSet;
 import org.almostrealism.audio.data.FileWaveDataProvider;
+import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.grains.GrainGenerationSettings;
 import org.almostrealism.audio.grains.GranularSynthesizer;
@@ -44,7 +46,12 @@ import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.Waves;
+import org.almostrealism.audio.pattern.PatternElementFactory;
+import org.almostrealism.audio.pattern.PatternFactoryChoice;
+import org.almostrealism.audio.pattern.PatternLayerManager;
+import org.almostrealism.audio.pattern.PatternNote;
 import org.almostrealism.audio.sequence.GridSequencer;
+import org.almostrealism.audio.tone.DefaultKeyboardTuning;
 import org.almostrealism.audio.tone.WesternChromatic;
 import org.almostrealism.audio.tone.WesternScales;
 import org.almostrealism.collect.PackedCollection;
@@ -56,6 +63,7 @@ import org.almostrealism.hardware.cl.HardwareOperator;
 import org.almostrealism.hardware.jni.NativeComputeContext;
 import org.almostrealism.heredity.ChromosomeFactory;
 import org.almostrealism.heredity.DefaultGenomeBreeder;
+import org.almostrealism.heredity.GenomeFromChromosomes;
 import org.almostrealism.heredity.RandomChromosomeFactory;
 import org.almostrealism.heredity.Genome;
 import org.almostrealism.heredity.GenomeBreeder;
@@ -64,7 +72,7 @@ import org.almostrealism.optimize.PopulationOptimizer;
 
 public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	public static final int verbosity = 0;
-	public static final boolean enableSourcesJson = true;
+	public static final boolean enableSourcesJson = false;
 	public static final boolean enableStems = false;
 
 	public static String LIBRARY = "Library";
@@ -109,7 +117,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	}
 
 	public static Supplier<Supplier<Genome<PackedCollection<?>>>> generator(int sources, int delayLayers, GeneratorConfiguration config) {
-		return () -> {
+		Supplier<GenomeFromChromosomes> oldGenome = () -> {
 			// Random genetic material generators
 			ChromosomeFactory<PackedCollection<?>> generators = DefaultAudioGenome.generatorFactory(config.minChoice, config.maxChoice,
 													config.offsetChoices, config.repeatChoices,
@@ -271,6 +279,11 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 			return Genome.fromChromosomes(generators, parameters, volume, filterUp, wetIn, processors, transmission, wetOut, filters, masterFilterDown);
 		};
+
+		return () -> {
+			GenomeFromChromosomes old = oldGenome.get();
+			return () -> new AudioSceneGenome(null, old.get());
+		};
 	}
 
 	public static CellularAudioOptimizer build(AudioScene<?> scene, int cycles) {
@@ -334,7 +347,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		// Hardware.getLocalHardware().setMaximumOperationDepth(7);
 
 		double bpm = 120.0; // 116.0;
-		int sourceCount = 6;
+		int sourceCount = 5;
 		AudioScene<?> scene = new AudioScene<>(null, bpm, sourceCount, 3, OutputLine.sampleRate);
 
 		Set<Integer> choices = IntStream.range(0, sourceCount).mapToObj(i -> i).collect(Collectors.toSet());
@@ -371,9 +384,6 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		if (enableSourcesJson && sources.exists()) {
 			waves = Waves.load(sources);
 			scene.setWaves(waves);
-
-//			GridSequencer seq = (GridSequencer) waves.getChildren().get(0).getChildren().get(0).getSource().getSource();
-//			((GranularSynthesizer) seq.getSamples().get(0).getSource()).setGain(12);
 		} else if (enableStems) {
 			waves.addSplits(Arrays.asList(new File(STEMS).listFiles()), bpm, Math.pow(10, -6), choices, 1.0, 2.0, 4.0);
 		} else {
@@ -381,13 +391,42 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			waves.getChoices().setChoices(choices);
 		}
 
-//		AudioScene.sourceOverride = new Waves();
-//		AudioScene.sourceOverride.getChoices().getChoices().addAll(List.of(0, 1, 2, 3, 4, 5));
-//		AudioScene.sourceOverride.addFiles(new RoutingChoices(0, 1, 2, 3, 4, 5), new File("Library/MD_SNARE_09.wav"));
+		scene.getPatternManager().getChoices().addAll(createChoices());
+		scene.setTuning(new DefaultKeyboardTuning());
+
+		PatternLayerManager layer = scene.getPatternManager().addPattern(false);
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
 
 		CellularAudioOptimizer opt = build(scene, PopulationOptimizer.enableBreeding ? 25 : 1);
 		opt.init();
 		opt.run();
+	}
+
+	private static List<PatternFactoryChoice> createChoices() {
+		List<PatternFactoryChoice> choices = new ArrayList<>();
+
+		PatternFactoryChoice kick = new PatternFactoryChoice(new PatternElementFactory("Kicks", new PatternNote("Kit/Kick.wav")));
+		kick.setSeed(true);
+		kick.setMinScale(0.25);
+		choices.add(kick);
+
+		PatternFactoryChoice clap = new PatternFactoryChoice(new PatternElementFactory("Clap/Snare", new PatternNote("Kit/Clap.wav")));
+		clap.setMaxScale(0.5);
+		choices.add(clap);
+
+		PatternFactoryChoice toms = new PatternFactoryChoice(
+				new PatternElementFactory("Toms", new PatternNote("Kit/Tom1.wav"),
+						new PatternNote("Kit/Tom2.wav")));
+		toms.setMaxScale(0.25);
+		choices.add(toms);
+
+		PatternFactoryChoice hats = new PatternFactoryChoice(new PatternElementFactory("Hats"));
+		hats.setMaxScale(0.25);
+		choices.add(hats);
+
+		return choices;
 	}
 
 	public static class GeneratorConfiguration {
