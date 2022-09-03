@@ -26,7 +26,6 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
 import org.almostrealism.audio.Waves;
 import org.almostrealism.audio.optimize.AudioSceneGenome;
-import org.almostrealism.audio.pattern.PatternLayer;
 import org.almostrealism.audio.pattern.PatternLayerManager;
 import org.almostrealism.audio.pattern.test.PatternFactoryTest;
 import org.almostrealism.audio.tone.DefaultKeyboardTuning;
@@ -145,8 +144,8 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		r.run();
 	}
 
-	protected Genome<PackedCollection<?>> genome(boolean filter) {
-		Genome<PackedCollection<?>> g = CellularAudioOptimizer.generator(2, 2).get().get();
+	protected Genome<PackedCollection<?>> genome(AudioScene<?> scene, boolean filter) {
+		Genome<PackedCollection<?>> g = CellularAudioOptimizer.generator(scene).get().get();
 		if (g != null) return new AudioSceneGenome(null, g);
 
 		ArrayListChromosome<PackedCollection<?>> generators = new ArrayListChromosome();
@@ -235,7 +234,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 	}
 
 	protected Cells cells(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output, boolean filter) {
-		scene.assignGenome(genome(filter));
+		scene.assignGenome(genome(scene, filter));
 		return scene.getCells(measures, output);
 	}
 
@@ -250,12 +249,12 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		conf.minLowPass = 20000;
 		conf.maxLowPass = 20000;
 
-		Genome g = CellularAudioOptimizer.generator(2, 2, conf).get().get();
+		Genome g = CellularAudioOptimizer.generator(scene, conf).get().get();
 		System.out.println(g);
 
 		scene.assignGenome(new AudioSceneGenome(null, g));
-		System.out.println("0, 0, 2 = " + scene.getGenome().valueAt(DefaultAudioGenome.GENERATORS, 0).valueAt(2).getResultant(c(1.0)).get().evaluate());
-		System.out.println("0, 1, 2 = " + scene.getGenome().valueAt(DefaultAudioGenome.GENERATORS, 1).valueAt(2).getResultant(c(1.0)).get().evaluate());
+		System.out.println("0, 0, 2 = " + scene.getLegacyGenome().valueAt(DefaultAudioGenome.GENERATORS, 0).valueAt(2).getResultant(c(1.0)).get().evaluate());
+		System.out.println("0, 1, 2 = " + scene.getLegacyGenome().valueAt(DefaultAudioGenome.GENERATORS, 1).valueAt(2).getResultant(c(1.0)).get().evaluate());
 
 		return scene.getCells(measures, output);
 	}
@@ -280,7 +279,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		Cells organ = cells(samples(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out);
 		organ.reset();
 
-		Genome<PackedCollection<?>> genome = ((AudioSceneGenome) genome(enableFilter)).getOldGenome();
+		Genome<PackedCollection<?>> genome = ((AudioSceneGenome) genome(scene, enableFilter)).getOldGenome();
 
 		List<TemporalFactor<PackedCollection<?>>> temporals = new ArrayList<>();
 

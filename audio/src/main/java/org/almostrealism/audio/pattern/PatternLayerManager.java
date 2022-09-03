@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleToIntFunction;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class PatternLayerManager implements CodeFeatures {
 	private double duration;
@@ -132,6 +133,19 @@ public class PatternLayerManager implements CodeFeatures {
 	}
 
 	public void addLayer(ParameterSet params) {
+		SimpleGene g = chromosome.addGene();
+		g.set(0, params.getX());
+		g.set(1, params.getY());
+		g.set(2, params.getZ());
+		layer(g);
+	}
+
+	public void layer(Gene<PackedCollection<?>> gene) {
+		ParameterSet params = new ParameterSet();
+		params.setX(gene.valueAt(0).getResultant(c(1.0)).get().evaluate().toDouble(0));
+		params.setY(gene.valueAt(1).getResultant(c(1.0)).get().evaluate().toDouble(0));
+		params.setZ(gene.valueAt(2).getResultant(c(1.0)).get().evaluate().toDouble(0));
+
 		if (rootCount() <= 0) {
 			PatternLayerSeeds seeds = getSeeds(params);
 			seeds.generator(applyNoteDuration).forEach(roots::add);
@@ -145,7 +159,6 @@ public class PatternLayerManager implements CodeFeatures {
 			});
 		}
 
-		SimpleGene g = chromosome.addGene(); // TODO  Gene needs to take the values of provided params
 		increment();
 	}
 
@@ -168,6 +181,11 @@ public class PatternLayerManager implements CodeFeatures {
 
 	public void clear() {
 		while (depth() > 0) removeLayer();
+	}
+
+	public void refresh() {
+		clear();
+		IntStream.range(0, chromosome.length()).forEach(i -> layer(chromosome.valueAt(i)));
 	}
 
 	public PatternFactoryChoice choose(double scale, ParameterSet params) {

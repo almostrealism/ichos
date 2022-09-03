@@ -115,7 +115,7 @@ public class AdjustmentLayerOrganSystemFactoryTest extends AudioSceneTest {
 	}
 
 	public Cells cells(AudioScene<?> scene, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> meter) {
-		Genome<PackedCollection<?>> g = CellularAudioOptimizer.generator(scene.getSourceCount(), scene.getDelayLayerCount()).get().get();
+		Genome<PackedCollection<?>> g = CellularAudioOptimizer.generator(scene).get().get();
 		scene.assignGenome(new AudioSceneGenome(null, g));
 		return scene.getCells(measures, meter);
 	}

@@ -1,5 +1,6 @@
 package org.almostrealism.audio.optimize.test;
 
+import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.optimize.CellularAudioOptimizer;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
 import io.almostrealism.relation.Evaluable;
@@ -58,8 +59,9 @@ public class DefaultAudioGenomeTest implements HeredityFeatures, TestFeatures {
 
 	@Test
 	public void generated() {
+		AudioScene<?> scene = new AudioScene<>(null, 120, 2, 2, OutputLine.sampleRate);
 		DefaultAudioGenome g = new DefaultAudioGenome(2, 2);
-		g.assignTo(CellularAudioOptimizer.generator(2, 2).get().get());
+		g.assignTo(CellularAudioOptimizer.generator(scene).get().get());
 		g.setup().get().run();
 
 		CellularTemporalFactor<PackedCollection<?>> volume = (CellularTemporalFactor<PackedCollection<?>>) g.valueAt(DefaultAudioGenome.VOLUME, 0, 0);
@@ -75,9 +77,11 @@ public class DefaultAudioGenomeTest implements HeredityFeatures, TestFeatures {
 
 	@Test
 	public void setup() {
+		AudioScene<?> scene = new AudioScene<>(null, 120, 2, 2, OutputLine.sampleRate);
+
 		IntStream.range(0, 10).forEach(i -> {
 			DefaultAudioGenome genome = new DefaultAudioGenome(2, 2, OutputLine.sampleRate);
-			genome.assignTo(CellularAudioOptimizer.generator(2, 2).get().get());
+			genome.assignTo(CellularAudioOptimizer.generator(scene).get().get());
 			genome.setup().get().run();
 			System.out.println("DefaultAudioGenomeTest: Setup " + i + " complete");
 		});

@@ -28,6 +28,7 @@ import org.almostrealism.hardware.OperationList;
 import org.almostrealism.hardware.PassThroughProducer;
 import org.almostrealism.heredity.ConfigurableGenome;
 import org.almostrealism.heredity.Genome;
+import org.almostrealism.heredity.ParameterGenome;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -93,17 +94,11 @@ public class PatternSystemManager implements CodeFeatures {
 		return choices;
 	}
 
-	public Genome<PackedCollection<?>> getParameters() { return genome.getParameters(); }
+	public ParameterGenome getParameters() { return genome.getParameters(); }
 
 	public void assignParameters(Genome<PackedCollection<?>> parameters) {
-		// TODO  clear();
-
 		genome.assignTo(parameters);
-
-		// TODO  Regenerate all patterns and layers from the new genome
-		IntStream.range(0, genome.count()).forEach(i -> {
-//			addPattern(genome.valueAt(i));
-		});
+		patterns.forEach(PatternLayerManager::refresh);
 	}
 
 	public void setTuning(KeyboardTuning tuning) {
