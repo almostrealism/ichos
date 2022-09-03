@@ -39,6 +39,18 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class PatternLayerManager implements CodeFeatures {
+	public static final boolean enableVolume = false;
+
+	/**
+	 * Repeat seeds prevents the pattern from being heavily asymmetric.
+	 * If seeds aren't repeated, the seeds need to be altered to match
+	 * the layer duration. Seed repeating repeats the seed process,
+	 * based on the seed duration, so that the same seeds can be used
+	 * with any layer duration without creating patterns biased towards
+	 * the first part of the layer.
+	 */
+	public static final boolean enableRepeatSeeds = true;
+
 	private double duration;
 	private double scale;
 	private boolean applyNoteDuration;
@@ -54,9 +66,9 @@ public class PatternLayerManager implements CodeFeatures {
 	private RootDelegateSegmentsAdd sum;
 	private OperationList runSum;
 
-	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome,
+	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome, double measures,
 							   boolean applyNoteDuration, PackedCollection destination) {
-		this.duration = 1.0;
+		this.duration = measures;
 		this.scale = 1.0;
 		this.applyNoteDuration = applyNoteDuration;
 
@@ -79,8 +91,15 @@ public class PatternLayerManager implements CodeFeatures {
 
 		OperationList generate = new OperationList();
 		generate.add(() -> sum.get());
-		generate.add(() -> () ->
-				scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
+
+		if (enableVolume) {
+			// TODO  This creates problems for multiple sum steps in ::sum
+			// TODO  because volume adjustment will be applied multiple times
+			// TODO  to earlier measures.
+			generate.add(() -> () ->
+					scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
+		}
+
 		runSum = generate;
 	}
 
@@ -112,9 +131,9 @@ public class PatternLayerManager implements CodeFeatures {
 				.collect(Collectors.toList());
 	}
 
-	public List<PatternElement> getAllElements() {
+	public List<PatternElement> getAllElements(double start, double end) {
 		return roots.stream()
-				.map(PatternLayer::getAllElements)
+				.map(l -> l.getAllElements(start, end))
 				.flatMap(List::stream)
 				.collect(Collectors.toList());
 	}
@@ -148,12 +167,24 @@ public class PatternLayerManager implements CodeFeatures {
 
 		if (rootCount() <= 0) {
 			PatternLayerSeeds seeds = getSeeds(params);
-			seeds.generator(applyNoteDuration).forEach(roots::add);
+
+			int count = 1;
+
+			if (enableRepeatSeeds) {
+				count = (int) (duration / seeds.getDuration());
+
+				if (duration / seeds.getDuration() - count > 0.0001) {
+					System.out.println("PatternLayerManager: Seed duration does not divide layer duration; there will be gaps");
+				}
+			}
+
+			IntStream.range(0, count).forEach(i ->
+					seeds.generator(i * seeds.getDuration(), applyNoteDuration).forEach(roots::add));
 			scale = seeds.getScale();
 		} else {
 			roots.forEach(layer -> {
-				// TODO  Each layer should be processed separately, with lower probability for higher layers
-				PatternLayer next = choose(scale, params).apply(layer.getAllElements(), scale, params);
+				// TODO  Each layer should be processed separately, with lower probability for higher layers (?)
+				PatternLayer next = choose(scale, params).apply(layer.getAllElements(0, 2 * duration), scale, params);
 				next.trim(2 * duration);
 				layer.getTail().setChild(next);
 			});
@@ -199,30 +230,41 @@ public class PatternLayerManager implements CodeFeatures {
 		return options.get((int) (options.size() * c));
 	}
 
-	public void sum(DoubleToIntFunction offsetForPosition, Scale<?> scale) {
-		List<PatternElement> elements = getAllElements();
+	public void sum(DoubleToIntFunction offsetForPosition, int measures, Scale<?> scale) {
+		List<PatternElement> elements = getAllElements(0.0, duration);
 		if (elements.isEmpty()) {
 			System.out.println("PatternLayerManager: No pattern elements");
 			return;
 		}
 
-		sum.getInput().clear();
-		elements.stream()
-				.map(e -> e.getNoteDestinations(offsetForPosition, scale))
-				.flatMap(List::stream)
-				.forEach(sum.getInput()::add);
+		destination.clear();
 
-		if (sum.getInput().size() > sum.getMaxInputs()) {
-			System.out.println("PatternLayerManager: Too many inputs (" + sum.getInput().size() + ") for sum");
-			return;
+		int count = (int) (measures / duration);
+		if (measures / duration - count > 0.0001) {
+			System.out.println("PatternLayerManager: Pattern duration does not divide measures; there will be gaps");
 		}
 
-		if (sum.getInput().size() <= 0) {
-			System.out.println("PatternLayerManager: No inputs for sum");
-			return;
-		}
+		IntStream.range(0, count).forEach(i -> {
+			DoubleToIntFunction offset = pos -> offsetForPosition.applyAsInt(pos + i * duration);
 
-		runSum.get().run();
+			sum.getInput().clear();
+			elements.stream()
+					.map(e -> e.getNoteDestinations(offset, scale))
+					.flatMap(List::stream)
+					.forEach(sum.getInput()::add);
+
+			if (sum.getInput().size() > sum.getMaxInputs()) {
+				System.out.println("PatternLayerManager: Too many inputs (" + sum.getInput().size() + ") for sum");
+				return;
+			}
+
+			if (sum.getInput().size() <= 0) {
+				System.out.println("PatternLayerManager: No inputs for sum");
+				return;
+			}
+
+			runSum.get().run();
+		});
 	}
 
 	public static String layerHeader() {

@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -84,6 +85,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	private DefaultAudioGenome genome;
 
 	private List<Consumer<Frequency>> tempoListeners;
+	private List<DoubleConsumer> durationListeners;
 	private List<Consumer<Waves>> sourcesListener;
 
 	public AudioScene(Animation<T> scene, double bpm, int sources, int delayLayers, int sampleRate) {
@@ -92,6 +94,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		this.delayLayerCount = delayLayers;
 		this.scene = scene;
 		this.tempoListeners = new ArrayList<>();
+		this.durationListeners = new ArrayList<>();
 		this.sourcesListener = new ArrayList<>();
 		this.genome = new DefaultAudioGenome(sources, delayLayers, sampleRate);
 		initSources();
@@ -107,7 +110,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		patterns.init(patternDestination, () -> WaveData.allocateCollection(getTotalSamples()));
 		patterns.setTuning(new DefaultKeyboardTuning());
 
-		addTempoListener(bpm -> {
+		addDurationListener(duration -> {
 			patternDestination = new PackedCollection(getTotalSamples());
 			patterns.updateDestination(patternDestination, () -> WaveData.allocateCollection(getTotalSamples()));
 		});
@@ -116,6 +119,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public void setBPM(double bpm) {
 		this.bpm = bpm;
 		tempoListeners.forEach(l -> l.accept(Frequency.forBPM(bpm)));
+		triggerDurationChange();
 	}
 
 	public double getBPM() { return this.bpm; }
@@ -142,21 +146,23 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
 	public void removeTempoListener(Consumer<Frequency> listener) { this.tempoListeners.remove(listener); }
 
+	public void addDurationListener(DoubleConsumer listener) { this.durationListeners.add(listener); }
+	public void removeDurationListener(DoubleConsumer listener) { this.durationListeners.remove(listener); }
+
 	public void addSourcesListener(Consumer<Waves> listener) { this.sourcesListener.add(listener); }
 	public void removeSourcesListener(Consumer<Waves> listener) { this.sourcesListener.remove(listener); }
 
 	public int getSourceCount() { return sourceCount; }
-
 	public int getDelayLayerCount() { return delayLayerCount; }
 
 	public int getMeasureSize() { return measureSize; }
+	public double getMeasureDuration() { return getTempo().l(getMeasureSize()); }
+	public int getMeasureSamples() { return (int) (getMeasureDuration() * getSampleRate()); }
 
+	public void setTotalMeasures(int measures) { this.totalMeasures = measures; triggerDurationChange(); }
 	public int getTotalMeasures() { return totalMeasures; }
-
 	public int getTotalBeats() { return totalMeasures * measureSize; }
-
 	public double getTotalDuration() { return getTempo().l(getTotalBeats()); }
-
 	public int getTotalSamples() { return (int) (getTotalDuration() * getSampleRate()); }
 
 	public int getSampleRate() { return OutputLine.sampleRate; }
@@ -176,6 +182,10 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	@Deprecated
 	public void triggerSourcesChange() {
 		sourcesListener.forEach(l -> l.accept(sources));
+	}
+
+	protected void triggerDurationChange() {
+		durationListeners.forEach(l -> l.accept(getTotalDuration()));
 	}
 
 	public Waves getWaves() { return sources; }
@@ -211,7 +221,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public Supplier<Runnable> getPatternSetup() {
 		return () -> () -> {
 			patternDestination.clear();
-			patterns.sum(pos -> (int) (pos * getTotalSamples()), getScale());
+			patterns.sum(pos -> (int) (pos * getMeasureSamples()), getTotalMeasures(), getScale());
 		};
 	}
 

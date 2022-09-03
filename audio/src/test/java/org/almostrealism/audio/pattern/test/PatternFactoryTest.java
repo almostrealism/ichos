@@ -153,7 +153,7 @@ public class PatternFactoryTest implements CellFeatures {
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
 
-		PatternLayerManager manager = new PatternLayerManager(readChoices(), new SimpleChromosome(3), false, destination);
+		PatternLayerManager manager = new PatternLayerManager(readChoices(), new SimpleChromosome(3), 1.0, false, destination);
 		manager.setTuning(new DefaultKeyboardTuning());
 
 		System.out.println(PatternLayerManager.layerHeader());
@@ -164,7 +164,7 @@ public class PatternFactoryTest implements CellFeatures {
 			System.out.println(PatternLayerManager.layerString(manager.getTailElements()));
 		}
 
-		manager.sum(pos -> (int) (pos * bpm.l(16) * OutputLine.sampleRate), Scale.of(WesternChromatic.C1));
+		manager.sum(pos -> (int) (pos * bpm.l(16) * OutputLine.sampleRate), 1, Scale.of(WesternChromatic.C1));
 
 		WaveData out = new WaveData(destination, OutputLine.sampleRate);
 		out.save(new File("pattern-test.wav"));

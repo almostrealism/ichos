@@ -27,6 +27,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.WaveSet;
 import org.almostrealism.audio.data.FileWaveDataProvider;
@@ -44,6 +45,7 @@ import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.Waves;
 import org.almostrealism.audio.pattern.PatternElementFactory;
 import org.almostrealism.audio.pattern.PatternFactoryChoice;
+import org.almostrealism.audio.pattern.PatternFactoryChoiceList;
 import org.almostrealism.audio.pattern.PatternLayerManager;
 import org.almostrealism.audio.pattern.PatternNote;
 import org.almostrealism.audio.sequence.GridSequencer;
@@ -69,7 +71,7 @@ import org.almostrealism.optimize.PopulationOptimizer;
 
 public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	public static final int verbosity = 0;
-	public static final boolean enableSourcesJson = false;
+	public static final boolean enableSourcesJson = true;
 	public static final boolean enableStems = false;
 
 	public static String LIBRARY = "Library";
@@ -395,40 +397,48 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 		scene.getPatternManager().getChoices().addAll(createChoices());
 		scene.setTuning(new DefaultKeyboardTuning());
+		scene.setTotalMeasures(4);
 
-		PatternLayerManager layer = scene.getPatternManager().addPattern(false);
-		layer.addLayer(new ParameterSet());
-		layer.addLayer(new ParameterSet());
-		layer.addLayer(new ParameterSet());
+		for (int i = 0; i < 3; i++) {
+			PatternLayerManager layer = scene.getPatternManager().addPattern(Math.pow(2, i), false);
+			layer.addLayer(new ParameterSet());
+			layer.addLayer(new ParameterSet());
+			layer.addLayer(new ParameterSet());
+		}
 
 		CellularAudioOptimizer opt = build(scene, PopulationOptimizer.enableBreeding ? 25 : 1);
 		opt.init();
 		opt.run();
 	}
 
-	private static List<PatternFactoryChoice> createChoices() {
-		List<PatternFactoryChoice> choices = new ArrayList<>();
+	private static List<PatternFactoryChoice> createChoices() throws IOException {
+		if (enableSourcesJson) {
+			return new ObjectMapper()
+					.readValue(new File("pattern-factory.json"), PatternFactoryChoiceList.class);
+		} else {
+			List<PatternFactoryChoice> choices = new ArrayList<>();
 
-		PatternFactoryChoice kick = new PatternFactoryChoice(new PatternElementFactory("Kicks", new PatternNote("Kit/Kick.wav")));
-		kick.setSeed(true);
-		kick.setMinScale(0.25);
-		choices.add(kick);
+			PatternFactoryChoice kick = new PatternFactoryChoice(new PatternElementFactory("Kicks", new PatternNote("Kit/Kick.wav")));
+			kick.setSeed(true);
+			kick.setMinScale(0.25);
+			choices.add(kick);
 
-		PatternFactoryChoice clap = new PatternFactoryChoice(new PatternElementFactory("Clap/Snare", new PatternNote("Kit/Clap.wav")));
-		clap.setMaxScale(0.5);
-		choices.add(clap);
+			PatternFactoryChoice clap = new PatternFactoryChoice(new PatternElementFactory("Clap/Snare", new PatternNote("Kit/Clap.wav")));
+			clap.setMaxScale(0.5);
+			choices.add(clap);
 
-		PatternFactoryChoice toms = new PatternFactoryChoice(
-				new PatternElementFactory("Toms", new PatternNote("Kit/Tom1.wav"),
-						new PatternNote("Kit/Tom2.wav")));
-		toms.setMaxScale(0.25);
-		choices.add(toms);
+			PatternFactoryChoice toms = new PatternFactoryChoice(
+					new PatternElementFactory("Toms", new PatternNote("Kit/Tom1.wav"),
+							new PatternNote("Kit/Tom2.wav")));
+			toms.setMaxScale(0.25);
+			choices.add(toms);
 
-		PatternFactoryChoice hats = new PatternFactoryChoice(new PatternElementFactory("Hats"));
-		hats.setMaxScale(0.25);
-		choices.add(hats);
+			PatternFactoryChoice hats = new PatternFactoryChoice(new PatternElementFactory("Hats"));
+			hats.setMaxScale(0.25);
+			choices.add(hats);
 
-		return choices;
+			return choices;
+		}
 	}
 
 	public static class GeneratorConfiguration {

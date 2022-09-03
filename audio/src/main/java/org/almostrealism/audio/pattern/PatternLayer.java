@@ -19,6 +19,7 @@ package org.almostrealism.audio.pattern;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PatternLayer {
 	private PatternFactoryChoice choice;
@@ -52,9 +53,11 @@ public class PatternLayer {
 		this.elements = elements;
 	}
 
-	public List<PatternElement> getAllElements() {
-		List<PatternElement> result = new ArrayList<>(elements);
-		if (child != null) result.addAll(child.getAllElements());
+	public List<PatternElement> getAllElements(double start, double end) {
+		List<PatternElement> result = new ArrayList<>(elements.stream()
+				.filter(e -> e.getPosition() >= start && e.getPosition() < end)
+				.collect(Collectors.toList()));
+		if (child != null) result.addAll(child.getAllElements(start, end));
 		return result;
 	}
 

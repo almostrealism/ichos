@@ -74,12 +74,16 @@ public class PatternLayerSeeds {
 		this.count = count;
 	}
 
-	public Stream<PatternLayer> generator(boolean applyNoteDuration) {
+	public double getDuration() {
+		return count * scale / units;
+	}
+
+	public Stream<PatternLayer> generator(double offset, boolean applyNoteDuration) {
 		return IntStream.range(0, count)
 				.mapToObj(i -> {
-					PatternNote note = notes.apply(position + i * scale / units);
+					PatternNote note = notes.apply(position + offset + i * scale / units);
 					if (note == null) return null;
-					PatternElement e = new PatternElement(note, position + i * scale / units);
+					PatternElement e = new PatternElement(note, position + offset + i * scale / units);
 					e.setApplyNoteDuration(applyNoteDuration);
 					e.setNoteDuration(scale);
 					return List.of(e);
