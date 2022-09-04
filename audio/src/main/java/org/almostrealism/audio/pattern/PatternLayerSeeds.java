@@ -75,7 +75,7 @@ public class PatternLayerSeeds {
 	}
 
 	public double getDuration() {
-		return count * scale / units;
+		return count * scale; // / units; (?)
 	}
 
 	public Stream<PatternLayer> generator(double offset, boolean applyNoteDuration) {

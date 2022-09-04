@@ -406,6 +406,15 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			layer.addLayer(new ParameterSet());
 		}
 
+		for (int i = 0; i < 1; i++) {
+			PatternLayerManager layer = scene.getPatternManager().addPattern(4.0, true);
+			layer.addLayer(new ParameterSet());
+			layer.addLayer(new ParameterSet());
+			layer.addLayer(new ParameterSet());
+			layer.addLayer(new ParameterSet());
+			layer.addLayer(new ParameterSet());
+		}
+
 		CellularAudioOptimizer opt = build(scene, PopulationOptimizer.enableBreeding ? 25 : 1);
 		opt.init();
 		opt.run();
@@ -413,8 +422,12 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 	private static List<PatternFactoryChoice> createChoices() throws IOException {
 		if (enableSourcesJson) {
-			return new ObjectMapper()
+			PatternFactoryChoiceList choices = new ObjectMapper()
 					.readValue(new File("pattern-factory.json"), PatternFactoryChoiceList.class);
+
+			choices.get(5).setMaxScale(2.0);
+			choices.get(5).setSeedScale(2.0);
+			return choices;
 		} else {
 			List<PatternFactoryChoice> choices = new ArrayList<>();
 

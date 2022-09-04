@@ -125,6 +125,7 @@ public class PatternElementFactory {
 		List<PatternNote> notes = getValidNotes();
 
 		PatternElement element = new PatternElement(notes.get((int) (note * notes.size())), position);
+		element.setScalePosition(scalePositionSelection.applyPositive(params, position, scale));
 		element.setNoteDuration(noteLengthSelection.power(2.0, 3, -3).apply(params));
 		element.setApplyNoteDuration(isMelodic());
 

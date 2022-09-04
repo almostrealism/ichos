@@ -97,7 +97,7 @@ public class PatternFactoryChoice {
 	}
 
 	public PatternLayerSeeds seeds(ParameterSet params) {
-		return new PatternLayerSeeds(0, seedScale, seedUnits, (int) (1 / seedScale),
+		return new PatternLayerSeeds(0, seedScale, seedUnits, (int) Math.max(1, 1 / seedScale),
 				pos -> {
 					double r = seedNoteFunction.apply(params, pos, seedScale);
 					return r < 0.0 ? null : factory.getNotes().get((int) (r * factory.getNotes().size()));

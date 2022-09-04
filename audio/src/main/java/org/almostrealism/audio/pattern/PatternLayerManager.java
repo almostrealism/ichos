@@ -156,7 +156,7 @@ public class PatternLayerManager implements CodeFeatures {
 		g.set(0, params.getX());
 		g.set(1, params.getY());
 		g.set(2, params.getZ());
-		layer(g);
+		layer(params);
 	}
 
 	public void layer(Gene<PackedCollection<?>> gene) {
@@ -164,7 +164,10 @@ public class PatternLayerManager implements CodeFeatures {
 		params.setX(gene.valueAt(0).getResultant(c(1.0)).get().evaluate().toDouble(0));
 		params.setY(gene.valueAt(1).getResultant(c(1.0)).get().evaluate().toDouble(0));
 		params.setZ(gene.valueAt(2).getResultant(c(1.0)).get().evaluate().toDouble(0));
+		layer(params);
+	}
 
+	protected void layer(ParameterSet params) {
 		if (rootCount() <= 0) {
 			PatternLayerSeeds seeds = getSeeds(params);
 

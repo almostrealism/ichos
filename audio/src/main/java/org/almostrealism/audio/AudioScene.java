@@ -26,6 +26,7 @@ import org.almostrealism.audio.tone.DefaultKeyboardTuning;
 import org.almostrealism.audio.tone.KeyboardTuning;
 import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.audio.tone.WesternChromatic;
+import org.almostrealism.audio.tone.WesternScales;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.graph.Cell;
@@ -169,7 +170,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 
 	public Scale<?> getScale() {
 		// TODO  This should be configurable
-		return Scale.of(WesternChromatic.G1);
+		return WesternScales.minor(WesternChromatic.G1, 1);
 	}
 
 	public void setWaves(Waves waves) {
