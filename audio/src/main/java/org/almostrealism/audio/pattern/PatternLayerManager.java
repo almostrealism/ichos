@@ -41,16 +41,7 @@ import java.util.stream.IntStream;
 public class PatternLayerManager implements CodeFeatures {
 	public static final boolean enableVolume = false;
 
-	/**
-	 * Repeat seeds prevents the pattern from being heavily asymmetric.
-	 * If seeds aren't repeated, the seeds need to be altered to match
-	 * the layer duration. Seed repeating repeats the seed process,
-	 * based on the seed duration, so that the same seeds can be used
-	 * with any layer duration without creating patterns biased towards
-	 * the first part of the layer.
-	 */
-	public static final boolean enableRepeatSeeds = true;
-
+	private int channel;
 	private double duration;
 	private double scale;
 	private boolean applyNoteDuration;
@@ -66,8 +57,9 @@ public class PatternLayerManager implements CodeFeatures {
 	private RootDelegateSegmentsAdd sum;
 	private OperationList runSum;
 
-	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome, double measures,
-							   boolean applyNoteDuration, PackedCollection destination) {
+	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome, int channel,
+							   double measures, boolean applyNoteDuration, PackedCollection destination) {
+		this.channel = channel;
 		this.duration = measures;
 		this.scale = 1.0;
 		this.applyNoteDuration = applyNoteDuration;
@@ -111,6 +103,9 @@ public class PatternLayerManager implements CodeFeatures {
 	public List<PatternFactoryChoice> getChoices() {
 		return choices;
 	}
+
+	public int getChannel() { return channel; }
+	public void setChannel(int channel) { this.channel = channel; }
 
 	public void setTuning(KeyboardTuning tuning) {
 		getChoices().forEach(c -> c.setTuning(tuning));
@@ -170,19 +165,7 @@ public class PatternLayerManager implements CodeFeatures {
 	protected void layer(ParameterSet params) {
 		if (rootCount() <= 0) {
 			PatternLayerSeeds seeds = getSeeds(params);
-
-			int count = 1;
-
-			if (enableRepeatSeeds) {
-				count = (int) (duration / seeds.getDuration());
-
-				if (duration / seeds.getDuration() - count > 0.0001) {
-					System.out.println("PatternLayerManager: Seed duration does not divide layer duration; there will be gaps");
-				}
-			}
-
-			IntStream.range(0, count).forEach(i ->
-					seeds.generator(i * seeds.getDuration(), applyNoteDuration).forEach(roots::add));
+			seeds.generator(0, duration).forEach(roots::add);
 			scale = seeds.getScale();
 		} else {
 			roots.forEach(layer -> {

@@ -111,7 +111,7 @@ public class PatternSystemManager implements CodeFeatures {
 		patterns.forEach(l -> l.setTuning(tuning));
 	}
 
-	public PatternLayerManager addPattern(double measures, boolean melodic) {
+	public PatternLayerManager addPattern(int channel, double measures, boolean melodic) {
 		PackedCollection out = intermediateDestination.get();
 		patternOutputs.add(new ProducerWithOffset<>(v(out), 0));
 
@@ -122,7 +122,7 @@ public class PatternSystemManager implements CodeFeatures {
 				choices.stream()
 					.filter(c -> c.getFactory().isMelodic() == melodic)
 					.collect(Collectors.toList()), genome.addSimpleChromosome(3),
-				measures, melodic, out);
+				channel, measures, melodic, out);
 		patterns.add(pattern);
 
 		return pattern;
@@ -133,16 +133,21 @@ public class PatternSystemManager implements CodeFeatures {
 		patternOutputs.clear();
 	}
 
-	public void sum(DoubleToIntFunction offsetForPosition, int measures, Scale<?> scale) {
-		if (patterns.isEmpty()) {
+	public void sum(List<Integer> channels, DoubleToIntFunction offsetForPosition, int measures, Scale<?> scale) {
+		List<Integer> patternsForChannel = IntStream.range(0, patterns.size())
+				.filter(i -> channels == null || channels.contains(patterns.get(i).getChannel()))
+				.boxed().collect(Collectors.toList());
+
+		if (patternsForChannel.isEmpty()) {
 			System.out.println("PatternSystemManager: No patterns");
 			return;
 		}
 
-		patterns.forEach(p -> p.sum(offsetForPosition, measures, scale));
-
 		sum.getInput().clear();
-		sum.getInput().addAll(patternOutputs);
+		patternsForChannel.forEach(i -> {
+			patterns.get(i).sum(offsetForPosition, measures, scale);
+			sum.getInput().add(patternOutputs.get(i));
+		});
 
 		if (sum.getInput().size() > sum.getMaxInputs()) {
 			System.out.println("PatternSystemManager: Too many patterns (" + sum.getInput().size() + ") for sum");

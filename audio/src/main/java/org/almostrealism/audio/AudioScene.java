@@ -213,16 +213,18 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		PackedCollection<?> audio = WaveData.allocateCollection(getTotalSamples());
 
 		OperationList setup = new OperationList();
-		setup.add(getPatternSetup());
+		setup.add(getPatternSetup(List.of(channel)));
 		setup.add(() -> () -> audio.setMem(0, patternDestination, 0, patternDestination.getMemLength()));
 
 		return w(c(getTotalDuration()), new WaveData(audio, getSampleRate())).addSetup(() -> setup);
 	}
 
-	public Supplier<Runnable> getPatternSetup() {
+	public Supplier<Runnable> getPatternSetup() { return getPatternSetup(null); }
+
+	public Supplier<Runnable> getPatternSetup(List<Integer> channels) {
 		return () -> () -> {
 			patternDestination.clear();
-			patterns.sum(pos -> (int) (pos * getMeasureSamples()), getTotalMeasures(), getScale());
+			patterns.sum(channels, pos -> (int) (pos * getMeasureSamples()), getTotalMeasures(), getScale());
 		};
 	}
 

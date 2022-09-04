@@ -59,11 +59,6 @@ public class PatternFactoryTest implements CellFeatures {
 	public void fixChoices() throws IOException {
 		List<PatternFactoryChoice> choices = readChoices();
 
-		choices.forEach(choice -> {
-			if (choice.getSeedNoteFunction() == null)
-				choice.setSeedNoteFunction(ParameterizedPositionFunction.random());
-		});
-
 		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
 	}
 
@@ -153,7 +148,7 @@ public class PatternFactoryTest implements CellFeatures {
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		PackedCollection destination = new PackedCollection((int) (bpm.l(16) * OutputLine.sampleRate));
 
-		PatternLayerManager manager = new PatternLayerManager(readChoices(), new SimpleChromosome(3), 1.0, false, destination);
+		PatternLayerManager manager = new PatternLayerManager(readChoices(), new SimpleChromosome(3), 0, 1.0, false, destination);
 		manager.setTuning(new DefaultKeyboardTuning());
 
 		System.out.println(PatternLayerManager.layerHeader());

@@ -100,7 +100,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		scene.getPatternManager().getChoices().addAll(PatternFactoryTest.createChoices());
 		scene.setTuning(new DefaultKeyboardTuning());
 
-		PatternLayerManager layer = scene.getPatternManager().addPattern(1.0, false);
+		PatternLayerManager layer = scene.getPatternManager().addPattern(0, 1.0, false);
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());

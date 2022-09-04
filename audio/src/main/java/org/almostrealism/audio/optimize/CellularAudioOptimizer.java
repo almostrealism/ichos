@@ -399,15 +399,17 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		scene.setTuning(new DefaultKeyboardTuning());
 		scene.setTotalMeasures(4);
 
+		int channel = 0;
+
 		for (int i = 0; i < 3; i++) {
-			PatternLayerManager layer = scene.getPatternManager().addPattern(Math.pow(2, i), false);
+			PatternLayerManager layer = scene.getPatternManager().addPattern(channel++, Math.pow(2, i), false);
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
 		}
 
 		for (int i = 0; i < 1; i++) {
-			PatternLayerManager layer = scene.getPatternManager().addPattern(4.0, true);
+			PatternLayerManager layer = scene.getPatternManager().addPattern(channel++, 4.0, true);
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
@@ -427,6 +429,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 			choices.get(5).setMaxScale(2.0);
 			choices.get(5).setSeedScale(2.0);
+			choices.get(5).setSeedUnits(8);
 			return choices;
 		} else {
 			List<PatternFactoryChoice> choices = new ArrayList<>();
