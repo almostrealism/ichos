@@ -316,6 +316,7 @@ public class DefaultAudioGenome implements Genome<PackedCollection<?>>, Setup, C
 		}
 	}
 
+	@Deprecated
 	public class AdjustmentChromosome extends WavCellChromosomeExpansion {
 		private boolean relative;
 
@@ -340,14 +341,9 @@ public class DefaultAudioGenome implements Genome<PackedCollection<?>>, Setup, C
 //				return sinw(in, periodicWavelength, periodicAmp).pow(2.0)
 //						.multiply(polyWaveLength.pow(-1.0).multiply(in).pow(polyExp));
 
-
-
 				if (relative) scale = scale._multiply(initial);
 				CollectionProducer pos = _subtract(in, offset);
 				return _bound(pos._greaterThan(c(0.0), polyWaveLength._pow(c(-1.0))._multiply(pos)._pow(polyExp)._multiply(scale)._add(initial), initial), min, max);
-//				return c(1.0);
-
-
 //				return bound(polyWaveLength.pow(-1.0).multiply(pos).pow(polyExp).multiply(scale).add(initial), min, max);
 			});
 		}

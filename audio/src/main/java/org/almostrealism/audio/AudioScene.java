@@ -18,6 +18,7 @@ package org.almostrealism.audio;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
+import org.almostrealism.audio.arrange.SceneSectionManager;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.optimize.AudioSceneGenome;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
@@ -34,7 +35,6 @@ import org.almostrealism.graph.Receptor;
 import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.ArrayListGene;
-import org.almostrealism.heredity.ConfigurableGenome;
 import org.almostrealism.heredity.Factor;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.heredity.Genome;
@@ -80,6 +80,8 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 
 	private Animation<T> scene;
 	private Waves sources;
+
+	private SceneSectionManager sections;
 	private PatternSystemManager patterns;
 	private PackedCollection<?> patternDestination;
 
@@ -94,6 +96,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		this.sourceCount = sources;
 		this.delayLayerCount = delayLayers;
 		this.scene = scene;
+		this.sections = new SceneSectionManager(sources);
 		this.tempoListeners = new ArrayList<>();
 		this.durationListeners = new ArrayList<>();
 		this.sourcesListener = new ArrayList<>();
@@ -142,6 +145,10 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		AudioSceneGenome g = (AudioSceneGenome) genome;
 		this.patterns.assignParameters(g.getGenome());
 		this.genome.assignTo(g.getOldGenome());
+	}
+
+	public void addSection(int position, int length) {
+		sections.addSection(position, length);
 	}
 
 	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
@@ -196,14 +203,18 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public WaveData getPatternDestination() { return new WaveData(patternDestination, getSampleRate()); }
 
 	public Cells getCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
+		CellList cells;
+
 		if (enablePatternSystem) {
-			return getPatternCells(measures, output);
+			cells = getPatternCells(measures, output);
 		} else {
-			return getWavesCells(measures, output);
+			cells = getWavesCells(measures, output);
 		}
+
+		return cells;
 	}
 
-	public Cells getPatternCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
+	public CellList getPatternCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		Supplier<Runnable> genomeSetup = genome.setup();
 		CellList cells = all(sourceCount, this::getPatternChannel).addSetup(() -> genomeSetup);
 		return cells(cells, measures, output);
@@ -215,6 +226,9 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		OperationList setup = new OperationList();
 		setup.add(getPatternSetup(List.of(channel)));
 		setup.add(() -> () -> audio.setMem(0, patternDestination, 0, patternDestination.getMemLength()));
+		setup.add(() -> () -> {
+			// TODO  Apply all ChannelSections to audio
+		});
 
 		return w(c(getTotalDuration()), new WaveData(audio, getSampleRate())).addSetup(() -> setup);
 	}
@@ -228,7 +242,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		};
 	}
 
-	private Cells getWavesCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
+	private CellList getWavesCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		sources.setBpm(getBPM());
 
 		BiFunction<Gene<PackedCollection<?>>, Gene<PackedCollection<?>>, IntFunction<Cell<PackedCollection<?>>>> generator = (g, p) -> channel -> {

@@ -18,7 +18,6 @@ package org.almostrealism.audio.optimize;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.algebra.Scalar;
-import org.almostrealism.algebra.ScalarBank;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.collect.PackedCollection;
@@ -38,6 +37,7 @@ public class WavCellChromosomeExpansion extends
 
 	private int sampleRate;
 
+	// TODO  Can't inputGenes just be inferred via source::length?
 	public WavCellChromosomeExpansion(Chromosome<PackedCollection<?>> source, int inputGenes, int inputFactors, int sampleRate) {
 		super((Class) PackedCollection.class, source, 1, PackedCollection.bank(new TraversalPolicy(1)),
 				PackedCollection.table(new TraversalPolicy(1), (delegateSpec, width) ->
