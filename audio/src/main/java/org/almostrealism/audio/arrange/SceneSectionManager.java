@@ -16,21 +16,33 @@
 
 package org.almostrealism.audio.arrange;
 
+import io.almostrealism.cycle.Setup;
+import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.ConfigurableGenome;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class SceneSectionManager {
+public class SceneSectionManager implements Setup {
 	private List<SceneSection> sections;
+	private OperationList setup;
+
 	private ConfigurableGenome genome;
 	private int channels;
 
-	public SceneSectionManager(int channels) {
+	private DoubleSupplier measureDuration;
+	private int sampleRate;
+
+	public SceneSectionManager(int channels, DoubleSupplier measureDuration, int sampleRate) {
 		this.sections = new ArrayList<>();
+		this.setup = new OperationList();
 		this.genome = new ConfigurableGenome();
 		this.channels = channels;
+		this.measureDuration = measureDuration;
+		this.sampleRate = sampleRate;
 	}
 
 	public ConfigurableGenome getGenome() {
@@ -44,8 +56,13 @@ public class SceneSectionManager {
 	}
 
 	public SceneSection addSection(int position, int length) {
-		SceneSection s = SceneSection.createSection(position, length, channels, () -> DefaultChannelSection.createSection(position, length, genome));
+		DefaultChannelSection.Factory channelFactory = new DefaultChannelSection.Factory(genome, channels, measureDuration, length, sampleRate);
+		SceneSection s = SceneSection.createSection(position, length, channels, () -> channelFactory.createSection(position));
 		sections.add(s);
+		setup.add(channelFactory.setup());
 		return s;
 	}
+
+	@Override
+	public Supplier<Runnable> setup() { return setup; }
 }

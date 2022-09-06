@@ -18,6 +18,7 @@ package org.almostrealism.audio;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
+import org.almostrealism.audio.arrange.ChannelSection;
 import org.almostrealism.audio.arrange.SceneSectionManager;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.optimize.AudioSceneGenome;
@@ -29,6 +30,7 @@ import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.audio.tone.WesternChromatic;
 import org.almostrealism.audio.tone.WesternScales;
 import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.Receptor;
@@ -72,6 +74,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 
 	public static Waves sourceOverride = null;
 
+	private int sampleRate;
 	private double bpm;
 	private int sourceCount;
 	private int delayLayerCount;
@@ -92,11 +95,12 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	private List<Consumer<Waves>> sourcesListener;
 
 	public AudioScene(Animation<T> scene, double bpm, int sources, int delayLayers, int sampleRate) {
+		this.sampleRate = sampleRate;
 		this.bpm = bpm;
 		this.sourceCount = sources;
 		this.delayLayerCount = delayLayers;
 		this.scene = scene;
-		this.sections = new SceneSectionManager(sources);
+		this.sections = new SceneSectionManager(sources, this::getMeasureDuration, getSampleRate());
 		this.tempoListeners = new ArrayList<>();
 		this.durationListeners = new ArrayList<>();
 		this.sourcesListener = new ArrayList<>();
@@ -173,7 +177,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	public double getTotalDuration() { return getTempo().l(getTotalBeats()); }
 	public int getTotalSamples() { return (int) (getTotalDuration() * getSampleRate()); }
 
-	public int getSampleRate() { return OutputLine.sampleRate; }
+	public int getSampleRate() { return sampleRate; }
 
 	public Scale<?> getScale() {
 		// TODO  This should be configurable
@@ -224,11 +228,17 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		PackedCollection<?> audio = WaveData.allocateCollection(getTotalSamples());
 
 		OperationList setup = new OperationList();
+		setup.add(sections.setup());
 		setup.add(getPatternSetup(List.of(channel)));
 		setup.add(() -> () -> audio.setMem(0, patternDestination, 0, patternDestination.getMemLength()));
-		setup.add(() -> () -> {
-			// TODO  Apply all ChannelSections to audio
-		});
+		sections.getChannelSections(channel).stream()
+				.map(section -> {
+					int pos = section.getPosition() * getMeasureSamples();
+					int len = section.getLength() * getMeasureSamples();
+					PackedCollection<?> sectionAudio = audio.range(new TraversalPolicy(len), pos);
+					return section.process(p(sectionAudio), p(sectionAudio));
+				})
+				.forEach(setup::add);
 
 		return w(c(getTotalDuration()), new WaveData(audio, getSampleRate())).addSetup(() -> setup);
 	}
