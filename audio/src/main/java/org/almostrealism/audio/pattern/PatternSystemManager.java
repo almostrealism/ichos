@@ -59,9 +59,17 @@ public class PatternSystemManager implements CodeFeatures {
 	}
 
 	public PatternSystemManager(List<PatternFactoryChoice> choices) {
+		this(choices, new ConfigurableGenome());
+	}
+
+	public PatternSystemManager(ConfigurableGenome genome) {
+		this(new ArrayList<>(), genome);
+	}
+
+	public PatternSystemManager(List<PatternFactoryChoice> choices, ConfigurableGenome genome) {
 		this.choices = choices;
 		this.patterns = new ArrayList<>();
-		this.genome = new ConfigurableGenome();
+		this.genome = genome;
 
 		this.patternOutputs = new ArrayList<>();
 	}
@@ -99,10 +107,7 @@ public class PatternSystemManager implements CodeFeatures {
 		return choices;
 	}
 
-	public ParameterGenome getParameters() { return genome.getParameters(); }
-
-	public void assignParameters(Genome<PackedCollection<?>> parameters) {
-		genome.assignTo(parameters);
+	public void refreshParameters() {
 		patterns.forEach(PatternLayerManager::refresh);
 	}
 

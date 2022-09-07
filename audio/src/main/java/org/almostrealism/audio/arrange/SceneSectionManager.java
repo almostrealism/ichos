@@ -36,10 +36,10 @@ public class SceneSectionManager implements Setup {
 	private DoubleSupplier measureDuration;
 	private int sampleRate;
 
-	public SceneSectionManager(int channels, DoubleSupplier measureDuration, int sampleRate) {
+	public SceneSectionManager(ConfigurableGenome genome, int channels, DoubleSupplier measureDuration, int sampleRate) {
 		this.sections = new ArrayList<>();
 		this.setup = new OperationList();
-		this.genome = new ConfigurableGenome();
+		this.genome = genome;
 		this.channels = channels;
 		this.measureDuration = measureDuration;
 		this.sampleRate = sampleRate;
