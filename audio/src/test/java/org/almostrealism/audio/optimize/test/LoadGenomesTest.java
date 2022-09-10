@@ -11,7 +11,7 @@ import java.io.FileNotFoundException;
 public class LoadGenomesTest implements TestFeatures {
 	@Test
 	public void loadGenomes() throws FileNotFoundException {
-		DefaultAudioGenome genome = new DefaultAudioGenome(6, 3);
+		DefaultAudioGenome genome = new DefaultAudioGenome(6, 3, null);
 		genome.assignTo(AudioPopulationOptimizer.read(new FileInputStream("Population.xml")).get(20));
 		genome.setup().get().run();
 		for (int i = 0; i < 6; i++) {

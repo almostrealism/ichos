@@ -48,7 +48,7 @@ public class DefaultAudioGenomeTest implements HeredityFeatures, TestFeatures {
 		genome.add(c(g(1.0), g(1.0))); // WET
 		genome.add(filters);
 
-		DefaultAudioGenome organGenome = new DefaultAudioGenome(2, 2);
+		DefaultAudioGenome organGenome = new DefaultAudioGenome(2, 2, null);
 		organGenome.assignTo(genome);
 
 		Gene<?> delayGene = organGenome.valueAt(DefaultAudioGenome.PROCESSORS).valueAt(0);
@@ -60,7 +60,7 @@ public class DefaultAudioGenomeTest implements HeredityFeatures, TestFeatures {
 	@Test
 	public void generated() {
 		AudioScene<?> scene = new AudioScene<>(null, 120, 2, 2, OutputLine.sampleRate);
-		DefaultAudioGenome g = new DefaultAudioGenome(2, 2);
+		DefaultAudioGenome g = new DefaultAudioGenome(2, 2, null);
 		g.assignTo(CellularAudioOptimizer.generator(scene).get().get());
 		g.setup().get().run();
 
@@ -80,7 +80,7 @@ public class DefaultAudioGenomeTest implements HeredityFeatures, TestFeatures {
 		AudioScene<?> scene = new AudioScene<>(null, 120, 2, 2, OutputLine.sampleRate);
 
 		IntStream.range(0, 10).forEach(i -> {
-			DefaultAudioGenome genome = new DefaultAudioGenome(2, 2, OutputLine.sampleRate);
+			DefaultAudioGenome genome = new DefaultAudioGenome(2, 2, OutputLine.sampleRate, null);
 			genome.assignTo(CellularAudioOptimizer.generator(scene).get().get());
 			genome.setup().get().run();
 			System.out.println("DefaultAudioGenomeTest: Setup " + i + " complete");

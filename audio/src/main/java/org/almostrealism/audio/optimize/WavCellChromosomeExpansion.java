@@ -36,6 +36,7 @@ public class WavCellChromosomeExpansion extends
 		MemoryDataTemporalCellularChromosomeExpansion<PackedCollection<PackedCollection<?>>, PackedCollection<?>, PackedCollection<?>> implements CellFeatures {
 
 	private int sampleRate;
+	private Producer<Scalar> time;
 
 	// TODO  Can't inputGenes just be inferred via source::length?
 	public WavCellChromosomeExpansion(Chromosome<PackedCollection<?>> source, int inputGenes, int inputFactors, int sampleRate) {
@@ -46,6 +47,10 @@ public class WavCellChromosomeExpansion extends
 		this.sampleRate = sampleRate;
 	}
 
+	public void setGlobalTime(Producer<Scalar> time) {
+		this.time = time;
+	}
+
 	@Override
 	public Supplier<Runnable> setup() {
 		return () -> () -> setTimeline(WaveOutput.timeline.getValue());
@@ -53,7 +58,7 @@ public class WavCellChromosomeExpansion extends
 
 	@Override
 	protected Cell<PackedCollection<?>> cell(PackedCollection<PackedCollection<?>> data) {
-		return new WaveCell(data, sampleRate);
+		return new WaveCell(data, sampleRate, time);
 	}
 
 	@Override

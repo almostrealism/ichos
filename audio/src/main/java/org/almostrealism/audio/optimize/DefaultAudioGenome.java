@@ -64,6 +64,8 @@ public class DefaultAudioGenome implements Genome<PackedCollection<?>>, Setup, C
 	private int sources, delayLayers, length;
 	private int sampleRate;
 
+	private Producer<Scalar> globalTime;
+
 	private GeneratorChromosome generatorChromosome;
 	private AdjustmentChromosome volumeChromosome;
 	private AdjustmentChromosome mainFilterUpChromosome;
@@ -71,33 +73,34 @@ public class DefaultAudioGenome implements Genome<PackedCollection<?>>, Setup, C
 	private DelayChromosome delayChromosome;
 	private AdjustmentChromosome masterFilterDownChromosome;
 
-	public DefaultAudioGenome(int sources, int delayLayers) {
-		this(sources, delayLayers, OutputLine.sampleRate);
+	public DefaultAudioGenome(int sources, int delayLayers, Producer<Scalar> globalTime) {
+		this(sources, delayLayers, OutputLine.sampleRate, globalTime);
 	}
 
-	public DefaultAudioGenome(int sources, int delayLayers, int sampleRate) {
-		this(sources, delayLayers, 10, sampleRate);
+	public DefaultAudioGenome(int sources, int delayLayers, int sampleRate, Producer<Scalar> globalTime) {
+		this(sources, delayLayers, 10, sampleRate, globalTime);
 	}
 
-	protected DefaultAudioGenome(int sources, int delayLayers, int length, int sampleRate) {
-		this(new AssignableGenome(), sources, delayLayers, length, sampleRate);
+	protected DefaultAudioGenome(int sources, int delayLayers, int length, int sampleRate, Producer<Scalar> globalTime) {
+		this(new AssignableGenome(), sources, delayLayers, length, sampleRate, globalTime);
 	}
 
-	private DefaultAudioGenome(AssignableGenome data, int sources, int delayLayers, int length, int sampleRate) {
+	private DefaultAudioGenome(AssignableGenome data, int sources, int delayLayers, int length, int sampleRate, Producer<Scalar> globalTime) {
 		this.data = data;
 		this.sources = sources;
 		this.delayLayers = delayLayers;
 		this.length = length;
 		this.sampleRate = sampleRate;
+		this.globalTime = globalTime;
 	}
 
 	protected void initChromosomes() {
-		if (generatorChromosome == null) generatorChromosome = new GeneratorChromosome(GENERATORS);
-		if (volumeChromosome == null) volumeChromosome = new AdjustmentChromosome(VOLUME, 0.0, 1.0, true);
-		if (mainFilterUpChromosome == null) mainFilterUpChromosome = new AdjustmentChromosome(MAIN_FILTER_UP, 0.0, 1.0, false);
-		if (wetInChromosome == null) wetInChromosome = new AdjustmentChromosome(WET_IN, 0.0, 1.0, false);
-		if (delayChromosome == null) delayChromosome = new DelayChromosome(PROCESSORS);
-		if (masterFilterDownChromosome == null) masterFilterDownChromosome = new AdjustmentChromosome(MASTER_FILTER_DOWN, 0.0, 1.0, false);
+		if (generatorChromosome == null) generatorChromosome = new GeneratorChromosome(GENERATORS, globalTime);
+		if (volumeChromosome == null) volumeChromosome = new AdjustmentChromosome(VOLUME, 0.0, 1.0, true, globalTime);
+		if (mainFilterUpChromosome == null) mainFilterUpChromosome = new AdjustmentChromosome(MAIN_FILTER_UP, 0.0, 1.0, false, globalTime);
+		if (wetInChromosome == null) wetInChromosome = new AdjustmentChromosome(WET_IN, 0.0, 1.0, false, globalTime);
+		if (delayChromosome == null) delayChromosome = new DelayChromosome(PROCESSORS, globalTime);
+		if (masterFilterDownChromosome == null) masterFilterDownChromosome = new AdjustmentChromosome(MASTER_FILTER_DOWN, 0.0, 1.0, false, globalTime);
 	}
 
 	public void assignTo(Genome g) {
@@ -107,7 +110,7 @@ public class DefaultAudioGenome implements Genome<PackedCollection<?>>, Setup, C
 
 	@Override
 	public Genome getHeadSubset() {
-		DefaultAudioGenome g = new DefaultAudioGenome(data, sources, delayLayers, length - 1, sampleRate);
+		DefaultAudioGenome g = new DefaultAudioGenome(data, sources, delayLayers, length - 1, sampleRate, globalTime);
 		g.initChromosomes();
 		return g;
 	}
@@ -295,9 +298,11 @@ public class DefaultAudioGenome implements Genome<PackedCollection<?>>, Setup, C
 		return valueForFactor(f) * 20000;
 	}
 
+	@Deprecated
 	protected class GeneratorChromosome extends WavCellChromosomeExpansion {
-		public GeneratorChromosome(int index) {
+		public GeneratorChromosome(int index, Producer<Scalar> globalTime) {
 			super(data.valueAt(index), data.length(index), 4, sampleRate);
+			setGlobalTime(globalTime);
 			setTransform(0, g -> g.valueAt(0).getResultant(c(1.0)));
 			setTransform(1, g -> g.valueAt(1).getResultant(c(1.0)));
 			setTransform(2, g -> g.valueAt(2).getResultant(c(1.0)));
@@ -320,8 +325,9 @@ public class DefaultAudioGenome implements Genome<PackedCollection<?>>, Setup, C
 	public class AdjustmentChromosome extends WavCellChromosomeExpansion {
 		private boolean relative;
 
-		public AdjustmentChromosome(int index, double min, double max, boolean relative) {
+		public AdjustmentChromosome(int index, double min, double max, boolean relative, Producer<Scalar> globalTime) {
 			super(data.valueAt(index), data.length(index), 6, sampleRate);
+			setGlobalTime(globalTime);
 			this.relative = relative;
 			setTransform(0, g -> oneToInfinity(g.valueAt(0), 3.0)._multiply(c(60.0)));
 			setTransform(1, g -> oneToInfinity(g.valueAt(1), 3.0)._multiply(c(60.0)));
@@ -350,8 +356,9 @@ public class DefaultAudioGenome implements Genome<PackedCollection<?>>, Setup, C
 	}
 
 	public class DelayChromosome extends WavCellChromosomeExpansion {
-		public DelayChromosome(int index) {
+		public DelayChromosome(int index, Producer<Scalar> globalTime) {
 			super(data.valueAt(index), data.length(index), 7, sampleRate);
+			setGlobalTime(globalTime);
 			setTransform(0, g -> oneToInfinity(g.valueAt(0).getResultant(c(1.0)), 3.0)._multiply(c(60.0)));
 			setTransform(1, g -> oneToInfinity(g.valueAt(1).getResultant(c(1.0)), 3.0)._multiply(c(60.0)));
 			setTransform(2, g -> oneToInfinity(g.valueAt(2).getResultant(c(1.0)), 0.5)._multiply(c(10.0)));

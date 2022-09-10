@@ -18,6 +18,7 @@ package org.almostrealism.audio;
 
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
+import org.almostrealism.audio.arrange.GlobalTimeManager;
 import org.almostrealism.audio.arrange.SceneSectionManager;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.optimize.AudioSceneGenome;
@@ -84,6 +85,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 	private Animation<T> scene;
 	private Waves sources;
 
+	private GlobalTimeManager time;
 	private SceneSectionManager sections;
 	private PatternSystemManager patterns;
 	private PackedCollection<?> patternDestination;
@@ -106,8 +108,10 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 		this.durationListeners = new ArrayList<>();
 		this.sourcesListener = new ArrayList<>();
 
+		this.time = new GlobalTimeManager();
+
 		this.genome = new CombinedGenome(2);
-		this.legacyGenome = new DefaultAudioGenome(sources, delayLayers, sampleRate);
+		this.legacyGenome = new DefaultAudioGenome(sources, delayLayers, sampleRate, time.getClock()::getFrame);
 
 		this.sections = new SceneSectionManager(genome.getGenome(0), sources, this::getMeasureDuration, getSampleRate());
 		initSources();
@@ -226,7 +230,7 @@ public class AudioScene<T extends ShadableSurface> implements CellFeatures {
 
 	public CellList getPatternCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		Supplier<Runnable> genomeSetup = legacyGenome.setup();
-		CellList cells = all(sourceCount, this::getPatternChannel).addSetup(() -> genomeSetup);
+		CellList cells = all(sourceCount, this::getPatternChannel).addRequirement(time).addSetup(() -> genomeSetup);
 		return cells(cells, measures, output);
 	}
 

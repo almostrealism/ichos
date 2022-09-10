@@ -27,9 +27,18 @@ public class AudioCellTest implements CellFeatures {
 	@Test
 	public void filter() throws IOException {
 		Supplier<Runnable> r =
-				w("src/test/resources/Snare Perc DD.wav")
+				w("Library/Snare Perc DD.wav")
 						.f(i -> hp(2000, 0.1))
 						.om(i -> new File("results/filter-cell-test.wav"))
+						.sec(10);
+		r.get().run();
+	}
+
+	@Test
+	public void repeat() throws IOException {
+		Supplier<Runnable> r =
+				w(c(1.0), "Library/Snare Perc DD.wav")
+						.om(i -> new File("results/repeat-cell-test.wav"))
 						.sec(10);
 		r.get().run();
 	}

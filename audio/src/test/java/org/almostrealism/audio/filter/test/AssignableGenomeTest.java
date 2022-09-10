@@ -188,7 +188,7 @@ public class AssignableGenomeTest implements CellFeatures {
 	public void examples() {
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/assignable-genome-example.wav")).get(0);
 
-		DefaultAudioGenome genome = new DefaultAudioGenome(2, 2);
+		DefaultAudioGenome genome = new DefaultAudioGenome(2, 2, null);
 		Temporal organ = organ(genome, null, out); // TODO
 
 		TemporalRunner runner = new TemporalRunner(organ, 8 * OutputLine.sampleRate);
@@ -221,7 +221,7 @@ public class AssignableGenomeTest implements CellFeatures {
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
 		health.setMaxDuration(8);
 
-		DefaultAudioGenome genome = new DefaultAudioGenome(2, 2);
+		DefaultAudioGenome genome = new DefaultAudioGenome(2, 2, null);
 		CellList organ = (CellList) organ(genome, null, health.getOutput()); // TODO
 
 		genome.assignTo(genome1());
@@ -236,7 +236,7 @@ public class AssignableGenomeTest implements CellFeatures {
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
 		health.setMaxDuration(8);
 
-		DefaultAudioGenome genome = new DefaultAudioGenome(2, 2);
+		DefaultAudioGenome genome = new DefaultAudioGenome(2, 2, null);
 		CellList organ = (CellList) organ(genome, null, health.getOutput()); // TODO
 
 		genome.assignTo(genome(0.4, 0.8, false));
@@ -257,7 +257,7 @@ public class AssignableGenomeTest implements CellFeatures {
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
 		health.setMaxDuration(8);
 
-		DefaultAudioGenome genome = new DefaultAudioGenome(2, 2);
+		DefaultAudioGenome genome = new DefaultAudioGenome(2, 2, null);
 		CellList organ = (CellList) organ(genome, null, health.getOutput()); // TODO
 
 		genome.assignTo(genome(0.4, 0.8, true));
