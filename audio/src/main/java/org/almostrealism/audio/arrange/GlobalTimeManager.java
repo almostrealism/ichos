@@ -18,24 +18,45 @@ package org.almostrealism.audio.arrange;
 
 import io.almostrealism.cycle.Setup;
 import org.almostrealism.graph.TimeCell;
+import org.almostrealism.hardware.OperationList;
 import org.almostrealism.time.Temporal;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 public class GlobalTimeManager implements Setup, Temporal {
-	private TimeCell clock;
+	public static final int MAX_RESETS = 32;
 
-	public GlobalTimeManager() {
-		this.clock = new TimeCell();
+	private TimeCell clock;
+	private List<Integer> resets;
+	private IntUnaryOperator frameForMeasure;
+
+	public GlobalTimeManager(IntUnaryOperator frameForMeasure) {
+		this.clock = new TimeCell(MAX_RESETS);
+		this.frameForMeasure = frameForMeasure;
+		this.resets = new ArrayList<>();
 	}
 
 	public TimeCell getClock() {
 		return clock;
 	}
 
+	public void addReset(int measure) {
+		if (resets.size() >= MAX_RESETS) throw new IllegalArgumentException("Maximum number of resets exceeded");
+		resets.add(measure);
+	}
+
 	@Override
 	public Supplier<Runnable> setup() {
-		return clock.setup();
+		OperationList setup = new OperationList("GlobalTimeManager Setup");
+		setup.add(() -> () -> {
+			IntStream.range(0, resets.size()).forEach(i -> clock.setReset(i, frameForMeasure.applyAsInt(resets.get(i))));
+		});
+		setup.add(clock.setup());
+		return setup;
 	}
 
 	@Override

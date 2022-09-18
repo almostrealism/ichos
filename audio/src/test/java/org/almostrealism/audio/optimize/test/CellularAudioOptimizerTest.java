@@ -31,6 +31,7 @@ import org.almostrealism.hardware.Hardware;
 import org.almostrealism.heredity.DefaultGenomeBreeder;
 import org.almostrealism.heredity.Genome;
 import org.almostrealism.heredity.ScaleFactor;
+import org.almostrealism.heredity.TemporalCellular;
 import org.almostrealism.optimize.PopulationOptimizer;
 import org.junit.Test;
 
@@ -117,7 +118,7 @@ public class CellularAudioOptimizerTest extends AssignableGenomeTest {
 					pop.init(pop.getGenomes().get(0), health.getMeasures(), health.getOutput());
 
 					IntStream.range(0, 4).forEach(i -> {
-						Cells organ = pop.enableGenome(i);
+						TemporalCellular organ = pop.enableGenome(i);
 
 						try {
 							health.setTarget(organ);

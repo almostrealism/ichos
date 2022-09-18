@@ -85,7 +85,7 @@ public class PatternSystemManager implements CodeFeatures {
 		KernelizedEvaluable<PackedCollection<?>> scale = _multiply(
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
 
-		OperationList generate = new OperationList();
+		OperationList generate = new OperationList("PatternSystemManager Sum");
 		generate.add(() -> sum.get());
 		generate.add(() -> () ->
 				scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));

@@ -279,7 +279,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		Cells organ = cells(samples(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out);
 		organ.reset();
 
-		Genome<PackedCollection<?>> genome = ((AudioSceneGenome) genome(scene, enableFilter)).getOldGenome();
+		Genome<PackedCollection<?>> genome = ((AudioSceneGenome) genome(scene, enableFilter)).getLegacyGenome();
 
 		List<TemporalFactor<PackedCollection<?>>> temporals = new ArrayList<>();
 

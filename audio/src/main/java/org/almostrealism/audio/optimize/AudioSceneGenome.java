@@ -27,13 +27,13 @@ import org.almostrealism.heredity.Genome;
 @Deprecated
 public class AudioSceneGenome implements Genome<PackedCollection<?>> {
 	private Genome<PackedCollection<?>> genome;
-	private Genome<PackedCollection<?>> oldGenome;
+	private Genome<PackedCollection<?>> legacyGenome;
 
 	public AudioSceneGenome() { }
 
-	public AudioSceneGenome(Genome<PackedCollection<?>> genome, Genome<PackedCollection<?>> oldGenome) {
+	public AudioSceneGenome(Genome<PackedCollection<?>> genome, Genome<PackedCollection<?>> legacyGenome) {
 		this.genome = genome;
-		this.oldGenome = oldGenome;
+		this.legacyGenome = legacyGenome;
 	}
 
 	public Genome<PackedCollection<?>> getGenome() {
@@ -44,12 +44,12 @@ public class AudioSceneGenome implements Genome<PackedCollection<?>> {
 		this.genome = genome;
 	}
 
-	public Genome<PackedCollection<?>> getOldGenome() {
-		return oldGenome;
+	public Genome<PackedCollection<?>> getLegacyGenome() {
+		return legacyGenome;
 	}
 
-	public void setOldGenome(Genome<PackedCollection<?>> oldGenome) {
-		this.oldGenome = oldGenome;
+	public void setLegacyGenome(Genome<PackedCollection<?>> legacyGenome) {
+		this.legacyGenome = legacyGenome;
 	}
 
 	@Override

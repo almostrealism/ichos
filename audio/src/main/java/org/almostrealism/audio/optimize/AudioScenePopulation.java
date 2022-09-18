@@ -17,22 +17,26 @@
 package org.almostrealism.audio.optimize;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.AudioScene;
 import org.almostrealism.audio.Cells;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.Receptor;
+import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.Genome;
+import org.almostrealism.heredity.TemporalCellular;
 import org.almostrealism.optimize.Population;
 import org.almostrealism.CodeFeatures;
 
-public class AudioScenePopulation<G> implements Population<G, PackedCollection<?>, Cells>, CodeFeatures {
+public class AudioScenePopulation<G> implements Population<G, PackedCollection<?>, TemporalCellular>, CodeFeatures {
 	private AudioScene<?> scene;
 
 	private List<Genome<G>> pop;
 	private Genome currentGenome;
 	private Cells cells;
+	private TemporalCellular temporal;
 
 	public AudioScenePopulation(AudioScene<?> scene, List<Genome<G>> population) {
 		this.scene = scene;
@@ -43,6 +47,22 @@ public class AudioScenePopulation<G> implements Population<G, PackedCollection<?
 	public void init(Genome<G> templateGenome, List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
 		enableGenome(templateGenome);
 		this.cells = scene.getCells(measures, output);
+
+		this.temporal = new TemporalCellular() {
+			@Override
+			public Supplier<Runnable> setup() {
+				OperationList setup = new OperationList("AudioScenePopulation Cellular Setup");
+				setup.addAll((List) scene.setup());
+				setup.addAll((List) cells.setup());
+				return setup;
+			}
+
+			@Override
+			public Supplier<Runnable> tick() {
+				return cells.tick();
+			}
+		};
+
 		disableGenome();
 	}
 
@@ -52,10 +72,10 @@ public class AudioScenePopulation<G> implements Population<G, PackedCollection<?
 	public void setGenomes(List<Genome<G>> pop) { this.pop = pop; }
 
 	@Override
-	public Cells enableGenome(int index) {
+	public TemporalCellular enableGenome(int index) {
 		enableGenome(getGenomes().get(index));
 		cells.reset();
-		return cells;
+		return temporal;
 	}
 
 	private void enableGenome(Genome newGenome) {

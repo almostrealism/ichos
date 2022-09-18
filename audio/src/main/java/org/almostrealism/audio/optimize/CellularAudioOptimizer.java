@@ -293,22 +293,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 	}
 
 	public static CellularAudioOptimizer build(Supplier<Supplier<Genome<PackedCollection<?>>>> generator, AudioScene<?> scene, int cycles) {
-		return new CellularAudioOptimizer(scene, () -> {
-			return new DefaultGenomeBreeder(
-					Breeders.of(Breeders.randomChoiceBreeder(),
-							Breeders.randomChoiceBreeder(),
-							Breeders.randomChoiceBreeder(),
-							Breeders.averageBreeder()), 							   // GENERATORS
-					Breeders.averageBreeder(),										   // PARAMETERS
-					Breeders.averageBreeder(),  									   // VOLUME
-					Breeders.averageBreeder(),  									   // MAIN FILTER UP
-					Breeders.averageBreeder(),  									   // WET IN
-					Breeders.perturbationBreeder(0.0005, ScaleFactor::new),  // DELAY
-					Breeders.perturbationBreeder(0.0005, ScaleFactor::new),  // ROUTING
-					Breeders.averageBreeder(),  									   // WET OUT
-					Breeders.perturbationBreeder(0.0005, ScaleFactor::new),  // FILTERS
-					Breeders.averageBreeder());  									   // MASTER FILTER DOWN
-		}, generator, cycles);
+		return new CellularAudioOptimizer(scene, scene::getBreeder, generator, cycles);
 	}
 
 	/**
@@ -341,7 +326,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		HardwareOperator.enableVerboseLog = verbosity > 3;
 
 		// PopulationOptimizer.THREADS = verbosity < 1 ? 2 : 1;
-		PopulationOptimizer.enableBreeding = false; // verbosity < 3;
+		PopulationOptimizer.enableBreeding = verbosity < 3;
 
 		AdjustableDelayCell.defaultPurgeFrequency = 1.0;
 		// HealthCallable.setComputeRequirements(ComputeRequirement.C);
@@ -399,6 +384,8 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		scene.setTuning(new DefaultKeyboardTuning());
 		scene.setTotalMeasures(32);
 		scene.addSection(0, 32);
+		scene.addBreak(12);
+		scene.addBreak(24);
 
 		int channel = 0;
 

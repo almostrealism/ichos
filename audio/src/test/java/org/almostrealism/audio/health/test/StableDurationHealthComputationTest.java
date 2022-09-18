@@ -33,6 +33,7 @@ import org.almostrealism.collect.PackedCollectionHeap;
 import org.almostrealism.graph.CellAdapter;
 import org.almostrealism.hardware.Hardware;
 import org.almostrealism.heredity.Genome;
+import org.almostrealism.heredity.TemporalCellular;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -170,7 +171,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 				pop.init(pop.getGenomes().get(0), health.getMeasures(), health.getOutput());
 
 				IntStream.range(0, 2).forEach(i -> {
-					Cells organ = pop.enableGenome(i);
+					TemporalCellular organ = pop.enableGenome(i);
 
 					try {
 						health.setTarget(organ);

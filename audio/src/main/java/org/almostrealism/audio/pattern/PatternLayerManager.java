@@ -81,7 +81,7 @@ public class PatternLayerManager implements CodeFeatures {
 		KernelizedEvaluable<PackedCollection<?>> scale = _multiply(
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
 
-		OperationList generate = new OperationList();
+		OperationList generate = new OperationList("PatternLayerManager Sum");
 		generate.add(() -> sum.get());
 
 		if (enableVolume) {
