@@ -31,6 +31,9 @@ public class SceneSection {
 		this.channels = channels;
 	}
 
+	public int getPosition() { return position; }
+	public int getLength() { return length; }
+
 	public ChannelSection getChannelSection(int channel) { return channels.get(channel); }
 
 	public static SceneSection createSection(int position, int length, int channels, Supplier<ChannelSection> supply) {

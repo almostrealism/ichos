@@ -20,6 +20,9 @@ import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.heredity.Chromosome;
 import org.almostrealism.heredity.Genome;
 
+import java.util.Optional;
+import java.util.stream.IntStream;
+
 /*
  * TODO  This class is just a temporary solution to the problem that
  * TODO  not everything has been migrated to ConfigurableGenome.
@@ -70,5 +73,10 @@ public class AudioSceneGenome implements Genome<PackedCollection<?>> {
 	@Override
 	public Chromosome<PackedCollection<?>> valueAt(int pos) {
 		throw new UnsupportedOperationException();
+	}
+
+	public String signature() {
+		return Optional.ofNullable(genome).map(Genome::signature).orElse("") + ":" +
+				Optional.ofNullable(legacyGenome).map(Genome::signature).orElse("");
 	}
 }

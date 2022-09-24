@@ -107,6 +107,20 @@ public class PatternSystemManager implements CodeFeatures {
 		return choices;
 	}
 
+	public List<PatternLayerManager> getPatterns() { return patterns; }
+
+	public Settings getSettings() {
+		Settings settings = new Settings();
+		settings.getPatterns().addAll(patterns.stream().map(PatternLayerManager::getSettings).collect(Collectors.toList()));
+		return settings;
+	}
+
+	public void setSettings(Settings settings) {
+		patterns.clear();
+		patternOutputs.clear();
+		settings.getPatterns().forEach(s -> addPattern(s.getChannel(), s.getDuration(), s.isMelodic()).setSettings(s));
+	}
+
 	public void refreshParameters() {
 		patterns.forEach(PatternLayerManager::refresh);
 	}
@@ -160,5 +174,12 @@ public class PatternSystemManager implements CodeFeatures {
 		}
 
 		runSum.get().run();
+	}
+
+	public static class Settings {
+		private List<PatternLayerManager.Settings> patterns = new ArrayList<>();
+
+		public List<PatternLayerManager.Settings> getPatterns() { return patterns; }
+		public void setPatterns(List<PatternLayerManager.Settings> patterns) { this.patterns = patterns; }
 	}
 }

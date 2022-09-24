@@ -335,6 +335,13 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(2000 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 
+		AudioScene<?> scene = createScene();
+		CellularAudioOptimizer opt = build(scene, PopulationOptimizer.enableBreeding ? 25 : 1);
+		opt.init();
+		opt.run();
+	}
+
+	public static AudioScene<?> createScene() throws IOException {
 		double bpm = 120.0; // 116.0;
 		int sourceCount = 5;
 		AudioScene<?> scene = new AudioScene<>(null, bpm, sourceCount, 3, OutputLine.sampleRate);
@@ -405,9 +412,8 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			layer.addLayer(new ParameterSet());
 		}
 
-		CellularAudioOptimizer opt = build(scene, PopulationOptimizer.enableBreeding ? 25 : 1);
-		opt.init();
-		opt.run();
+		scene.saveSettings(new File("scene-settings.json"));
+		return scene;
 	}
 
 	private static List<PatternFactoryChoice> createChoices() throws IOException {

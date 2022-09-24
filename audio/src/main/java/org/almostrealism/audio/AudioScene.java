@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Operation;
 import io.almostrealism.relation.Producer;
@@ -54,6 +55,8 @@ import org.almostrealism.space.Animation;
 import io.almostrealism.uml.ModelEntity;
 import org.almostrealism.time.Frequency;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -61,6 +64,7 @@ import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @ModelEntity
@@ -198,8 +202,9 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public void addSection(int position, int length) {
 		sections.addSection(position, length);
 	}
-
 	public void addBreak(int measure) { time.addReset(measure); }
+
+	public GlobalTimeManager getTimeManager() { return time; }
 
 	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
 	public void removeTempoListener(Consumer<Frequency> listener) { this.tempoListeners.remove(listener); }
@@ -213,6 +218,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public int getSourceCount() { return sourceCount; }
 	public int getDelayLayerCount() { return delayLayerCount; }
 
+	public void setMeasureSize(int measureSize) { this.measureSize = measureSize; triggerDurationChange(); }
 	public int getMeasureSize() { return measureSize; }
 	public double getMeasureDuration() { return getTempo().l(getMeasureSize()); }
 	public int getMeasureSamples() { return (int) (getMeasureDuration() * getSampleRate()); }
@@ -224,6 +230,29 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public int getTotalSamples() { return (int) (getTotalDuration() * getSampleRate()); }
 
 	public int getSampleRate() { return sampleRate; }
+
+	public Settings getSettings() {
+		Settings settings = new Settings();
+		settings.setBpm(getBPM());
+		settings.setMeasureSize(getMeasureSize());
+		settings.setTotalMeasures(getTotalMeasures());
+		settings.getBreaks().addAll(time.getResets());
+		settings.getSections().addAll(sections.getSections()
+				.stream().map(s -> new Settings.Section(s.getPosition(), s.getLength())).collect(Collectors.toList()));
+		settings.setPatternSystem(patterns.getSettings());
+		return settings;
+	}
+
+	public void setSettings(Settings settings) {
+		setBPM(settings.getBpm());
+		setMeasureSize(settings.getMeasureSize());
+		setTotalMeasures(settings.getTotalMeasures());
+
+		time.getResets().clear();
+		settings.getBreaks().forEach(time::addReset);
+		settings.getSections().forEach(s -> sections.addSection(s.getPosition(), s.getLength()));
+		patterns.setSettings(settings.getPatternSystem());
+	}
 
 	public Scale<?> getScale() {
 		// TODO  This should be configurable
@@ -304,6 +333,14 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 			patternDestination.clear();
 			patterns.sum(channels, pos -> (int) (pos * getMeasureSamples()), getTotalMeasures(), getScale());
 		};
+	}
+
+	public void saveSettings(File file) throws IOException {
+		new ObjectMapper().writeValue(file, getSettings());
+	}
+
+	public void loadSettings(File file) throws IOException {
+		setSettings(new ObjectMapper().readValue(file, AudioScene.Settings.class));
 	}
 
 	private CellList getWavesCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
@@ -447,5 +484,49 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 
 		IntStream.range(0, delays - 1).forEach(i -> gene.add(p -> c(0.0)));
 		return gene;
+	}
+
+	public static class Settings {
+		private double bpm = 120;
+		private int measureSize = 4;
+		private int totalMeasures = 1;
+		private List<Integer> breaks = new ArrayList<>();
+		private List<Section> sections = new ArrayList<>();
+		private PatternSystemManager.Settings patternSystem;
+
+		public double getBpm() { return bpm; }
+		public void setBpm(double bpm) { this.bpm = bpm; }
+
+		public int getMeasureSize() { return measureSize; }
+		public void setMeasureSize(int measureSize) { this.measureSize = measureSize; }
+
+		public int getTotalMeasures() { return totalMeasures; }
+		public void setTotalMeasures(int totalMeasures) { this.totalMeasures = totalMeasures; }
+
+		public List<Integer> getBreaks() { return breaks; }
+		public void setBreaks(List<Integer> breaks) { this.breaks = breaks; }
+
+		public List<Section> getSections() { return sections; }
+		public void setSections(List<Section> sections) { this.sections = sections; }
+
+		public PatternSystemManager.Settings getPatternSystem() { return patternSystem; }
+		public void setPatternSystem(PatternSystemManager.Settings patternSystem) { this.patternSystem = patternSystem; }
+
+		public static class Section {
+			private int position, length;
+
+			public Section() { }
+
+			public Section(int position, int length) {
+				this.position = position;
+				this.length = length;
+			}
+
+			public int getPosition() { return position; }
+			public void setPosition(int position) { this.position = position; }
+
+			public int getLength() { return length; }
+			public void setLength(int length) { this.length = length; }
+		}
 	}
 }

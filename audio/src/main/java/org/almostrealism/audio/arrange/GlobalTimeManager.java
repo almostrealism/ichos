@@ -49,6 +49,8 @@ public class GlobalTimeManager implements Setup, Temporal {
 		resets.add(measure);
 	}
 
+	public List<Integer> getResets() { return resets; }
+
 	@Override
 	public Supplier<Runnable> setup() {
 		OperationList setup = new OperationList("GlobalTimeManager Setup");

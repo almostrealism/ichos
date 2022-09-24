@@ -44,6 +44,7 @@ public class PatternLayerManager implements CodeFeatures {
 	private int channel;
 	private double duration;
 	private double scale;
+	private boolean melodic;
 	private boolean applyNoteDuration;
 
 	private List<PatternFactoryChoice> choices;
@@ -51,6 +52,7 @@ public class PatternLayerManager implements CodeFeatures {
 	private ParameterFunction factorySelection;
 
 	private List<PatternLayer> roots;
+	private List<ParameterSet> layerParams;
 
 	private PackedCollection volume;
 	private PackedCollection destination;
@@ -58,15 +60,17 @@ public class PatternLayerManager implements CodeFeatures {
 	private OperationList runSum;
 
 	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome, int channel,
-							   double measures, boolean applyNoteDuration, PackedCollection destination) {
+							   double measures, boolean melodic, PackedCollection destination) {
 		this.channel = channel;
 		this.duration = measures;
 		this.scale = 1.0;
-		this.applyNoteDuration = applyNoteDuration;
+		this.melodic = melodic;
+		this.applyNoteDuration = melodic;
 
 		this.choices = choices;
 		this.chromosome = chromosome;
 		this.roots = new ArrayList<>();
+		this.layerParams = new ArrayList<>();
 		if (destination != null) init(destination);
 	}
 
@@ -133,6 +137,26 @@ public class PatternLayerManager implements CodeFeatures {
 				.collect(Collectors.toList());
 	}
 
+	public Settings getSettings() {
+		Settings settings = new Settings();
+		settings.setChannel(channel);
+		settings.setDuration(duration);
+		settings.setMelodic(melodic);
+		settings.setFactorySelection(factorySelection);
+		settings.getLayers().addAll(layerParams);
+		return settings;
+	}
+
+	public void setSettings(Settings settings) {
+		channel = settings.getChannel();
+		duration = settings.getDuration();
+		melodic = settings.isMelodic();
+		factorySelection = settings.getFactorySelection();
+
+		clear();
+		settings.getLayers().forEach(this::addLayer);
+	}
+
 	protected void decrement() { scale *= 2; }
 	protected void increment() {
 		scale /= 2;
@@ -176,10 +200,13 @@ public class PatternLayerManager implements CodeFeatures {
 			});
 		}
 
+		layerParams.add(params);
 		increment();
 	}
 
 	public void removeLayer() {
+		chromosome.removeGene(chromosome.length() - 1);
+		layerParams.remove(layerParams.size() - 1);
 		decrement();
 
 		if (depth() <= 0) return;
@@ -301,5 +328,28 @@ public class PatternLayerManager implements CodeFeatures {
 
 		buf.append("|");
 		return buf.toString();
+	}
+
+	public static class Settings {
+		private int channel;
+		private double duration;
+		private boolean melodic;
+		private ParameterFunction factorySelection;
+		private List<ParameterSet> layers = new ArrayList<>();
+
+		public int getChannel() { return channel; }
+		public void setChannel(int channel) { this.channel = channel; }
+
+		public double getDuration() { return duration; }
+		public void setDuration(double duration) { this.duration = duration; }
+
+		public boolean isMelodic() { return melodic; }
+		public void setMelodic(boolean melodic) { this.melodic = melodic; }
+
+		public ParameterFunction getFactorySelection() { return factorySelection; }
+		public void setFactorySelection(ParameterFunction factorySelection) { this.factorySelection = factorySelection; }
+
+		public List<ParameterSet> getLayers() { return layers; }
+		public void setLayers(List<ParameterSet> layers) { this.layers = layers; }
 	}
 }
