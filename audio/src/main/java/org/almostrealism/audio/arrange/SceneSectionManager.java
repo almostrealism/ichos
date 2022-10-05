@@ -21,6 +21,7 @@ import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.ConfigurableGenome;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
@@ -49,7 +50,7 @@ public class SceneSectionManager implements Setup {
 		return genome;
 	}
 
-	public List<SceneSection> getSections() { return sections; }
+	public List<SceneSection> getSections() { return Collections.unmodifiableList(sections); }
 
 	public List<ChannelSection> getChannelSections(int channel) {
 		return sections.stream().map(s -> s.getChannelSection(channel)).collect(Collectors.toList());
@@ -61,6 +62,12 @@ public class SceneSectionManager implements Setup {
 		sections.add(s);
 		setup.add(channelFactory.setup());
 		return s;
+	}
+
+	public void removeSection(int index) {
+		sections.remove(index);
+		setup.remove(index);
+		genome.removeChromosome(index);
 	}
 
 	@Override

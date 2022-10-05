@@ -205,6 +205,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public void addBreak(int measure) { time.addReset(measure); }
 
 	public GlobalTimeManager getTimeManager() { return time; }
+	public SceneSectionManager getSectionManager() { return sections; }
 
 	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
 	public void removeTempoListener(Consumer<Frequency> listener) { this.tempoListeners.remove(listener); }

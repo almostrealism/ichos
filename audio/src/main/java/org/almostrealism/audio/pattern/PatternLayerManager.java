@@ -19,15 +19,12 @@ package org.almostrealism.audio.pattern;
 import org.almostrealism.CodeFeatures;
 import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
-import org.almostrealism.audio.tone.KeyboardTuning;
 import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.collect.PackedCollection;
-import org.almostrealism.collect.TraversalPolicy;
 import org.almostrealism.collect.computations.RootDelegateSegmentsAdd;
 import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.hardware.PassThroughProducer;
-import org.almostrealism.heredity.ConfigurableChromosome;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.heredity.SimpleChromosome;
 import org.almostrealism.heredity.SimpleGene;
@@ -35,6 +32,7 @@ import org.almostrealism.heredity.SimpleGene;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleToIntFunction;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -47,7 +45,8 @@ public class PatternLayerManager implements CodeFeatures {
 	private boolean melodic;
 	private boolean applyNoteDuration;
 
-	private List<PatternFactoryChoice> choices;
+	private Supplier<List<PatternFactoryChoice>> percChoices;
+	private Supplier<List<PatternFactoryChoice>> melodicChoices;
 	private SimpleChromosome chromosome;
 	private ParameterFunction factorySelection;
 
@@ -59,15 +58,21 @@ public class PatternLayerManager implements CodeFeatures {
 	private RootDelegateSegmentsAdd sum;
 	private OperationList runSum;
 
-	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome, int channel,
-							   double measures, boolean melodic, PackedCollection destination) {
+	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome, int channel, double measures,
+							   boolean melodic, PackedCollection destination) {
+		this(PatternFactoryChoice.choices(choices, false), PatternFactoryChoice.choices(choices, true),
+				chromosome, channel, measures, melodic, destination);
+	}
+
+	public PatternLayerManager(Supplier<List<PatternFactoryChoice>> percChoices, Supplier<List<PatternFactoryChoice>> melodicChoices,
+							   SimpleChromosome chromosome, int channel, double measures, boolean melodic, PackedCollection destination) {
 		this.channel = channel;
 		this.duration = measures;
 		this.scale = 1.0;
-		this.melodic = melodic;
-		this.applyNoteDuration = melodic;
+		setMelodic(melodic);
 
-		this.choices = choices;
+		this.percChoices = percChoices;
+		this.melodicChoices = melodicChoices;
 		this.chromosome = chromosome;
 		this.roots = new ArrayList<>();
 		this.layerParams = new ArrayList<>();
@@ -105,21 +110,33 @@ public class PatternLayerManager implements CodeFeatures {
 	}
 
 	public List<PatternFactoryChoice> getChoices() {
-		return choices;
+		return melodic ? melodicChoices.get() : percChoices.get();
 	}
 
 	public int getChannel() { return channel; }
 	public void setChannel(int channel) { this.channel = channel; }
 
-	public void setTuning(KeyboardTuning tuning) {
-		getChoices().forEach(c -> c.setTuning(tuning));
+	public void setDuration(double measures) { duration = measures; }
+	public double getDuration() { return duration; }
+
+	public void setMelodic(boolean melodic) {
+		this.melodic = melodic;
+		this.applyNoteDuration = melodic;
 	}
 
+	public boolean isMelodic() { return melodic; }
+
 	public PatternLayerSeeds getSeeds(ParameterSet params) {
-		return getChoices().stream()
+		List<PatternLayerSeeds> options = getChoices().stream()
 				.filter(PatternFactoryChoice::isSeed)
 				.map(choice -> choice.seeds(params))
-				.findFirst().orElseThrow();
+				.collect(Collectors.toList());
+
+		if (options.isEmpty()) return null;
+
+		double c = factorySelection.apply(params);
+		if (c < 0) c = c + 1.0;
+		return options.get((int) (options.size() * c));
 	}
 
 	public List<PatternElement> getTailElements() {
@@ -153,7 +170,7 @@ public class PatternLayerManager implements CodeFeatures {
 		melodic = settings.isMelodic();
 		factorySelection = settings.getFactorySelection();
 
-		clear();
+		clear(true);
 		settings.getLayers().forEach(this::addLayer);
 	}
 
@@ -163,11 +180,27 @@ public class PatternLayerManager implements CodeFeatures {
 	}
 
 	public int rootCount() { return roots.size(); }
+
 	public int depth() {
 		if (rootCount() <= 0) return 0;
 		return roots.stream()
 				.map(PatternLayer::depth)
 				.max(Integer::compareTo).orElse(0);
+	}
+
+	public int getLayerCount() {
+		return chromosome.length();
+	}
+
+	public void setLayerCount(int count) {
+		if (count < 0) throw new IllegalArgumentException(count + " is not a valid number of layers");
+		if (count == getLayerCount()) return;
+
+		if (getLayerCount() < count) {
+			while (getLayerCount() < count) addLayer(new ParameterSet());
+		} else {
+			while (getLayerCount() > count) removeLayer(true);
+		}
 	}
 
 	public void addLayer(ParameterSet params) {
@@ -204,8 +237,8 @@ public class PatternLayerManager implements CodeFeatures {
 		increment();
 	}
 
-	public void removeLayer() {
-		chromosome.removeGene(chromosome.length() - 1);
+	public void removeLayer(boolean removeGene) {
+		if (removeGene) chromosome.removeGene(chromosome.length() - 1);
 		layerParams.remove(layerParams.size() - 1);
 		decrement();
 
@@ -219,21 +252,25 @@ public class PatternLayerManager implements CodeFeatures {
 	}
 
 	public void replaceLayer(ParameterSet params) {
-		removeLayer();
+		removeLayer(true);
 		addLayer(params);
 	}
 
-	public void clear() {
-		while (depth() > 0) removeLayer();
+	public void clear(boolean removeGenes) {
+		if (removeGenes) {
+			while (getLayerCount() > 0) removeLayer(true);
+		} else {
+			while (depth() > 0) removeLayer(false);
+		}
 	}
 
 	public void refresh() {
-		clear();
+		clear(false);
 		IntStream.range(0, chromosome.length()).forEach(i -> layer(chromosome.valueAt(i)));
 	}
 
 	public PatternFactoryChoice choose(double scale, ParameterSet params) {
-		List<PatternFactoryChoice> options = choices.stream()
+		List<PatternFactoryChoice> options = getChoices().stream()
 				.filter(c -> scale >= c.getMinScale())
 				.filter(c -> scale <= c.getMaxScale())
 				.collect(Collectors.toList());

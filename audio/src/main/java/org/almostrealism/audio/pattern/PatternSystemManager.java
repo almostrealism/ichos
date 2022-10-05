@@ -127,21 +127,15 @@ public class PatternSystemManager implements CodeFeatures {
 
 	public void setTuning(KeyboardTuning tuning) {
 		getChoices().forEach(c -> c.setTuning(tuning));
-		patterns.forEach(l -> l.setTuning(tuning));
 	}
 
 	public PatternLayerManager addPattern(int channel, double measures, boolean melodic) {
 		PackedCollection out = intermediateDestination.get();
 		patternOutputs.add(new ProducerWithOffset<>(v(out), 0));
 
-		// TODO  This is a problem, because if the user changes the choices,
-		// TODO  they will expect those changes to take effect, but they will
-		// TODO  not until the next pattern is created
-		PatternLayerManager pattern = new PatternLayerManager(
-				choices.stream()
-					.filter(c -> c.getFactory().isMelodic() == melodic)
-					.collect(Collectors.toList()), genome.addSimpleChromosome(3),
-				channel, measures, melodic, out);
+		PatternLayerManager pattern = new PatternLayerManager(choices,
+								genome.addSimpleChromosome(3),
+								channel, measures, melodic, out);
 		patterns.add(pattern);
 
 		return pattern;

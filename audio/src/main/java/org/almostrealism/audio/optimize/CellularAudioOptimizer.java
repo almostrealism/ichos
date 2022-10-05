@@ -389,8 +389,14 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 		scene.getPatternManager().getChoices().addAll(createChoices());
 		scene.setTuning(new DefaultKeyboardTuning());
-		scene.setTotalMeasures(32);
-		scene.addSection(0, 32);
+		scene.setTotalMeasures(40);
+		scene.addSection(0, 8);
+		scene.addSection(8, 4);
+		scene.addSection(12, 4);
+		scene.addSection(16, 4);
+		scene.addSection(20, 4);
+		scene.addSection(24, 8);
+		scene.addSection(32, 8);
 		scene.addBreak(12);
 		scene.addBreak(24);
 

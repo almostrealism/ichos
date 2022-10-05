@@ -63,19 +63,11 @@ public class CellularAudioOptimizerTest extends AssignableGenomeTest {
 
 		AudioScene<?> scene = scene();
 
-		CellularAudioOptimizer optimizer = new CellularAudioOptimizer(scene, () -> {
-			return new DefaultGenomeBreeder(
-					Breeders.perturbationBreeder(0.0005, ScaleFactor::new),  // GENERATORS
-					Breeders.averageBreeder(),  									   // VOLUME
-					Breeders.perturbationBreeder(0.0005, ScaleFactor::new),  // DELAY
-					Breeders.perturbationBreeder(0.0005, ScaleFactor::new),  // ROUTING
-					Breeders.averageBreeder(),  									   // FILTER
-					Breeders.perturbationBreeder(0.005, ScaleFactor::new));  // PERIODIC
-		}, null, cycles);
+		CellularAudioOptimizer optimizer = new CellularAudioOptimizer(scene, scene::getBreeder, null, cycles);
 
 		optimizer.setChildrenFunction(g -> {
-			System.out.println("Creating LayeredOrganPopulation...");
-			AudioScenePopulation<Scalar> pop = new AudioScenePopulation<>(null, genomes);
+			System.out.println("Creating AudioScenePopulation...");
+			AudioScenePopulation<Scalar> pop = new AudioScenePopulation<>(scene, genomes);
 			AudioHealthComputation hc = (AudioHealthComputation) optimizer.getHealthComputation();
 			pop.init(pop.getGenomes().get(0), hc.getMeasures(), hc.getOutput());
 			return pop;

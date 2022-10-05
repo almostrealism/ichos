@@ -20,6 +20,8 @@ import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.tone.KeyboardTuning;
 
 import java.util.List;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class PatternFactoryChoice {
 	private PatternElementFactory factory;
@@ -116,5 +118,11 @@ public class PatternFactoryChoice {
 		getFactory().apply(ElementParity.LEFT, element.getPosition(), scale, params).ifPresent(layer.getElements()::add);
 		getFactory().apply(ElementParity.RIGHT, element.getPosition(), scale, params).ifPresent(layer.getElements()::add);
 		return layer;
+	}
+
+	public static Supplier<List<PatternFactoryChoice>> choices(List<PatternFactoryChoice> choices, boolean melodic) {
+		return () -> choices.stream()
+				.filter(c -> c.getFactory().isMelodic() == melodic)
+				.collect(Collectors.toList());
 	}
 }
