@@ -407,16 +407,27 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
+			if (i == 0) {
+				layer.addLayer(new ParameterSet());
+			}
 		}
 
 		for (int i = 0; i < 1; i++) {
 			PatternLayerManager layer = scene.getPatternManager().addPattern(channel++, 4.0, true);
+			layer.setChordDepth(3);
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
 			layer.addLayer(new ParameterSet());
 		}
+
+		PatternLayerManager layer = scene.getPatternManager().addPattern(channel++, 4.0, true);
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
 
 		scene.saveSettings(new File("scene-settings.json"));
 		return scene;

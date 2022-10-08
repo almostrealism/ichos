@@ -36,7 +36,7 @@ public class PatternElement implements CodeFeatures {
 
 	private boolean applyNoteDuration;
 	private double noteDuration;
-	private double scalePosition;
+	private List<Double> scalePositions;
 
 	private PatternDirection direction;
 	private int repeatCount;
@@ -78,9 +78,9 @@ public class PatternElement implements CodeFeatures {
 
 	public void setNoteDuration(double noteDuration) { this.noteDuration = noteDuration; }
 
-	public double getScalePosition() { return scalePosition;}
+	public List<Double> getScalePositions() { return scalePositions; }
 
-	public void setScalePosition(double scalePosition) { this.scalePosition = scalePosition; }
+	public void setScalePosition(List<Double> scalePositions) { this.scalePositions = scalePositions; }
 
 	public PatternDirection getDirection() {
 		return direction;
@@ -114,9 +114,19 @@ public class PatternElement implements CodeFeatures {
 	public List<ProducerWithOffset<PackedCollection>> getNoteDestinations(DoubleToIntFunction offsetForPosition, Scale<?> scale) {
 		List<ProducerWithOffset<PackedCollection>> destinations = new ArrayList<>();
 
-		for (int i = 0; i < repeatCount; i++) {
-			Producer<PackedCollection> note = getNoteAudio(scale.valueAt((int) (scalePosition * scale.length())));
-			destinations.add(new ProducerWithOffset<>(note, offsetForPosition.applyAsInt(getPosition() + i * repeatDuration)));
+		List<KeyPosition<?>> keys = new ArrayList<>();
+		scale.forEach(keys::add);
+
+		p: for (double p : getScalePositions()) {
+			if (keys.isEmpty()) break p;
+			int keyIndex = (int) (p * keys.size());
+
+			for (int i = 0; i < repeatCount; i++) {
+				Producer<PackedCollection> note = getNoteAudio(keys.get(keyIndex));
+				destinations.add(new ProducerWithOffset<>(note, offsetForPosition.applyAsInt(getPosition() + i * repeatDuration)));
+			}
+
+			keys.remove(keyIndex);
 		}
 
 		return destinations;

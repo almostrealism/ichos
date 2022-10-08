@@ -42,6 +42,7 @@ public class PatternLayerManager implements CodeFeatures {
 	private int channel;
 	private double duration;
 	private double scale;
+	private int chordDepth;
 	private boolean melodic;
 	private boolean applyNoteDuration;
 
@@ -69,6 +70,7 @@ public class PatternLayerManager implements CodeFeatures {
 		this.channel = channel;
 		this.duration = measures;
 		this.scale = 1.0;
+		this.chordDepth = 1;
 		setMelodic(melodic);
 
 		this.percChoices = percChoices;
@@ -119,6 +121,9 @@ public class PatternLayerManager implements CodeFeatures {
 	public void setDuration(double measures) { duration = measures; }
 	public double getDuration() { return duration; }
 
+	public int getChordDepth() { return chordDepth; }
+	public void setChordDepth(int chordDepth) { this.chordDepth = chordDepth; }
+
 	public void setMelodic(boolean melodic) {
 		this.melodic = melodic;
 		this.applyNoteDuration = melodic;
@@ -167,6 +172,7 @@ public class PatternLayerManager implements CodeFeatures {
 	public void setSettings(Settings settings) {
 		channel = settings.getChannel();
 		duration = settings.getDuration();
+		chordDepth = settings.getChordDepth();
 		melodic = settings.isMelodic();
 		factorySelection = settings.getFactorySelection();
 
@@ -222,12 +228,12 @@ public class PatternLayerManager implements CodeFeatures {
 	protected void layer(ParameterSet params) {
 		if (rootCount() <= 0) {
 			PatternLayerSeeds seeds = getSeeds(params);
-			seeds.generator(0, duration).forEach(roots::add);
+			seeds.generator(0, duration, chordDepth).forEach(roots::add);
 			scale = seeds.getScale();
 		} else {
 			roots.forEach(layer -> {
 				// TODO  Each layer should be processed separately, with lower probability for higher layers (?)
-				PatternLayer next = choose(scale, params).apply(layer.getAllElements(0, 2 * duration), scale, params);
+				PatternLayer next = choose(scale, params).apply(layer.getAllElements(0, 2 * duration), scale, chordDepth, params);
 				next.trim(2 * duration);
 				layer.getTail().setChild(next);
 			});
@@ -370,6 +376,7 @@ public class PatternLayerManager implements CodeFeatures {
 	public static class Settings {
 		private int channel;
 		private double duration;
+		private int chordDepth;
 		private boolean melodic;
 		private ParameterFunction factorySelection;
 		private List<ParameterSet> layers = new ArrayList<>();
@@ -379,6 +386,9 @@ public class PatternLayerManager implements CodeFeatures {
 
 		public double getDuration() { return duration; }
 		public void setDuration(double duration) { this.duration = duration; }
+
+		public int getChordDepth() { return chordDepth; }
+		public void setChordDepth(int chordDepth) { this.chordDepth = chordDepth; }
 
 		public boolean isMelodic() { return melodic; }
 		public void setMelodic(boolean melodic) { this.melodic = melodic; }

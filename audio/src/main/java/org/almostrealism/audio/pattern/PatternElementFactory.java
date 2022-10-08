@@ -32,7 +32,11 @@ public class PatternElementFactory {
 
 	private ParameterizedPositionFunction noteSelection;
 	private ParameterFunction noteLengthSelection;
+
+	@Deprecated
 	private ParameterizedPositionFunction scalePositionSelection;
+
+	private ChordPositionFunction chordNoteSelection;
 
 	private ParameterizedPositionFunction repeatSelection;
 
@@ -55,6 +59,7 @@ public class PatternElementFactory {
 		noteSelection = ParameterizedPositionFunction.random();
 		noteLengthSelection = ParameterFunction.random();
 		scalePositionSelection = ParameterizedPositionFunction.random();
+		chordNoteSelection = ChordPositionFunction.random();
 		repeatSelection = ParameterizedPositionFunction.random();
 	}
 
@@ -82,12 +87,22 @@ public class PatternElementFactory {
 
 	public void setNoteLengthSelection(ParameterFunction noteLengthSelection) { this.noteLengthSelection = noteLengthSelection; }
 
+	@Deprecated
 	public ParameterizedPositionFunction getScalePositionSelection() {
 		return scalePositionSelection;
 	}
 
+	@Deprecated
 	public void setScalePositionSelection(ParameterizedPositionFunction scalePositionSelection) {
 		this.scalePositionSelection = scalePositionSelection;
+	}
+
+	public ChordPositionFunction getChordNoteSelection() {
+		return chordNoteSelection;
+	}
+
+	public void setChordNoteSelection(ChordPositionFunction chordNoteSelection) {
+		this.chordNoteSelection = chordNoteSelection;
 	}
 
 	public ParameterizedPositionFunction getRepeatSelection() {
@@ -110,7 +125,8 @@ public class PatternElementFactory {
 		return notes.stream().filter(PatternNote::isValid).collect(Collectors.toList());
 	}
 
-	public Optional<PatternElement> apply(ElementParity parity, double position, double scale, ParameterSet params) {
+	// TODO  This should take instruction for whether to apply note duration, relying just on isMelodic limits its use
+	public Optional<PatternElement> apply(ElementParity parity, double position, double scale, int depth, ParameterSet params) {
 		if (parity == ElementParity.LEFT) {
 			position -= scale;
 		} else if (parity == ElementParity.RIGHT) {
@@ -125,7 +141,7 @@ public class PatternElementFactory {
 		List<PatternNote> notes = getValidNotes();
 
 		PatternElement element = new PatternElement(notes.get((int) (note * notes.size())), position);
-		element.setScalePosition(scalePositionSelection.applyPositive(params, position, scale));
+		element.setScalePosition(chordNoteSelection.applyAll(params, position, scale, depth));
 		element.setNoteDuration(noteLengthSelection.power(2.0, 3, -3).apply(params));
 		element.setApplyNoteDuration(isMelodic());
 

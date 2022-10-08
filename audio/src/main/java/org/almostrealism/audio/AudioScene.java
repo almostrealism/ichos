@@ -341,7 +341,11 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	}
 
 	public void loadSettings(File file) throws IOException {
-		setSettings(new ObjectMapper().readValue(file, AudioScene.Settings.class));
+		if (file.exists()) {
+			setSettings(new ObjectMapper().readValue(file, AudioScene.Settings.class));
+		} else {
+			setSettings(new Settings()); // TODO Should be fixed pattern count = source count
+		}
 	}
 
 	private CellList getWavesCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output) {
@@ -490,10 +494,14 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public static class Settings {
 		private double bpm = 120;
 		private int measureSize = 4;
-		private int totalMeasures = 1;
+		private int totalMeasures = 4;
 		private List<Integer> breaks = new ArrayList<>();
 		private List<Section> sections = new ArrayList<>();
 		private PatternSystemManager.Settings patternSystem;
+
+		public Settings() {
+			patternSystem = new PatternSystemManager.Settings();
+		}
 
 		public double getBpm() { return bpm; }
 		public void setBpm(double bpm) { this.bpm = bpm; }

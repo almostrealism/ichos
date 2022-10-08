@@ -22,6 +22,7 @@ import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.WaveData;
+import org.almostrealism.audio.pattern.ChordPositionFunction;
 import org.almostrealism.audio.pattern.ParameterizedPositionFunction;
 import org.almostrealism.audio.pattern.PatternElementFactory;
 import org.almostrealism.audio.pattern.PatternFactoryChoice;
@@ -58,7 +59,16 @@ public class PatternFactoryTest implements CellFeatures {
 	@Test
 	public void fixChoices() throws IOException {
 		List<PatternFactoryChoice> choices = readChoices();
-		choices.forEach(c -> c.setSeed(true));
+
+		choices.forEach(c -> {
+			c.getFactory().setScalePositionSelection(null);
+			c.getFactory().setChordNoteSelection(ChordPositionFunction.random());
+		});
+
+		choices.stream().filter(c -> c.getFactory().getName().equals("Monarch")).forEach(c -> {
+			c.getFactory().setName("Synths");
+			c.getFactory().getNotes().add(new PatternNote("Kit/BigCinema.wav"));
+		});
 
 		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
 	}

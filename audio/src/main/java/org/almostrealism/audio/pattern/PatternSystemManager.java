@@ -109,6 +109,10 @@ public class PatternSystemManager implements CodeFeatures {
 
 	public List<PatternLayerManager> getPatterns() { return patterns; }
 
+	public void setVolume(double volume) {
+		this.volume.setMem(0, volume);
+	}
+
 	public Settings getSettings() {
 		Settings settings = new Settings();
 		settings.getPatterns().addAll(patterns.stream().map(PatternLayerManager::getSettings).collect(Collectors.toList()));

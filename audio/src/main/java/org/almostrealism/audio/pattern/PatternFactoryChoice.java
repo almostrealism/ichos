@@ -104,19 +104,19 @@ public class PatternFactoryChoice {
 		return new PatternLayerSeeds(0, seedScale, seedUnits, 1 / seedScale, factory, params);
 	}
 
-	public PatternLayer apply(List<PatternElement> elements, double scale, ParameterSet params) {
+	public PatternLayer apply(List<PatternElement> elements, double scale, int depth, ParameterSet params) {
 		PatternLayer layer = new PatternLayer();
 		layer.setChoice(this);
-		elements.forEach(e -> layer.getElements().addAll(apply(e, scale, params).getElements()));
+		elements.forEach(e -> layer.getElements().addAll(apply(e, scale, depth, params).getElements()));
 		return layer;
 	}
 
-	public PatternLayer apply(PatternElement element, double scale, ParameterSet params) {
+	public PatternLayer apply(PatternElement element, double scale, int depth, ParameterSet params) {
 		PatternLayer layer = new PatternLayer();
 		layer.setChoice(this);
 
-		getFactory().apply(ElementParity.LEFT, element.getPosition(), scale, params).ifPresent(layer.getElements()::add);
-		getFactory().apply(ElementParity.RIGHT, element.getPosition(), scale, params).ifPresent(layer.getElements()::add);
+		getFactory().apply(ElementParity.LEFT, element.getPosition(), scale, depth, params).ifPresent(layer.getElements()::add);
+		getFactory().apply(ElementParity.RIGHT, element.getPosition(), scale, depth, params).ifPresent(layer.getElements()::add);
 		return layer;
 	}
 

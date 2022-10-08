@@ -93,10 +93,10 @@ public class PatternLayerSeeds {
 		return count * scale;
 	}
 
-	public Stream<PatternLayer> generator(double offset, double duration) {
+	public Stream<PatternLayer> generator(double offset, double duration, int chordDepth) {
 		List<PatternLayer> layers = IntStream.range(0, (int) (duration * count * units))
 				.mapToObj(i ->
-						factory.apply(null, position + offset + i * scale / units, scale / units, params).orElse(null))
+						factory.apply(null, position + offset + i * scale / units, scale / units, chordDepth, params).orElse(null))
 				.filter(Objects::nonNull)
 				.map(List::of)
 				.map(PatternLayer::new)
