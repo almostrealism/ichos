@@ -28,6 +28,7 @@ import org.almostrealism.time.Frequency;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleFunction;
 import java.util.function.DoubleToIntFunction;
 
 public class PatternElement implements CodeFeatures {
@@ -111,11 +112,11 @@ public class PatternElement implements CodeFeatures {
 		this.note.setTuning(tuning);
 	}
 
-	public List<ProducerWithOffset<PackedCollection>> getNoteDestinations(DoubleToIntFunction offsetForPosition, Scale<?> scale) {
+	public List<ProducerWithOffset<PackedCollection>> getNoteDestinations(DoubleToIntFunction offsetForPosition, DoubleFunction<Scale<?>> scaleForPosition) {
 		List<ProducerWithOffset<PackedCollection>> destinations = new ArrayList<>();
 
 		List<KeyPosition<?>> keys = new ArrayList<>();
-		scale.forEach(keys::add);
+		scaleForPosition.apply(getPosition()).forEach(keys::add);
 
 		p: for (double p : getScalePositions()) {
 			if (keys.isEmpty()) break p;

@@ -26,6 +26,7 @@ import org.almostrealism.audio.arrange.SceneSectionManager;
 import org.almostrealism.audio.data.WaveData;
 import org.almostrealism.audio.optimize.AudioSceneGenome;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
+import org.almostrealism.audio.pattern.ChordProgressionManager;
 import org.almostrealism.audio.pattern.PatternSystemManager;
 import org.almostrealism.audio.tone.DefaultKeyboardTuning;
 import org.almostrealism.audio.tone.KeyboardTuning;
@@ -97,6 +98,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 
 	private GlobalTimeManager time;
 	private SceneSectionManager sections;
+	private ChordProgressionManager progression;
 	private PatternSystemManager patterns;
 	private PackedCollection<?> patternDestination;
 
@@ -122,10 +124,13 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 
 		this.time = new GlobalTimeManager(measure -> (int) (measure * getMeasureDuration() * getSampleRate()));
 
-		this.genome = new CombinedGenome(2);
+		this.genome = new CombinedGenome(3);
 		this.legacyGenome = new DefaultAudioGenome(sources, delayLayers, sampleRate, time.getClock().frame());
 
 		this.sections = new SceneSectionManager(genome.getGenome(0), sources, this::getMeasureDuration, getSampleRate());
+		this.progression = new ChordProgressionManager(genome.getGenome(1), WesternScales.minor(WesternChromatic.G1, 1)); // TODO  Musical key should be configurable
+		this.progression.setSize(8); // TODO  Should be configurable
+		this.progression.setDuration(16); // TODO  Should be taken from longest pattern length
 		initSources();
 	}
 
@@ -133,7 +138,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		sources = new Waves();
 		IntStream.range(0, sourceCount).forEach(sources.getChoices().getChoices()::add);
 
-		patterns = new PatternSystemManager(genome.getGenome(1));
+		patterns = new PatternSystemManager(genome.getGenome(2));
 
 		patternDestination = new PackedCollection(getTotalSamples());
 		patterns.init(patternDestination, () -> WaveData.allocateCollection(getTotalSamples()));
@@ -195,7 +200,8 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public void assignGenome(Genome<PackedCollection<?>> genome) {
 		AudioSceneGenome g = (AudioSceneGenome) genome;
 		this.genome.assignTo(g.getGenome());
-		this.legacyGenome.assignTo(g.getLegacyGenome());
+		if (g.getLegacyGenome() != null) this.legacyGenome.assignTo(g.getLegacyGenome());
+		this.progression.refreshParameters();
 		this.patterns.refreshParameters();
 	}
 
@@ -206,6 +212,8 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 
 	public GlobalTimeManager getTimeManager() { return time; }
 	public SceneSectionManager getSectionManager() { return sections; }
+	public ChordProgressionManager getChordProgression() { return progression; }
+	public PatternSystemManager getPatternManager() { return patterns; }
 
 	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
 	public void removeTempoListener(Consumer<Frequency> listener) { this.tempoListeners.remove(listener); }
@@ -255,11 +263,6 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		patterns.setSettings(settings.getPatternSystem());
 	}
 
-	public Scale<?> getScale() {
-		// TODO  This should be configurable
-		return WesternScales.minor(WesternChromatic.G1, 1);
-	}
-
 	public void setWaves(Waves waves) {
 		this.sources = waves;
 		sourcesListener.forEach(l -> l.accept(sources));
@@ -277,8 +280,6 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	}
 
 	public Waves getWaves() { return sources; }
-
-	public PatternSystemManager getPatternManager() { return patterns; }
 
 	public WaveData getPatternDestination() { return new WaveData(patternDestination, getSampleRate()); }
 
@@ -302,7 +303,6 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	}
 
 	public CellList getPatternCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output, OperationList setup) {
-		Supplier<Runnable> genomeSetup = legacyGenome.setup();
 		CellList cells = all(sourceCount, i -> getPatternChannel(i, setup));
 		return cells(cells, measures, output);
 	}
@@ -332,7 +332,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public Supplier<Runnable> getPatternSetup(List<Integer> channels) {
 		return () -> () -> {
 			patternDestination.clear();
-			patterns.sum(channels, pos -> (int) (pos * getMeasureSamples()), getTotalMeasures(), getScale());
+			patterns.sum(channels, pos -> (int) (pos * getMeasureSamples()), getTotalMeasures(), getChordProgression()::forPosition);
 		};
 	}
 
@@ -369,15 +369,12 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 			}
 		};
 
-		Supplier<Runnable> genomeSetup = legacyGenome.setup();
-
 		// Generators
 		CellList cells = cells(legacyGenome.valueAt(DefaultAudioGenome.GENERATORS).length(),
 				i -> generator.apply(legacyGenome.valueAt(DefaultAudioGenome.GENERATORS, i),
 									legacyGenome.valueAt(DefaultAudioGenome.PARAMETERS, i))
 										.apply(i));
 
-		cells.addSetup(() -> genomeSetup);
 		return cells(cells, measures, output);
 	}
 
@@ -494,7 +491,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public static class Settings {
 		private double bpm = 120;
 		private int measureSize = 4;
-		private int totalMeasures = 4;
+		private int totalMeasures = 16;
 		private List<Integer> breaks = new ArrayList<>();
 		private List<Section> sections = new ArrayList<>();
 		private PatternSystemManager.Settings patternSystem;

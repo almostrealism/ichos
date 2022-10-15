@@ -31,6 +31,7 @@ import org.almostrealism.heredity.SimpleGene;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleFunction;
 import java.util.function.DoubleToIntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -108,7 +109,7 @@ public class PatternLayerManager implements CodeFeatures {
 
 	public void updateDestination(PackedCollection destination) {
 		this.destination = destination;
-		this.sum = new RootDelegateSegmentsAdd<>(512, this.destination.traverse(1));
+		this.sum = new RootDelegateSegmentsAdd<>(1024, this.destination.traverse(1));
 	}
 
 	public List<PatternFactoryChoice> getChoices() {
@@ -232,7 +233,6 @@ public class PatternLayerManager implements CodeFeatures {
 			scale = seeds.getScale();
 		} else {
 			roots.forEach(layer -> {
-				// TODO  Each layer should be processed separately, with lower probability for higher layers (?)
 				PatternLayer next = choose(scale, params).apply(layer.getAllElements(0, 2 * duration), scale, chordDepth, params);
 				next.trim(2 * duration);
 				layer.getTail().setChild(next);
@@ -286,7 +286,7 @@ public class PatternLayerManager implements CodeFeatures {
 		return options.get((int) (options.size() * c));
 	}
 
-	public void sum(DoubleToIntFunction offsetForPosition, int measures, Scale<?> scale) {
+	public void sum(DoubleToIntFunction offsetForPosition, int measures, DoubleFunction<Scale<?>> scaleForPosition) {
 		List<PatternElement> elements = getAllElements(0.0, duration);
 		if (elements.isEmpty()) {
 			System.out.println("PatternLayerManager: No pattern elements");
@@ -305,7 +305,7 @@ public class PatternLayerManager implements CodeFeatures {
 
 			sum.getInput().clear();
 			elements.stream()
-					.map(e -> e.getNoteDestinations(offset, scale))
+					.map(e -> e.getNoteDestinations(offset, scaleForPosition))
 					.flatMap(List::stream)
 					.forEach(sum.getInput()::add);
 

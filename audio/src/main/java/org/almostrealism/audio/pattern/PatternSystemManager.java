@@ -32,6 +32,7 @@ import org.almostrealism.heredity.ParameterGenome;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleFunction;
 import java.util.function.DoubleToIntFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -150,7 +151,7 @@ public class PatternSystemManager implements CodeFeatures {
 		patternOutputs.clear();
 	}
 
-	public void sum(List<Integer> channels, DoubleToIntFunction offsetForPosition, int measures, Scale<?> scale) {
+	public void sum(List<Integer> channels, DoubleToIntFunction offsetForPosition, int measures, DoubleFunction<Scale<?>> scaleForPosition) {
 		List<Integer> patternsForChannel = IntStream.range(0, patterns.size())
 				.filter(i -> channels == null || channels.contains(patterns.get(i).getChannel()))
 				.boxed().collect(Collectors.toList());
@@ -162,7 +163,7 @@ public class PatternSystemManager implements CodeFeatures {
 
 		sum.getInput().clear();
 		patternsForChannel.forEach(i -> {
-			patterns.get(i).sum(offsetForPosition, measures, scale);
+			patterns.get(i).sum(offsetForPosition, measures, scaleForPosition);
 			sum.getInput().add(patternOutputs.get(i));
 		});
 
