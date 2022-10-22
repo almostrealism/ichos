@@ -24,18 +24,20 @@ import org.almostrealism.audio.tone.KeyboardTuning;
 import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.ProducerWithOffset;
-import org.almostrealism.time.Frequency;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.DoubleFunction;
 import java.util.function.DoubleToIntFunction;
+import java.util.function.DoubleUnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class PatternElement implements CodeFeatures {
 	private PatternNote note;
 	private double position;
 
-	private boolean applyNoteDuration;
+	private NoteDurationStrategy durationStrategy;
 	private double noteDuration;
 	private List<Double> scalePositions;
 
@@ -50,6 +52,7 @@ public class PatternElement implements CodeFeatures {
 	public PatternElement(PatternNote note, double position) {
 		setNote(note);
 		setPosition(position);
+		setDurationStrategy(NoteDurationStrategy.NONE);
 		setDirection(PatternDirection.FORWARD);
 		setRepeatCount(1);
 		setRepeatDuration(1);
@@ -58,7 +61,6 @@ public class PatternElement implements CodeFeatures {
 	public PatternNote getNote() {
 		return note;
 	}
-
 	public void setNote(PatternNote note) {
 		this.note = note;
 	}
@@ -66,27 +68,28 @@ public class PatternElement implements CodeFeatures {
 	public double getPosition() {
 		return position;
 	}
-
 	public void setPosition(double position) {
 		this.position = position;
 	}
 
-	public boolean isApplyNoteDuration() { return applyNoteDuration; }
+	public NoteDurationStrategy getDurationStrategy() { return durationStrategy; }
+	public void setDurationStrategy(NoteDurationStrategy durationStrategy) {
+		this.durationStrategy = durationStrategy;
+	}
 
-	public void setApplyNoteDuration(boolean applyNoteDuration) { this.applyNoteDuration = applyNoteDuration; }
+	public double getNoteDuration(double position, double nextPosition) {
+		return durationStrategy.getLength(position, nextPosition, getNote().getDuration(), getNoteDurationSelection());
+	}
 
-	public double getNoteDuration() { return noteDuration; }
-
-	public void setNoteDuration(double noteDuration) { this.noteDuration = noteDuration; }
+	public double getNoteDurationSelection() { return noteDuration; }
+	public void setNoteDurationSelection(double noteDuration) { this.noteDuration = noteDuration; }
 
 	public List<Double> getScalePositions() { return scalePositions; }
-
 	public void setScalePosition(List<Double> scalePositions) { this.scalePositions = scalePositions; }
 
 	public PatternDirection getDirection() {
 		return direction;
 	}
-
 	public void setDirection(PatternDirection direction) {
 		this.direction = direction;
 	}
@@ -94,7 +97,6 @@ public class PatternElement implements CodeFeatures {
 	public int getRepeatCount() {
 		return repeatCount;
 	}
-
 	public void setRepeatCount(int repeatCount) {
 		this.repeatCount = repeatCount;
 	}
@@ -102,7 +104,6 @@ public class PatternElement implements CodeFeatures {
 	public double getRepeatDuration() {
 		return repeatDuration;
 	}
-
 	public void setRepeatDuration(double repeatDuration) {
 		this.repeatDuration = repeatDuration;
 	}
@@ -112,9 +113,18 @@ public class PatternElement implements CodeFeatures {
 		this.note.setTuning(tuning);
 	}
 
-	public List<ProducerWithOffset<PackedCollection>> getNoteDestinations(DoubleToIntFunction offsetForPosition, DoubleFunction<Scale<?>> scaleForPosition) {
+	public List<Double> getPositions() {
+		return IntStream.range(0, repeatCount)
+				.mapToObj(i -> position + (i * repeatDuration))
+				.collect(Collectors.toList());
+	}
+
+	public List<ProducerWithOffset<PackedCollection>> getNoteDestinations(double offset, DoubleToIntFunction frameForPosition,
+																		  DoubleFunction<Scale<?>> scaleForPosition,
+																		  DoubleUnaryOperator nextNotePosition) {
 		List<ProducerWithOffset<PackedCollection>> destinations = new ArrayList<>();
 
+		/*
 		List<KeyPosition<?>> keys = new ArrayList<>();
 		scaleForPosition.apply(getPosition()).forEach(keys::add);
 
@@ -123,29 +133,47 @@ public class PatternElement implements CodeFeatures {
 			int keyIndex = (int) (p * keys.size());
 
 			for (int i = 0; i < repeatCount; i++) {
-				Producer<PackedCollection> note = getNoteAudio(keys.get(keyIndex));
-				destinations.add(new ProducerWithOffset<>(note, offsetForPosition.applyAsInt(getPosition() + i * repeatDuration)));
+				double position = getPosition() + i * repeatDuration;
+
+				Producer<PackedCollection> note = getNoteAudio(keys.get(keyIndex), position,
+													nextNotePosition.applyAsDouble(position),
+													frameForPosition);
+				destinations.add(new ProducerWithOffset<>(note, frameForPosition.applyAsInt(position)));
 			}
 
 			keys.remove(keyIndex);
+		}
+		 */
+
+		for (int i = 0; i < getRepeatCount(); i++) {
+			double relativePosition = getPosition() + i * getRepeatDuration();
+			double actualPosition = offset + relativePosition;
+
+			List<KeyPosition<?>> keys = new ArrayList<>();
+			scaleForPosition.apply(actualPosition).forEach(keys::add);
+
+			p: for (double p : getScalePositions()) {
+				if (keys.isEmpty()) break p;
+				int keyIndex = (int) (p * keys.size());
+
+				Producer<PackedCollection> note = getNoteAudio(keys.get(keyIndex), relativePosition,
+													nextNotePosition.applyAsDouble(relativePosition),
+													frameForPosition);
+				destinations.add(new ProducerWithOffset<>(note, frameForPosition.applyAsInt(actualPosition)));
+
+				keys.remove(keyIndex);
+			}
 		}
 
 		return destinations;
 	}
 
-	public Producer<PackedCollection> getNoteAudio(KeyPosition<?> target) {
-		if (isApplyNoteDuration()) {
-			return getNote().getAudio(target, getNoteDuration());
-		} else {
+	public Producer<PackedCollection> getNoteAudio(KeyPosition<?> target, double position, double nextNotePosition,
+												   DoubleToIntFunction frameForPosition) {
+		if (getDurationStrategy() == NoteDurationStrategy.NONE) {
 			return getNote().getAudio(target);
-		}
-	}
-
-	public PackedCollection getNoteAudio() {
-		if (isApplyNoteDuration()) {
-			return getNote().getAudio(getNoteDuration());
 		} else {
-			return getNote().getAudio();
+			return getNote().getAudio(target, frameForPosition.applyAsInt(getNoteDuration(position, nextNotePosition)));
 		}
 	}
 

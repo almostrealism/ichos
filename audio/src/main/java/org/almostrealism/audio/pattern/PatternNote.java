@@ -108,15 +108,17 @@ public class PatternNote {
 		}
 	}
 
-	public Producer<PackedCollection> getAudio(KeyPosition<?> target, double duration) {
-		return () -> {
-			Evaluable<PackedCollection> audio = getAudio(target).get();
-			return args -> audio.evaluate().range(new TraversalPolicy((int) (duration * OutputLine.sampleRate)));
-		};
+	@JsonIgnore
+	public double getDuration() {
+		if (audio == null) return 0;
+		return audio.getMemLength() / (double) OutputLine.sampleRate;
 	}
 
-	public PackedCollection getAudio(double duration) {
-		return getAudio().range(new TraversalPolicy((int) (duration * OutputLine.sampleRate)));
+	public Producer<PackedCollection> getAudio(KeyPosition<?> target, int length) {
+		return () -> {
+			Evaluable<PackedCollection> audio = getAudio(target).get();
+			return args -> audio.evaluate().range(new TraversalPolicy(length));
+		};
 	}
 
 	public CachedValue<PackedCollection> getAudio(KeyPosition<?> target) {

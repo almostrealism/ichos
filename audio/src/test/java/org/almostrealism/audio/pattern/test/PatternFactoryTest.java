@@ -60,16 +60,19 @@ public class PatternFactoryTest implements CellFeatures {
 	public void fixChoices() throws IOException {
 		List<PatternFactoryChoice> choices = readChoices();
 
-		choices.forEach(c -> {
-			c.getFactory().setScalePositionSelection(null);
-			c.getFactory().setChordNoteSelection(ChordPositionFunction.random());
-		});
+		// String json = new ObjectMapper().writeValueAsString(choices.get(5));
+		// choices.add(new ObjectMapper().readValue(json, PatternFactoryChoice.class));
+		choices.get(6).getFactory().setName("Lead Synth");
+		choices.get(6).getFactory().getNotes().get(0).setSource("/Users/michael/Documents/AudioLibrary/Monarch_C1.wav");
+		choices.get(6).setSeedUnits(2);
+		choices.get(6).setSeedScale(0.25);
 
-		choices.stream().filter(c -> c.getFactory().getName().equals("Monarch")).forEach(c -> {
-			c.getFactory().setName("Synths");
-			c.getFactory().getNotes().add(new PatternNote("Kit/BigCinema.wav"));
-		});
+		choices.get(5).getFactory().setName("Chord Synth");
+		choices.get(5).setMaxChordDepth(5);
+		choices.get(5).setSeedUnits(1);
+		choices.get(5).setSeedScale(0.5);
 
+		System.out.println(choices);
 		new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
 	}
 

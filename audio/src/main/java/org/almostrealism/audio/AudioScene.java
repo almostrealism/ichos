@@ -128,9 +128,9 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		this.legacyGenome = new DefaultAudioGenome(sources, delayLayers, sampleRate, time.getClock().frame());
 
 		this.sections = new SceneSectionManager(genome.getGenome(0), sources, this::getMeasureDuration, getSampleRate());
-		this.progression = new ChordProgressionManager(genome.getGenome(1), WesternScales.minor(WesternChromatic.G1, 1)); // TODO  Musical key should be configurable
-		this.progression.setSize(8); // TODO  Should be configurable
-		this.progression.setDuration(16); // TODO  Should be taken from longest pattern length
+		this.progression = new ChordProgressionManager(genome.getGenome(1), WesternScales.minor(WesternChromatic.G1, 1));
+		this.progression.setSize(16); // TODO  Should be configurable
+		this.progression.setDuration(8); // TODO  Should be configurable
 		initSources();
 	}
 

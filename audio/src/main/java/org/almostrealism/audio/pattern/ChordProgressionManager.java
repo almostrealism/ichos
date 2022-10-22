@@ -155,8 +155,8 @@ public class ChordProgressionManager {
 	}
 
 	public Scale<?> forPosition(double position) {
-		System.out.println("ChordProgressionManager: Retrieving scale for position = " + position);
-		while (position > duration) position -= duration;
+		// System.out.println("ChordProgressionManager: Retrieving scale for position = " + position);
+		while (position >= duration) position -= duration;
 		for (Region region : regions) {
 			if (region.contains(position)) {
 				return region.getScale();

@@ -16,6 +16,7 @@
 
 package org.almostrealism.audio.pattern;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.tone.KeyboardTuning;
@@ -26,6 +27,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class PatternElementFactory {
+	public static NoteDurationStrategy CHORD_STRATEGY = NoteDurationStrategy.FIXED;
+
 	private String name;
 	private List<PatternNote> notes;
 	private boolean melodic;
@@ -100,7 +103,6 @@ public class PatternElementFactory {
 	public ChordPositionFunction getChordNoteSelection() {
 		return chordNoteSelection;
 	}
-
 	public void setChordNoteSelection(ChordPositionFunction chordNoteSelection) {
 		this.chordNoteSelection = chordNoteSelection;
 	}
@@ -108,25 +110,24 @@ public class PatternElementFactory {
 	public ParameterizedPositionFunction getRepeatSelection() {
 		return repeatSelection;
 	}
-
 	public void setRepeatSelection(ParameterizedPositionFunction repeatSelection) {
 		this.repeatSelection = repeatSelection;
 	}
 
 	public boolean isMelodic() { return melodic; }
-
 	public void setMelodic(boolean melodic) { this.melodic = melodic; }
 
 	public void setTuning(KeyboardTuning tuning) {
 		notes.forEach(n -> n.setTuning(tuning));
 	}
 
+	@JsonIgnore
 	public List<PatternNote> getValidNotes() {
 		return notes.stream().filter(PatternNote::isValid).collect(Collectors.toList());
 	}
 
 	// TODO  This should take instruction for whether to apply note duration, relying just on isMelodic limits its use
-	public Optional<PatternElement> apply(ElementParity parity, double position, double scale, int depth, ParameterSet params) {
+	public Optional<PatternElement> apply(ElementParity parity, double position, double scale, double bias, int depth, ParameterSet params) {
 		if (parity == ElementParity.LEFT) {
 			position -= scale;
 		} else if (parity == ElementParity.RIGHT) {
@@ -135,15 +136,18 @@ public class PatternElementFactory {
 
 		if (notes.isEmpty()) return Optional.empty();
 
-		double note = noteSelection.apply(params, position, scale);
+		double note = noteSelection.apply(params, position, scale) + bias;
+		while (note > 1) note -= 1;
 		if (note < 0.0) return Optional.empty();
 
 		List<PatternNote> notes = getValidNotes();
 
 		PatternElement element = new PatternElement(notes.get((int) (note * notes.size())), position);
 		element.setScalePosition(chordNoteSelection.applyAll(params, position, scale, depth));
-		element.setNoteDuration(noteLengthSelection.power(2.0, 3, -3).apply(params));
-		element.setApplyNoteDuration(isMelodic());
+		element.setNoteDurationSelection(noteLengthSelection.power(2.0, 3, -3).apply(params));
+		element.setDurationStrategy(isMelodic() ?
+				(depth > 1 ? CHORD_STRATEGY : NoteDurationStrategy.FIXED) :
+					NoteDurationStrategy.NONE);
 
 		double r = repeatSelection.apply(params, position, scale);
 

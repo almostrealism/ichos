@@ -28,6 +28,7 @@ public class PatternFactoryChoice {
 	private double weight;
 	private double minScale;
 	private double maxScale;
+	private int maxChordDepth;
 
 	private boolean seed;
 	private int seedUnits;
@@ -51,6 +52,7 @@ public class PatternFactoryChoice {
 		setWeight(weight);
 		setMinScale(minScale);
 		setMaxScale(maxScale);
+		setMaxChordDepth(1);
 		setSeedUnits(1);
 		setSeedScale(0.25);
 		initSelectionFunctions();
@@ -65,33 +67,29 @@ public class PatternFactoryChoice {
 	public void setFactory(PatternElementFactory factory) { this.factory = factory; }
 
 	public double getWeight() { return weight; }
-
 	public void setWeight(double weight) { this.weight = weight; }
 
 	public double getMinScale() { return minScale; }
-
 	public void setMinScale(double minScale) { this.minScale = minScale; }
 
 	public double getMaxScale() { return maxScale; }
-
 	public void setMaxScale(double maxScale) { this.maxScale = maxScale; }
 
-	public boolean isSeed() { return seed; }
+	public int getMaxChordDepth() { return maxChordDepth; }
+	public void setMaxChordDepth(int maxChordDepth) { this.maxChordDepth = maxChordDepth; }
 
+	public boolean isSeed() { return seed; }
 	public void setSeed(boolean seed) { this.seed = seed; }
 
 	public int getSeedUnits() { return seedUnits; }
-
 	public void setSeedUnits(int seedUnits) { this.seedUnits = seedUnits; }
 
 	public double getSeedScale() { return seedScale; }
-
 	public void setSeedScale(double seedScale) { this.seedScale = seedScale; }
 
 	public ParameterizedPositionFunction getSeedNoteFunction() {
 		return seedNoteFunction;
 	}
-
 	public void setSeedNoteFunction(ParameterizedPositionFunction seedNoteFunction) {
 		this.seedNoteFunction = seedNoteFunction;
 	}
@@ -115,8 +113,8 @@ public class PatternFactoryChoice {
 		PatternLayer layer = new PatternLayer();
 		layer.setChoice(this);
 
-		getFactory().apply(ElementParity.LEFT, element.getPosition(), scale, depth, params).ifPresent(layer.getElements()::add);
-		getFactory().apply(ElementParity.RIGHT, element.getPosition(), scale, depth, params).ifPresent(layer.getElements()::add);
+		getFactory().apply(ElementParity.LEFT, element.getPosition(), scale, 0.0, depth, params).ifPresent(layer.getElements()::add);
+		getFactory().apply(ElementParity.RIGHT, element.getPosition(), scale, 0.0, depth, params).ifPresent(layer.getElements()::add);
 		return layer;
 	}
 

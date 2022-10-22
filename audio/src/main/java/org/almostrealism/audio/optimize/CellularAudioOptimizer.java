@@ -389,42 +389,35 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 		scene.getPatternManager().getChoices().addAll(createChoices());
 		scene.setTuning(new DefaultKeyboardTuning());
-		scene.setTotalMeasures(40);
-		scene.addSection(0, 8);
-		scene.addSection(8, 4);
-		scene.addSection(12, 4);
-		scene.addSection(16, 4);
-		scene.addSection(20, 4);
-		scene.addSection(24, 8);
-		scene.addSection(32, 8);
-		scene.addBreak(12);
-		scene.addBreak(24);
+		scene.setTotalMeasures(64);
+		scene.addSection(0, 64);
+		// scene.addBreak(24);
 
 		int channel = 0;
 
-		for (int i = 0; i < 3; i++) {
-			PatternLayerManager layer = scene.getPatternManager().addPattern(channel++, Math.pow(2, i), false);
-			layer.addLayer(new ParameterSet());
-			layer.addLayer(new ParameterSet());
-			layer.addLayer(new ParameterSet());
-			if (i == 0) {
-				layer.addLayer(new ParameterSet());
-			}
-		}
+		PatternLayerManager layer = scene.getPatternManager().addPattern(channel++, 0.25, false);
+		layer.setSeedBias(1.0);
+		layer.addLayer(new ParameterSet());
 
-		for (int i = 0; i < 1; i++) {
-			PatternLayerManager layer = scene.getPatternManager().addPattern(channel++, 4.0, true);
-			layer.setChordDepth(3);
-			layer.addLayer(new ParameterSet());
-			layer.addLayer(new ParameterSet());
-			layer.addLayer(new ParameterSet());
-			layer.addLayer(new ParameterSet());
-			layer.addLayer(new ParameterSet());
-		}
-
-		PatternLayerManager layer = scene.getPatternManager().addPattern(channel++, 4.0, true);
+		layer = scene.getPatternManager().addPattern(channel++, 1.0, false);
+		layer.setSeedBias(0.2);
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
+
+		layer = scene.getPatternManager().addPattern(channel++, 1.0, false);
+		layer.setSeedBias(0.2);
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+
+		layer = scene.getPatternManager().addPattern(channel++, 1.0, true);
+		layer.setChordDepth(3);
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+
+		layer = scene.getPatternManager().addPattern(channel++, 2.0, true);
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
@@ -523,6 +516,9 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		public GeneratorConfiguration() { this(1); }
 
 		public GeneratorConfiguration(int scale) {
+			double offset = 80;
+			double duration = 5;
+
 			minChoiceValue = 0.0;
 			maxChoiceValue = 1.0;
 			repeatSpeedUpDurationMin = 1;
@@ -534,21 +530,21 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			periodicVolumeDurationMax = 180;
 //			overallVolumeDurationMin = 60;
 //			overallVolumeDurationMax = 240;
-			overallVolumeDurationMin = 4;
-			overallVolumeDurationMax = 10;
+			overallVolumeDurationMin = duration - 1;
+			overallVolumeDurationMax = duration + 5;
 			overallVolumeExponentMin = 1;
 			overallVolumeExponentMax = 1;
-			overallVolumeOffsetMin = 18;
-			overallVolumeOffsetMax = 22;
+			overallVolumeOffsetMin = offset + 3;
+			overallVolumeOffsetMax = offset + 5;
 
 			periodicFilterUpDurationMin = 0.5;
 			periodicFilterUpDurationMax = 180;
-			overallFilterUpDurationMin = 30;
-			overallFilterUpDurationMax = 180;
+			overallFilterUpDurationMin = duration + 25;
+			overallFilterUpDurationMax = duration + 175;
 			overallFilterUpExponentMin = 0.5;
 			overallFilterUpExponentMax = 3.5;
-			overallFilterUpOffsetMin = 15;
-			overallFilterUpOffsetMax = 20;
+			overallFilterUpOffsetMin = offset;
+			overallFilterUpOffsetMax = offset + 15; // + 5;
 
 			minTransmission = 0.0;
 			maxTransmission = 0.5;
@@ -574,12 +570,12 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			periodicWetInDurationMax = 180;
 //			overallWetInDurationMin = 30;
 //			overallWetInDurationMax = 120;
-			overallWetInDurationMin = 6;
-			overallWetInDurationMax = 20;
+			overallWetInDurationMin = duration + 1;
+			overallWetInDurationMax = duration + 15;
 			overallWetInExponentMin = 0.5;
 			overallWetInExponentMax = 2.5;
-			overallWetInOffsetMin = 15;
-			overallWetInOffsetMax = 25;
+			overallWetInOffsetMin = offset;
+			overallWetInOffsetMax = offset + 30; // + 10;
 
 			minWetOut = 0.8;
 			maxWetOut = 1.0;
@@ -590,12 +586,12 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 			periodicMasterFilterDownDurationMin = 0.5;
 			periodicMasterFilterDownDurationMax = 90;
-			overallMasterFilterDownDurationMin = 5;
-			overallMasterFilterDownDurationMax = 30;
+			overallMasterFilterDownDurationMin = duration;
+			overallMasterFilterDownDurationMax = duration + 25;
 			overallMasterFilterDownExponentMin = 0.5;
 			overallMasterFilterDownExponentMax = 3.5;
-			overallMasterFilterDownOffsetMin = 15;
-			overallMasterFilterDownOffsetMax = 120;
+			overallMasterFilterDownOffsetMin = offset;
+			overallMasterFilterDownOffsetMax = offset + 30; // 120;
 
 			offsetChoices = IntStream.range(0, 7)
 					.mapToDouble(i -> Math.pow(2, -i))

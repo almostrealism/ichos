@@ -38,11 +38,12 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class PatternLayerManager implements CodeFeatures {
-	public static final boolean enableVolume = false;
+	public static final int MAX_NOTES = 2048;
 
 	private int channel;
 	private double duration;
 	private double scale;
+	private double seedBias;
 	private int chordDepth;
 	private boolean melodic;
 	private boolean applyNoteDuration;
@@ -59,6 +60,7 @@ public class PatternLayerManager implements CodeFeatures {
 	private PackedCollection destination;
 	private RootDelegateSegmentsAdd sum;
 	private OperationList runSum;
+	private OperationList adjustVolume;
 
 	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome, int channel, double measures,
 							   boolean melodic, PackedCollection destination) {
@@ -93,23 +95,18 @@ public class PatternLayerManager implements CodeFeatures {
 		KernelizedEvaluable<PackedCollection<?>> scale = _multiply(
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
 
-		OperationList generate = new OperationList("PatternLayerManager Sum");
-		generate.add(() -> sum.get());
+		runSum = new OperationList("PatternLayerManager Sum");
+		runSum.add(() -> sum.get());
 
-		if (enableVolume) {
-			// TODO  This creates problems for multiple sum steps in ::sum
-			// TODO  because volume adjustment will be applied multiple times
-			// TODO  to earlier measures.
-			generate.add(() -> () ->
-					scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
-		}
-
-		runSum = generate;
+		adjustVolume = new OperationList("PatternLayerManager Adjust Volume");
+		adjustVolume.add(() -> () -> volume.setMem(0, 1.0 / chordDepth));
+		adjustVolume.add(() -> () ->
+				scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
 	}
 
 	public void updateDestination(PackedCollection destination) {
 		this.destination = destination;
-		this.sum = new RootDelegateSegmentsAdd<>(1024, this.destination.traverse(1));
+		this.sum = new RootDelegateSegmentsAdd<>(MAX_NOTES, this.destination.traverse(1));
 	}
 
 	public List<PatternFactoryChoice> getChoices() {
@@ -125,6 +122,9 @@ public class PatternLayerManager implements CodeFeatures {
 	public int getChordDepth() { return chordDepth; }
 	public void setChordDepth(int chordDepth) { this.chordDepth = chordDepth; }
 
+	public double getSeedBias() { return seedBias; }
+	public void setSeedBias(double seedBias) { this.seedBias = seedBias; }
+
 	public void setMelodic(boolean melodic) {
 		this.melodic = melodic;
 		this.applyNoteDuration = melodic;
@@ -135,6 +135,7 @@ public class PatternLayerManager implements CodeFeatures {
 	public PatternLayerSeeds getSeeds(ParameterSet params) {
 		List<PatternLayerSeeds> options = getChoices().stream()
 				.filter(PatternFactoryChoice::isSeed)
+				.filter(choice -> chordDepth <= choice.getMaxChordDepth())
 				.map(choice -> choice.seeds(params))
 				.collect(Collectors.toList());
 
@@ -229,7 +230,7 @@ public class PatternLayerManager implements CodeFeatures {
 	protected void layer(ParameterSet params) {
 		if (rootCount() <= 0) {
 			PatternLayerSeeds seeds = getSeeds(params);
-			seeds.generator(0, duration, chordDepth).forEach(roots::add);
+			seeds.generator(0, duration, seedBias, chordDepth).forEach(roots::add);
 			scale = seeds.getScale();
 		} else {
 			roots.forEach(layer -> {
@@ -279,6 +280,7 @@ public class PatternLayerManager implements CodeFeatures {
 		List<PatternFactoryChoice> options = getChoices().stream()
 				.filter(c -> scale >= c.getMinScale())
 				.filter(c -> scale <= c.getMaxScale())
+				.filter(c -> chordDepth <= c.getMaxChordDepth())
 				.collect(Collectors.toList());
 
 		double c = factorySelection.apply(params);
@@ -295,22 +297,24 @@ public class PatternLayerManager implements CodeFeatures {
 
 		destination.clear();
 
+		// TODO  What about when duration is longer than measures?
+		// TODO  This results in count being 0, and nothing being output
 		int count = (int) (measures / duration);
 		if (measures / duration - count > 0.0001) {
 			System.out.println("PatternLayerManager: Pattern duration does not divide measures; there will be gaps");
 		}
 
 		IntStream.range(0, count).forEach(i -> {
-			DoubleToIntFunction offset = pos -> offsetForPosition.applyAsInt(pos + i * duration);
+			double offset = i * duration;
 
 			sum.getInput().clear();
 			elements.stream()
-					.map(e -> e.getNoteDestinations(offset, scaleForPosition))
+					.map(e -> e.getNoteDestinations(offset, offsetForPosition, scaleForPosition, this::nextNotePosition))
 					.flatMap(List::stream)
 					.forEach(sum.getInput()::add);
 
 			if (sum.getInput().size() > sum.getMaxInputs()) {
-				System.out.println("PatternLayerManager: Too many inputs (" + sum.getInput().size() + ") for sum");
+				System.out.println("PatternLayerManager: Too many inputs (" + sum.getInput().size() + ") for sum on channel " + getChannel());
 				return;
 			}
 
@@ -321,6 +325,17 @@ public class PatternLayerManager implements CodeFeatures {
 
 			runSum.get().run();
 		});
+
+		adjustVolume.get().run();
+	}
+
+	public double nextNotePosition(double position) {
+		return getAllElements(position, duration).stream()
+				.map(PatternElement::getPositions)
+				.flatMap(List::stream)
+				.filter(p -> p > position)
+				.mapToDouble(p -> p)
+				.min().orElse(duration);
 	}
 
 	public static String layerHeader() {
