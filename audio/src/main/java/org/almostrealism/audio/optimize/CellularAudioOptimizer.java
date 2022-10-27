@@ -390,7 +390,8 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		scene.getPatternManager().getChoices().addAll(createChoices());
 		scene.setTuning(new DefaultKeyboardTuning());
 		scene.setTotalMeasures(64);
-		scene.addSection(0, 64);
+		scene.addSection(0, 32);
+		scene.addSection(32, 32);
 		// scene.addBreak(24);
 
 		int channel = 0;
@@ -399,8 +400,8 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		layer.setSeedBias(1.0);
 		layer.addLayer(new ParameterSet());
 
-		layer = scene.getPatternManager().addPattern(channel++, 1.0, false);
-		layer.setSeedBias(0.2);
+		layer = scene.getPatternManager().addPattern(channel++, 0.5, false);
+		layer.setSeedBias(0.5);
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 
@@ -409,15 +410,17 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
 
-		layer = scene.getPatternManager().addPattern(channel++, 1.0, true);
+		layer = scene.getPatternManager().addPattern(channel++, 4.0, true);
+		layer.setSeedBias(0.4);
 		layer.setChordDepth(3);
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
-		layer.addLayer(new ParameterSet());
 
-		layer = scene.getPatternManager().addPattern(channel++, 2.0, true);
+		layer = scene.getPatternManager().addPattern(channel++, 4.0, true);
+		layer.setSeedBias(0.0);
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
@@ -430,10 +433,6 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		if (enableSourcesJson) {
 			PatternFactoryChoiceList choices = new ObjectMapper()
 					.readValue(new File("pattern-factory.json"), PatternFactoryChoiceList.class);
-
-			choices.get(5).setMaxScale(2.0);
-			choices.get(5).setSeedScale(2.0);
-			choices.get(5).setSeedUnits(8);
 			return choices;
 		} else {
 			List<PatternFactoryChoice> choices = new ArrayList<>();

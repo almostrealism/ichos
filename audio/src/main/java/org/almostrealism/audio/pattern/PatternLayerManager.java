@@ -291,7 +291,7 @@ public class PatternLayerManager implements CodeFeatures {
 	public void sum(DoubleToIntFunction offsetForPosition, int measures, DoubleFunction<Scale<?>> scaleForPosition) {
 		List<PatternElement> elements = getAllElements(0.0, duration);
 		if (elements.isEmpty()) {
-			System.out.println("PatternLayerManager: No pattern elements");
+			System.out.println("PatternLayerManager: No pattern elements (channel " + channel + ")");
 			return;
 		}
 

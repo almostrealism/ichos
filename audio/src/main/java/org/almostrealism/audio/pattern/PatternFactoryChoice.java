@@ -99,7 +99,7 @@ public class PatternFactoryChoice {
 	}
 
 	public PatternLayerSeeds seeds(ParameterSet params) {
-		return new PatternLayerSeeds(0, seedScale, seedUnits, 1 / seedScale, factory, params);
+		return new PatternLayerSeeds(0, seedScale, 1.0 / seedUnits, factory, params);
 	}
 
 	public PatternLayer apply(List<PatternElement> elements, double scale, int depth, ParameterSet params) {
