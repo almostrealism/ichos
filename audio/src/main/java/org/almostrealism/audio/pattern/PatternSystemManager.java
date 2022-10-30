@@ -17,6 +17,9 @@
 package org.almostrealism.audio.pattern;
 
 import org.almostrealism.CodeFeatures;
+import org.almostrealism.audio.AudioScene;
+import org.almostrealism.audio.data.ParameterFunction;
+import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.tone.KeyboardTuning;
 import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.collect.PackedCollection;
@@ -53,7 +56,7 @@ public class PatternSystemManager implements CodeFeatures {
 	private PackedCollection volume;
 	private PackedCollection destination;
 	private RootDelegateSegmentsAdd<PackedCollection> sum;
-	private OperationList runSum;
+	private Runnable runSum;
 
 	public PatternSystemManager() {
 		this(new ArrayList<>());
@@ -82,15 +85,6 @@ public class PatternSystemManager implements CodeFeatures {
 		volume.setMem(0, 1.0);
 
 		updateDestination(destination, intermediateDestination);
-
-		KernelizedEvaluable<PackedCollection<?>> scale = _multiply(
-				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
-
-		OperationList generate = new OperationList("PatternSystemManager Sum");
-		generate.add(() -> sum.get());
-		generate.add(() -> () ->
-				scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
-		runSum = generate;
 	}
 
 	public void updateDestination(PackedCollection destination, Supplier<PackedCollection> intermediateDestination) {
@@ -102,6 +96,15 @@ public class PatternSystemManager implements CodeFeatures {
 			patternOutputs.get(i).setProducer(v(out));
 			patterns.get(i).updateDestination(out);
 		});
+
+		KernelizedEvaluable<PackedCollection<?>> scale = _multiply(
+				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
+
+		OperationList generate = new OperationList("PatternSystemManager Sum");
+		generate.add(() -> sum.get());
+		generate.add(() -> () ->
+				scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
+		runSum = generate.get();
 	}
 
 	public List<PatternFactoryChoice> getChoices() {
@@ -172,7 +175,7 @@ public class PatternSystemManager implements CodeFeatures {
 			return;
 		}
 
-		runSum.get().run();
+		runSum.run();
 	}
 
 	public static class Settings {
@@ -180,5 +183,20 @@ public class PatternSystemManager implements CodeFeatures {
 
 		public List<PatternLayerManager.Settings> getPatterns() { return patterns; }
 		public void setPatterns(List<PatternLayerManager.Settings> patterns) { this.patterns = patterns; }
+
+		public static Settings defaultSettings(int channels, int patternsPerChannel) {
+			Settings settings = new Settings();
+			IntStream.range(0, channels).forEach(c -> IntStream.range(0, patternsPerChannel).forEach(p -> {
+				PatternLayerManager.Settings pattern = new PatternLayerManager.Settings();
+				pattern.setChannel(c);
+				pattern.setDuration(1.0);
+				pattern.setChordDepth(1);
+				pattern.setMelodic(false);
+				pattern.setFactorySelection(ParameterFunction.random());
+				if (p == 0) pattern.getLayers().add(ParameterSet.random());
+				settings.getPatterns().add(pattern);
+			}));
+			return settings;
+		}
 	}
 }

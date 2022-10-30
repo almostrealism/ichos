@@ -21,6 +21,8 @@ import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.tone.KeyPosition;
 import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.audio.tone.StaticScale;
+import org.almostrealism.audio.tone.WesternChromatic;
+import org.almostrealism.audio.tone.WesternScales;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.heredity.ConfigurableGenome;
 import org.almostrealism.heredity.SimpleChromosome;
@@ -123,18 +125,42 @@ public class ChordProgressionManager {
 	public ConfigurableGenome getGenome() { return genome; }
 
 	public Settings getSettings() {
-		return null; // TODO
+		Settings settings = new Settings();
+
+		Scale<WesternChromatic> scale = (Scale<WesternChromatic>) getKey();
+		WesternChromatic root = scale.valueAt(0);
+		ScaleType scaleType = scale.length() > 2 && scale.valueAt(2).position() - scale.valueAt(0).position() < 4 ? ScaleType.MINOR : ScaleType.MAJOR;
+
+		settings.setRoot(root);
+		settings.setScaleType(scaleType);
+		settings.setSize(getSize());
+		settings.setDuration(getDuration());
+		settings.setRegionLengthSelection(getRegionLengthSelection());
+		settings.setChordSelection(getChordSelection());
+		return settings;
 	}
 
 	public void setSettings(Settings settings) {
-		// TODO
+		WesternChromatic root = settings.getRoot();
+
+		if (root != null) {
+			if (ScaleType.MAJOR.equals(settings.getScaleType())) {
+				setKey(WesternScales.major(root, 1));
+			} else if (ScaleType.MINOR.equals(settings.getScaleType())) {
+				setKey(WesternScales.minor(root, 1));
+			}
+		}
+
+		setSize(settings.getSize());
+		setDuration(settings.getDuration());
+		setRegionLengthSelection(settings.getRegionLengthSelection());
+		setChordSelection(settings.getChordSelection());
 	}
 
 	public Scale<?> getKey() { return key; }
 	public void setKey(Scale<?> scale) { this.key = scale; }
 
 	public int getChordDepth() { return chordDepth; }
-
 	public void setChordDepth(int chordDepth) { this.chordDepth = chordDepth; }
 
 	public int getSize() { return size; }
@@ -154,8 +180,15 @@ public class ChordProgressionManager {
 		this.regionLengthSelection = regionLengthSelection;
 	}
 
+	public List<ChordPositionFunction> getChordSelection() {
+		return chordSelection;
+	}
+
+	public void setChordSelection(List<ChordPositionFunction> chordSelection) {
+		this.chordSelection = chordSelection;
+	}
+
 	public Scale<?> forPosition(double position) {
-		// System.out.println("ChordProgressionManager: Retrieving scale for position = " + position);
 		while (position >= duration) position -= duration;
 		for (Region region : regions) {
 			if (region.contains(position)) {
@@ -197,12 +230,22 @@ public class ChordProgressionManager {
 	}
 
 	public static class Settings {
-		// TODO  Store scale for the key
+		private ScaleType scaleType;
+		private WesternChromatic root;
+
 		private int size;
 		private double duration;
+
 		private List<ParameterFunction> regionLengthSelection;
+		private List<ChordPositionFunction> chordSelection;
 
 		public Settings() { }
+
+		public ScaleType getScaleType() { return scaleType; }
+		public void setScaleType(ScaleType scaleType) { this.scaleType = scaleType; }
+
+		public WesternChromatic getRoot() { return root; }
+		public void setRoot(WesternChromatic root) { this.root = root; }
 
 		public int getSize() { return size; }
 		public void setSize(int size) { this.size = size; }
@@ -217,5 +260,32 @@ public class ChordProgressionManager {
 		public void setRegionLengthSelection(List<ParameterFunction> regionLengthSelection) {
 			this.regionLengthSelection = regionLengthSelection;
 		}
+
+		public List<ChordPositionFunction> getChordSelection() {
+			return chordSelection;
+		}
+
+		public void setChordSelection(List<ChordPositionFunction> chordSelection) {
+			this.chordSelection = chordSelection;
+		}
+
+		public static Settings defaultSettings() {
+			Settings settings = new Settings();
+			settings.setScaleType(ScaleType.MAJOR);
+			settings.setRoot(WesternChromatic.C1);
+			settings.setSize(16);
+			settings.setDuration(8);
+			settings.setRegionLengthSelection(IntStream.range(0, MAX_SIZE)
+					.mapToObj(i -> ParameterFunction.random())
+					.collect(Collectors.toUnmodifiableList()));
+			settings.setChordSelection(IntStream.range(0, MAX_SIZE)
+					.mapToObj(i -> ChordPositionFunction.random())
+					.collect(Collectors.toUnmodifiableList()));
+			return settings;
+		}
+	}
+
+	public enum ScaleType {
+		MAJOR, MINOR;
 	}
 }

@@ -104,7 +104,7 @@ public class WaveOutput implements Receptor<PackedCollection<?>>, Lifecycle, Cod
 	}
 
 	public WaveOutput(File f, int bits) {
-		this(() -> f, 180 * OutputLine.sampleRate, bits);
+		this(() -> f, 240 * OutputLine.sampleRate, bits);
 	}
 
 	public WaveOutput(Supplier<File> f, int bits) {

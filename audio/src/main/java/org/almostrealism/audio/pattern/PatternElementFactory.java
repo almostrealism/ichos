@@ -127,7 +127,7 @@ public class PatternElementFactory {
 	}
 
 	// TODO  This should take instruction for whether to apply note duration, relying just on isMelodic limits its use
-	public Optional<PatternElement> apply(ElementParity parity, double position, double scale, double bias, int depth, ParameterSet params) {
+	public Optional<PatternElement> apply(ElementParity parity, double position, double scale, double bias, int depth, boolean repeat, ParameterSet params) {
 		if (parity == ElementParity.LEFT) {
 			position -= scale;
 		} else if (parity == ElementParity.RIGHT) {
@@ -151,7 +151,7 @@ public class PatternElementFactory {
 
 		double r = repeatSelection.apply(params, position, scale);
 
-		if (r <= 0) {
+		if (!repeat || r <= 0) {
 			element.setRepeatCount(1);
 		} else {
 			int c;

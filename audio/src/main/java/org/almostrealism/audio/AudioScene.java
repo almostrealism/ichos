@@ -70,6 +70,8 @@ import java.util.stream.IntStream;
 
 @ModelEntity
 public class AudioScene<T extends ShadableSurface> implements Setup, CellFeatures {
+	public static final int DEFAULT_PATTERNS_PER_CHANNEL = 6;
+
 	public static final int mixdownDuration = 140;
 
 	public static final boolean enablePatternSystem = true;
@@ -129,8 +131,8 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 
 		this.sections = new SceneSectionManager(genome.getGenome(0), sources, this::getMeasureDuration, getSampleRate());
 		this.progression = new ChordProgressionManager(genome.getGenome(1), WesternScales.minor(WesternChromatic.G1, 1));
-		this.progression.setSize(16); // TODO  Should be configurable
-		this.progression.setDuration(8); // TODO  Should be configurable
+		this.progression.setSize(16);
+		this.progression.setDuration(8);
 		initSources();
 	}
 
@@ -248,6 +250,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		settings.getBreaks().addAll(time.getResets());
 		settings.getSections().addAll(sections.getSections()
 				.stream().map(s -> new Settings.Section(s.getPosition(), s.getLength())).collect(Collectors.toList()));
+		settings.setChordProgression(progression.getSettings());
 		settings.setPatternSystem(patterns.getSettings());
 		return settings;
 	}
@@ -260,6 +263,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		time.getResets().clear();
 		settings.getBreaks().forEach(time::addReset);
 		settings.getSections().forEach(s -> sections.addSection(s.getPosition(), s.getLength()));
+		progression.setSettings(settings.getChordProgression());
 		patterns.setSettings(settings.getPatternSystem());
 	}
 
@@ -344,7 +348,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		if (file.exists()) {
 			setSettings(new ObjectMapper().readValue(file, AudioScene.Settings.class));
 		} else {
-			setSettings(new Settings()); // TODO Should be fixed pattern count = source count
+			setSettings(Settings.defaultSettings(getSourceCount(), DEFAULT_PATTERNS_PER_CHANNEL));
 		}
 	}
 
@@ -491,9 +495,11 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public static class Settings {
 		private double bpm = 120;
 		private int measureSize = 4;
-		private int totalMeasures = 16;
+		private int totalMeasures = 64;
 		private List<Integer> breaks = new ArrayList<>();
 		private List<Section> sections = new ArrayList<>();
+
+		private ChordProgressionManager.Settings chordProgression;
 		private PatternSystemManager.Settings patternSystem;
 
 		public Settings() {
@@ -515,6 +521,9 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		public List<Section> getSections() { return sections; }
 		public void setSections(List<Section> sections) { this.sections = sections; }
 
+		public ChordProgressionManager.Settings getChordProgression() { return chordProgression; }
+		public void setChordProgression(ChordProgressionManager.Settings chordProgression) { this.chordProgression = chordProgression; }
+		
 		public PatternSystemManager.Settings getPatternSystem() { return patternSystem; }
 		public void setPatternSystem(PatternSystemManager.Settings patternSystem) { this.patternSystem = patternSystem; }
 
@@ -533,6 +542,13 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 
 			public int getLength() { return length; }
 			public void setLength(int length) { this.length = length; }
+		}
+
+		public static Settings defaultSettings(int channels, int patternsPerChannel) {
+			Settings settings = new Settings();
+			settings.setChordProgression(ChordProgressionManager.Settings.defaultSettings());
+			settings.setPatternSystem(PatternSystemManager.Settings.defaultSettings(channels, patternsPerChannel));
+			return settings;
 		}
 	}
 }

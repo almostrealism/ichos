@@ -119,7 +119,8 @@ public class PatternElement implements CodeFeatures {
 				.collect(Collectors.toList());
 	}
 
-	public List<ProducerWithOffset<PackedCollection>> getNoteDestinations(double offset, DoubleToIntFunction frameForPosition,
+	public List<ProducerWithOffset<PackedCollection>> getNoteDestinations(boolean melodic, double offset,
+																		  DoubleToIntFunction frameForPosition,
 																		  DoubleFunction<Scale<?>> scaleForPosition,
 																		  DoubleUnaryOperator nextNotePosition) {
 		List<ProducerWithOffset<PackedCollection>> destinations = new ArrayList<>();
@@ -156,7 +157,7 @@ public class PatternElement implements CodeFeatures {
 				if (keys.isEmpty()) break p;
 				int keyIndex = (int) (p * keys.size());
 
-				Producer<PackedCollection> note = getNoteAudio(keys.get(keyIndex), relativePosition,
+				Producer<PackedCollection> note = getNoteAudio(melodic, keys.get(keyIndex), relativePosition,
 													nextNotePosition.applyAsDouble(relativePosition),
 													frameForPosition);
 				destinations.add(new ProducerWithOffset<>(note, frameForPosition.applyAsInt(actualPosition)));
@@ -168,12 +169,14 @@ public class PatternElement implements CodeFeatures {
 		return destinations;
 	}
 
-	public Producer<PackedCollection> getNoteAudio(KeyPosition<?> target, double position, double nextNotePosition,
+	public Producer<PackedCollection> getNoteAudio(boolean melodic, KeyPosition<?> target,
+												   double position, double nextNotePosition,
 												   DoubleToIntFunction frameForPosition) {
 		if (getDurationStrategy() == NoteDurationStrategy.NONE) {
-			return getNote().getAudio(target);
+			return getNote().getAudio(melodic ? target : getNote().getRoot());
 		} else {
-			return getNote().getAudio(target, frameForPosition.applyAsInt(getNoteDuration(position, nextNotePosition)));
+			return getNote().getAudio(melodic ? target : getNote().getRoot(),
+					frameForPosition.applyAsInt(getNoteDuration(position, nextNotePosition)));
 		}
 	}
 

@@ -84,7 +84,7 @@ public class PatternLayerSeeds {
 
 		List<PatternLayer> layers = IntStream.range(0, (int) count)
 				.mapToObj(i ->
-						factory.apply(null, position + offset + i * granularity, granularity, bias, chordDepth, params).orElse(null))
+						factory.apply(null, position + offset + i * granularity, granularity, bias, chordDepth, false, params).orElse(null))
 				.filter(Objects::nonNull)
 				.map(List::of)
 				.map(PatternLayer::new)

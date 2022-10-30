@@ -59,8 +59,8 @@ public class PatternLayerManager implements CodeFeatures {
 	private PackedCollection volume;
 	private PackedCollection destination;
 	private RootDelegateSegmentsAdd sum;
-	private OperationList runSum;
-	private OperationList adjustVolume;
+	private Runnable runSum;
+	private Runnable adjustVolume;
 
 	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome, int channel, double measures,
 							   boolean melodic, PackedCollection destination) {
@@ -95,13 +95,13 @@ public class PatternLayerManager implements CodeFeatures {
 		KernelizedEvaluable<PackedCollection<?>> scale = _multiply(
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
 
-		runSum = new OperationList("PatternLayerManager Sum");
-		runSum.add(() -> sum.get());
+		runSum = sum.get();
 
-		adjustVolume = new OperationList("PatternLayerManager Adjust Volume");
-		adjustVolume.add(() -> () -> volume.setMem(0, 1.0 / chordDepth));
-		adjustVolume.add(() -> () ->
+		OperationList v = new OperationList("PatternLayerManager Adjust Volume");
+		v.add(() -> () -> volume.setMem(0, 1.0 / chordDepth));
+		v.add(() -> () ->
 				scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
+		adjustVolume = v.get();
 	}
 
 	public void updateDestination(PackedCollection destination) {
@@ -309,7 +309,7 @@ public class PatternLayerManager implements CodeFeatures {
 
 			sum.getInput().clear();
 			elements.stream()
-					.map(e -> e.getNoteDestinations(offset, offsetForPosition, scaleForPosition, this::nextNotePosition))
+					.map(e -> e.getNoteDestinations(melodic, offset, offsetForPosition, scaleForPosition, this::nextNotePosition))
 					.flatMap(List::stream)
 					.forEach(sum.getInput()::add);
 
@@ -323,10 +323,10 @@ public class PatternLayerManager implements CodeFeatures {
 				return;
 			}
 
-			runSum.get().run();
+			runSum.run();
 		});
 
-		adjustVolume.get().run();
+		adjustVolume.run();
 	}
 
 	public double nextNotePosition(double position) {

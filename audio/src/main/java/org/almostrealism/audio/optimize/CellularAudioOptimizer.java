@@ -333,7 +333,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		// HealthCallable.setComputeRequirements(ComputeRequirement.PROFILING);
 		// Hardware.getLocalHardware().setMaximumOperationDepth(7);
 
-		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(2000 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(20000 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 
 		AudioScene<?> scene = createScene();
 		CellularAudioOptimizer opt = build(scene, PopulationOptimizer.enableBreeding ? 25 : 1);
@@ -392,28 +392,57 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		scene.setTotalMeasures(64);
 		scene.addSection(0, 32);
 		scene.addSection(32, 32);
-		// scene.addBreak(24);
+		// scene.addBreak(48);
+
+		double duration1 = 0.5;
+		double duration2 = 1.0;
 
 		int channel = 0;
-
-		PatternLayerManager layer = scene.getPatternManager().addPattern(channel++, 0.25, false);
-		layer.setSeedBias(1.0);
+		PatternLayerManager layer = scene.getPatternManager().addPattern(channel, 0.25, false);
+		layer.setSeedBias(0.8);
 		layer.addLayer(new ParameterSet());
 
-		layer = scene.getPatternManager().addPattern(channel++, 0.5, false);
-		layer.setSeedBias(0.5);
+		layer = scene.getPatternManager().addPattern(channel, duration1, false);
+		layer.setSeedBias(0.8);
+		layer.addLayer(new ParameterSet());
+
+		layer = scene.getPatternManager().addPattern(channel, duration1, false);
+		layer.setSeedBias(0.8);
+		layer.addLayer(new ParameterSet());
+
+		layer = scene.getPatternManager().addPattern(channel, duration1, false);
+		layer.setSeedBias(0.8);
+		layer.addLayer(new ParameterSet());
+
+		layer = scene.getPatternManager().addPattern(channel, duration1, false);
+		layer.setSeedBias(0.8);
+		layer.addLayer(new ParameterSet());
+
+		layer = scene.getPatternManager().addPattern(channel++, duration1, false);
+		layer.setSeedBias(0.8);
+		layer.addLayer(new ParameterSet());
+
+		layer = scene.getPatternManager().addPattern(channel, duration2, false);
+		layer.setSeedBias(0.25);
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 
-		layer = scene.getPatternManager().addPattern(channel++, 1.0, false);
+		layer = scene.getPatternManager().addPattern(channel++, duration2, false);
+		layer.setSeedBias(0.25);
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
+
+		layer = scene.getPatternManager().addPattern(channel++, 2.0, false);
 		layer.setSeedBias(0.2);
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
+		layer.addLayer(new ParameterSet());
 
-		layer = scene.getPatternManager().addPattern(channel++, 4.0, true);
-		layer.setSeedBias(0.4);
+		layer = scene.getPatternManager().addPattern(channel++, 8.0, true);
+		layer.setSeedBias(0.2);
 		layer.setChordDepth(3);
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
@@ -425,7 +454,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 
-		scene.saveSettings(new File("scene-settings.json"));
+		// scene.saveSettings(new File("scene-settings.json"));
 		return scene;
 	}
 
