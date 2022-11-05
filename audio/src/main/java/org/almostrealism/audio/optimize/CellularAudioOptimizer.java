@@ -545,52 +545,52 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 		public GeneratorConfiguration(int scale) {
 			double offset = 80;
-			double duration = 5;
+			double duration = 0;
 
 			minChoiceValue = 0.0;
 			maxChoiceValue = 1.0;
-			repeatSpeedUpDurationMin = 1;
-			repeatSpeedUpDurationMax = 90;
+			repeatSpeedUpDurationMin = 5.0;
+			repeatSpeedUpDurationMax = 60.0;
 
-			minVolumeValue = 0.5 / scale;
-			maxVolumeValue = 1 / scale;
+			minVolumeValue = 0.4 / scale;
+			maxVolumeValue = 0.8 / scale;
 			periodicVolumeDurationMin = 0.5;
 			periodicVolumeDurationMax = 180;
 //			overallVolumeDurationMin = 60;
 //			overallVolumeDurationMax = 240;
-			overallVolumeDurationMin = duration - 1;
-			overallVolumeDurationMax = duration + 5;
+			overallVolumeDurationMin = duration + 5.0;
+			overallVolumeDurationMax = duration + 30.0;
 			overallVolumeExponentMin = 1;
 			overallVolumeExponentMax = 1;
-			overallVolumeOffsetMin = offset + 3;
-			overallVolumeOffsetMax = offset + 5;
+			overallVolumeOffsetMin = offset + 10.0;
+			overallVolumeOffsetMax = offset + 35.0;
 
 			periodicFilterUpDurationMin = 0.5;
 			periodicFilterUpDurationMax = 180;
-			overallFilterUpDurationMin = duration + 25;
-			overallFilterUpDurationMax = duration + 175;
+			overallFilterUpDurationMin = duration + 90.0;
+			overallFilterUpDurationMax = duration + 360.0;
 			overallFilterUpExponentMin = 0.5;
 			overallFilterUpExponentMax = 3.5;
 			overallFilterUpOffsetMin = offset;
-			overallFilterUpOffsetMax = offset + 15; // + 5;
+			overallFilterUpOffsetMax = offset + 35.0;
 
-			minTransmission = 0.0;
-			maxTransmission = 0.5;
-			minDelay = 0.5;
-			maxDelay = 60;
+			minTransmission = 0.3;
+			maxTransmission = 1.6;
+			minDelay = 4.0;
+			maxDelay = 20.0;
 
-			periodicSpeedUpDurationMin = 0.5;
-			periodicSpeedUpDurationMax = 180;
+			periodicSpeedUpDurationMin = 20.0;
+			periodicSpeedUpDurationMax = 180.0;
 			periodicSpeedUpPercentageMin = 0.0;
-			periodicSpeedUpPercentageMax = 10;
+			periodicSpeedUpPercentageMax = 2.0;
 
-			periodicSlowDownDurationMin = 1;
-			periodicSlowDownDurationMax = 180;
+			periodicSlowDownDurationMin = 20.0;
+			periodicSlowDownDurationMax = 180.0;
 			periodicSlowDownPercentageMin = 0.0;
 			periodicSlowDownPercentageMax = 0.9;
 
-			overallSpeedUpDurationMin = 10;
-			overallSpeedUpDurationMax = 180;
+			overallSpeedUpDurationMin = 10.0;
+			overallSpeedUpDurationMax = 60.0;
 			overallSpeedUpExponentMin = 1;
 			overallSpeedUpExponentMax = 1;
 
@@ -598,19 +598,19 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			periodicWetInDurationMax = 180;
 //			overallWetInDurationMin = 30;
 //			overallWetInDurationMax = 120;
-			overallWetInDurationMin = duration + 1;
-			overallWetInDurationMax = duration + 15;
+			overallWetInDurationMin = duration + 5.0;
+			overallWetInDurationMax = duration + 60.0;
 			overallWetInExponentMin = 0.5;
 			overallWetInExponentMax = 2.5;
 			overallWetInOffsetMin = offset;
-			overallWetInOffsetMax = offset + 30; // + 10;
+			overallWetInOffsetMax = offset + 30;
 
-			minWetOut = 0.8;
-			maxWetOut = 1.0;
-			minHighPass = 0;
-			maxHighPass = 20000;
-			minLowPass = 0;
-			maxLowPass = 20000;
+			minWetOut = 0.5;
+			maxWetOut = 1.8;
+			minHighPass = 0.0;
+			maxHighPass = 5000.0;
+			minLowPass = 15000.0;
+			maxLowPass = 20000.0;
 
 			periodicMasterFilterDownDurationMin = 0.5;
 			periodicMasterFilterDownDurationMax = 90;
@@ -619,7 +619,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 			overallMasterFilterDownExponentMin = 0.5;
 			overallMasterFilterDownExponentMax = 3.5;
 			overallMasterFilterDownOffsetMin = offset;
-			overallMasterFilterDownOffsetMax = offset + 30; // 120;
+			overallMasterFilterDownOffsetMax = offset + 30;
 
 			offsetChoices = IntStream.range(0, 7)
 					.mapToDouble(i -> Math.pow(2, -i))

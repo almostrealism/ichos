@@ -165,6 +165,7 @@ public class PatternLayerManager implements CodeFeatures {
 		Settings settings = new Settings();
 		settings.setChannel(channel);
 		settings.setDuration(duration);
+		settings.setChordDepth(chordDepth);
 		settings.setMelodic(melodic);
 		settings.setFactorySelection(factorySelection);
 		settings.getLayers().addAll(layerParams);

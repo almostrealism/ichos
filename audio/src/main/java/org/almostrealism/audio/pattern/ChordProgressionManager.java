@@ -135,6 +135,7 @@ public class ChordProgressionManager {
 		settings.setScaleType(scaleType);
 		settings.setSize(getSize());
 		settings.setDuration(getDuration());
+		settings.setChordDepth(getChordDepth());
 		settings.setRegionLengthSelection(getRegionLengthSelection());
 		settings.setChordSelection(getChordSelection());
 		return settings;
@@ -153,6 +154,7 @@ public class ChordProgressionManager {
 
 		setSize(settings.getSize());
 		setDuration(settings.getDuration());
+		setChordDepth(settings.getChordDepth());
 		setRegionLengthSelection(settings.getRegionLengthSelection());
 		setChordSelection(settings.getChordSelection());
 	}
@@ -235,6 +237,7 @@ public class ChordProgressionManager {
 
 		private int size;
 		private double duration;
+		private int chordDepth;
 
 		private List<ParameterFunction> regionLengthSelection;
 		private List<ChordPositionFunction> chordSelection;
@@ -252,6 +255,9 @@ public class ChordProgressionManager {
 
 		public double getDuration() { return duration; }
 		public void setDuration(double duration) { this.duration = duration; }
+
+		public int getChordDepth() { return chordDepth; }
+		public void setChordDepth(int chordDepth) { this.chordDepth = chordDepth; }
 
 		public List<ParameterFunction> getRegionLengthSelection() {
 			return regionLengthSelection;
@@ -275,6 +281,7 @@ public class ChordProgressionManager {
 			settings.setRoot(WesternChromatic.C1);
 			settings.setSize(16);
 			settings.setDuration(8);
+			settings.setChordDepth(4);
 			settings.setRegionLengthSelection(IntStream.range(0, MAX_SIZE)
 					.mapToObj(i -> ParameterFunction.random())
 					.collect(Collectors.toUnmodifiableList()));
