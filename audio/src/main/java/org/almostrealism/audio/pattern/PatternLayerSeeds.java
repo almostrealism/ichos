@@ -39,18 +39,20 @@ public class PatternLayerSeeds {
 	private double position;
 	private double scale;
 	private double granularity;
+	private double bias;
 
 	private PatternElementFactory factory;
 	private ParameterSet params;
 
 	public PatternLayerSeeds() {
-		this(0, 1.0, 1.0, null, null);
+		this(0, 1.0, 1.0, 0.0, null, null);
 	}
 
-	public PatternLayerSeeds(double position, double scale, double granularity, PatternElementFactory factory, ParameterSet params) {
+	public PatternLayerSeeds(double position, double scale, double granularity, double bias, PatternElementFactory factory, ParameterSet params) {
 		this.position = position;
 		this.scale = scale;
 		this.granularity = granularity;
+		this.bias = bias;
 		this.factory = factory;
 		this.params = params;
 	}
@@ -58,7 +60,6 @@ public class PatternLayerSeeds {
 	public double getPosition() {
 		return position;
 	}
-
 	public void setPosition(double position) {
 		this.position = position;
 	}
@@ -66,7 +67,6 @@ public class PatternLayerSeeds {
 	public double getScale() {
 		return scale;
 	}
-
 	public void setScale(double scale) {
 		this.scale = scale;
 	}
@@ -74,17 +74,19 @@ public class PatternLayerSeeds {
 	public double getGranularity() {
 		return granularity;
 	}
-
 	public void setGranularity(double granularity) {
 		this.granularity = granularity;
 	}
+
+	public double getBias() { return bias; }
+	public void setBias(double bias) { this.bias = bias; }
 
 	public Stream<PatternLayer> generator(double offset, double duration, double bias, int chordDepth) {
 		double count = Math.max(1.0, duration / granularity);
 
 		List<PatternLayer> layers = IntStream.range(0, (int) count)
 				.mapToObj(i ->
-						factory.apply(null, position + offset + i * granularity, granularity, bias, chordDepth, false, params).orElse(null))
+						factory.apply(null, position + offset + i * granularity, granularity, this.bias + bias, chordDepth, false, params).orElse(null))
 				.filter(Objects::nonNull)
 				.map(List::of)
 				.map(PatternLayer::new)
@@ -100,7 +102,7 @@ public class PatternLayerSeeds {
 			}
 		}
 
-		if (layers.size() <= 0 && bias >= 1.0) {
+		if (layers.size() <= 0 && (this.bias + bias) >= 1.0) {
 			System.out.println("PatternLayerSeeds: No seeds generated, despite bias >= 1.0");
 		}
 

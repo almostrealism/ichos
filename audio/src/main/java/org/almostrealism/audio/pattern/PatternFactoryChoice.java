@@ -33,6 +33,7 @@ public class PatternFactoryChoice {
 	private boolean seed;
 	private int seedUnits;
 	private double seedScale;
+	private double seedBias;
 
 	@Deprecated
 	private ParameterizedPositionFunction seedNoteFunction;
@@ -87,6 +88,9 @@ public class PatternFactoryChoice {
 	public double getSeedScale() { return seedScale; }
 	public void setSeedScale(double seedScale) { this.seedScale = seedScale; }
 
+	public double getSeedBias() { return seedBias; }
+	public void setSeedBias(double seedBias) { this.seedBias = seedBias; }
+
 	public ParameterizedPositionFunction getSeedNoteFunction() {
 		return seedNoteFunction;
 	}
@@ -99,7 +103,7 @@ public class PatternFactoryChoice {
 	}
 
 	public PatternLayerSeeds seeds(ParameterSet params) {
-		return new PatternLayerSeeds(0, seedScale, 1.0 / seedUnits, factory, params);
+		return new PatternLayerSeeds(0, seedScale, 1.0 / seedUnits, seedBias, factory, params);
 	}
 
 	public PatternLayer apply(List<PatternElement> elements, double scale, int depth, ParameterSet params) {
