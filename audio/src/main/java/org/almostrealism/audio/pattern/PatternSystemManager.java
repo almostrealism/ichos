@@ -51,8 +51,6 @@ public class PatternSystemManager implements CodeFeatures {
 	private List<PatternLayerManager> patterns;
 	private ConfigurableGenome genome;
 
-	private Supplier<PackedCollection> intermediateDestination;
-	private List<ProducerWithOffset<PackedCollection>> patternOutputs;
 	private PackedCollection volume;
 	private PackedCollection destination;
 	private RootDelegateSegmentsAdd<PackedCollection> sum;
@@ -74,28 +72,17 @@ public class PatternSystemManager implements CodeFeatures {
 		this.choices = choices;
 		this.patterns = new ArrayList<>();
 		this.genome = genome;
-
-		this.patternOutputs = new ArrayList<>();
 	}
 
-	public void init(PackedCollection destination, Supplier<PackedCollection> intermediateDestination) {
-		this.intermediateDestination = intermediateDestination;
-
+	public void init() {
 		volume = new PackedCollection(1);
 		volume.setMem(0, 1.0);
-
-		updateDestination(destination, intermediateDestination);
 	}
 
-	public void updateDestination(PackedCollection destination, Supplier<PackedCollection> intermediateDestination) {
+	private void updateDestination(PackedCollection destination, Supplier<PackedCollection> intermediateDestination) {
 		this.destination = destination;
-		this.intermediateDestination = intermediateDestination;
 		this.sum = new RootDelegateSegmentsAdd<>(8, destination.traverse(1));
-		IntStream.range(0, patterns.size()).forEach(i -> {
-			PackedCollection out = intermediateDestination.get();
-			patternOutputs.get(i).setProducer(v(out));
-			patterns.get(i).updateDestination(out);
-		});
+		IntStream.range(0, patterns.size()).forEach(i -> patterns.get(i).updateDestination(intermediateDestination.get()));
 
 		KernelizedEvaluable<PackedCollection<?>> scale = _multiply(
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
@@ -125,7 +112,6 @@ public class PatternSystemManager implements CodeFeatures {
 
 	public void setSettings(Settings settings) {
 		patterns.clear();
-		patternOutputs.clear();
 		settings.getPatterns().forEach(s -> addPattern(s.getChannel(), s.getDuration(), s.isMelodic()).setSettings(s));
 	}
 
@@ -138,23 +124,24 @@ public class PatternSystemManager implements CodeFeatures {
 	}
 
 	public PatternLayerManager addPattern(int channel, double measures, boolean melodic) {
-		PackedCollection out = intermediateDestination.get();
-		patternOutputs.add(new ProducerWithOffset<>(v(out), 0));
-
 		PatternLayerManager pattern = new PatternLayerManager(choices,
 								genome.addSimpleChromosome(3),
-								channel, measures, melodic, out);
+								channel, measures, melodic);
 		patterns.add(pattern);
-
 		return pattern;
 	}
 
 	public void clear() {
 		patterns.clear();
-		patternOutputs.clear();
 	}
 
-	public void sum(List<Integer> channels, DoubleToIntFunction offsetForPosition, int measures, DoubleFunction<Scale<?>> scaleForPosition) {
+	public void sum(List<Integer> channels, DoubleToIntFunction offsetForPosition,
+					int measures, DoubleFunction<Scale<?>> scaleForPosition,
+					PackedCollection destination, Supplier<PackedCollection> intermediateDestination) {
+		if (this.destination != destination) {
+			updateDestination(destination, intermediateDestination);
+		}
+
 		List<Integer> patternsForChannel = IntStream.range(0, patterns.size())
 				.filter(i -> channels == null || channels.contains(patterns.get(i).getChannel()))
 				.boxed().collect(Collectors.toList());
@@ -167,7 +154,7 @@ public class PatternSystemManager implements CodeFeatures {
 		sum.getInput().clear();
 		patternsForChannel.forEach(i -> {
 			patterns.get(i).sum(offsetForPosition, measures, scaleForPosition);
-			sum.getInput().add(patternOutputs.get(i));
+			sum.getInput().add(new ProducerWithOffset<>(v(patterns.get(i).getDestination()), 0));
 		});
 
 		if (sum.getInput().size() > sum.getMaxInputs()) {

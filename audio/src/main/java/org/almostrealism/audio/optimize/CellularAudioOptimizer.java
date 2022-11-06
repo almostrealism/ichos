@@ -392,7 +392,7 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		scene.setTotalMeasures(64);
 		scene.addSection(0, 32);
 		scene.addSection(32, 32);
-		// scene.addBreak(48);
+		scene.addBreak(64);
 
 		double duration1 = 0.5;
 		double duration2 = 1.0;
@@ -614,12 +614,12 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 
 			periodicMasterFilterDownDurationMin = 0.5;
 			periodicMasterFilterDownDurationMax = 90;
-			overallMasterFilterDownDurationMin = duration;
-			overallMasterFilterDownDurationMax = duration + 25;
+			overallMasterFilterDownDurationMin = duration + 30;
+			overallMasterFilterDownDurationMax = duration + 120;
 			overallMasterFilterDownExponentMin = 0.5;
 			overallMasterFilterDownExponentMax = 3.5;
 			overallMasterFilterDownOffsetMin = offset;
-			overallMasterFilterDownOffsetMax = offset + 30;
+			overallMasterFilterDownOffsetMax = offset + 40;
 
 			offsetChoices = IntStream.range(0, 7)
 					.mapToDouble(i -> Math.pow(2, -i))

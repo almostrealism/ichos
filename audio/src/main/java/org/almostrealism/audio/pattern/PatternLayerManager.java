@@ -63,13 +63,13 @@ public class PatternLayerManager implements CodeFeatures {
 	private Runnable adjustVolume;
 
 	public PatternLayerManager(List<PatternFactoryChoice> choices, SimpleChromosome chromosome, int channel, double measures,
-							   boolean melodic, PackedCollection destination) {
+							   boolean melodic) {
 		this(PatternFactoryChoice.choices(choices, false), PatternFactoryChoice.choices(choices, true),
-				chromosome, channel, measures, melodic, destination);
+				chromosome, channel, measures, melodic);
 	}
 
 	public PatternLayerManager(Supplier<List<PatternFactoryChoice>> percChoices, Supplier<List<PatternFactoryChoice>> melodicChoices,
-							   SimpleChromosome chromosome, int channel, double measures, boolean melodic, PackedCollection destination) {
+							   SimpleChromosome chromosome, int channel, double measures, boolean melodic) {
 		this.channel = channel;
 		this.duration = measures;
 		this.scale = 1.0;
@@ -81,16 +81,21 @@ public class PatternLayerManager implements CodeFeatures {
 		this.chromosome = chromosome;
 		this.roots = new ArrayList<>();
 		this.layerParams = new ArrayList<>();
-		if (destination != null) init(destination);
+		init();
 	}
 
-	public void init(PackedCollection destination) {
+	public void init() {
 		factorySelection = ParameterFunction.random();
 
 		volume = new PackedCollection(1);
 		volume.setMem(0, 0.1);
+	}
 
-		updateDestination(destination);
+	protected PackedCollection<?> getDestination() { return destination; }
+
+	public void updateDestination(PackedCollection destination) {
+		this.destination = destination;
+		this.sum = new RootDelegateSegmentsAdd<>(MAX_NOTES, this.destination.traverse(1));
 
 		KernelizedEvaluable<PackedCollection<?>> scale = _multiply(
 				new PassThroughProducer<>(1, 0), new PassThroughProducer<>(1, 1, -1)).get();
@@ -102,11 +107,6 @@ public class PatternLayerManager implements CodeFeatures {
 		v.add(() -> () ->
 				scale.kernelEvaluate(this.destination.traverse(1), this.destination.traverse(1), volume));
 		adjustVolume = v.get();
-	}
-
-	public void updateDestination(PackedCollection destination) {
-		this.destination = destination;
-		this.sum = new RootDelegateSegmentsAdd<>(MAX_NOTES, this.destination.traverse(1));
 	}
 
 	public List<PatternFactoryChoice> getChoices() {

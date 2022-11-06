@@ -141,15 +141,10 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		IntStream.range(0, sourceCount).forEach(sources.getChoices().getChoices()::add);
 
 		patterns = new PatternSystemManager(genome.getGenome(2));
-
-		patternDestination = new PackedCollection(getTotalSamples());
-		patterns.init(patternDestination, () -> WaveData.allocateCollection(getTotalSamples()));
+		patterns.init();
 		patterns.setTuning(new DefaultKeyboardTuning());
 
-		addDurationListener(duration -> {
-			patternDestination = new PackedCollection(getTotalSamples());
-			patterns.updateDestination(patternDestination, () -> WaveData.allocateCollection(getTotalSamples()));
-		});
+		addDurationListener(duration -> patternDestination = null);
 	}
 
 	public void setBPM(double bpm) {
@@ -335,9 +330,19 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 
 	public Supplier<Runnable> getPatternSetup(List<Integer> channels) {
 		return () -> () -> {
-			patternDestination.clear();
-			patterns.sum(channels, pos -> (int) (pos * getMeasureSamples()), getTotalMeasures(), getChordProgression()::forPosition);
+			refreshPatternDestination();
+			patterns.sum(channels, pos -> (int) (pos * getMeasureSamples()),
+					getTotalMeasures(), getChordProgression()::forPosition,
+					patternDestination, () -> WaveData.allocateCollection(getTotalSamples()));
 		};
+	}
+
+	private void refreshPatternDestination() {
+		if (patternDestination == null) {
+			patternDestination = new PackedCollection(getTotalSamples());
+		} else {
+			patternDestination.clear();
+		}
 	}
 
 	public void saveSettings(File file) throws IOException {
