@@ -98,6 +98,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	private Animation<T> scene;
 	private Waves sources;
 
+	private KeyboardTuning tuning;
 	private GlobalTimeManager time;
 	private SceneSectionManager sections;
 	private ChordProgressionManager progression;
@@ -129,6 +130,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		this.genome = new CombinedGenome(3);
 		this.legacyGenome = new DefaultAudioGenome(sources, delayLayers, sampleRate, time.getClock().frame());
 
+		this.tuning = new DefaultKeyboardTuning();
 		this.sections = new SceneSectionManager(genome.getGenome(0), sources, this::getMeasureDuration, getSampleRate());
 		this.progression = new ChordProgressionManager(genome.getGenome(1), WesternScales.minor(WesternChromatic.G1, 1));
 		this.progression.setSize(16);
@@ -142,7 +144,6 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 
 		patterns = new PatternSystemManager(genome.getGenome(2));
 		patterns.init();
-		patterns.setTuning(new DefaultKeyboardTuning());
 
 		addDurationListener(duration -> patternDestination = null);
 	}
@@ -310,6 +311,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		PackedCollection<?> audio = WaveData.allocateCollection(getTotalSamples());
 
 		OperationList patternSetup = new OperationList("PatternChannel Setup");
+		patternSetup.add(() -> () -> patterns.setTuning(tuning));
 		patternSetup.add(sections.setup());
 		patternSetup.add(getPatternSetup(List.of(channel)));
 		patternSetup.add(() -> () -> audio.setMem(0, patternDestination, 0, patternDestination.getMemLength()));

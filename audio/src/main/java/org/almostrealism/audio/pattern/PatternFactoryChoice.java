@@ -54,7 +54,7 @@ public class PatternFactoryChoice {
 		setMinScale(minScale);
 		setMaxScale(maxScale);
 		setMaxChordDepth(1);
-		setSeedUnits(1);
+		setSeedUnits(4);
 		setSeedScale(0.25);
 		initSelectionFunctions();
 	}
@@ -67,6 +67,7 @@ public class PatternFactoryChoice {
 
 	public void setFactory(PatternElementFactory factory) { this.factory = factory; }
 
+	// TODO Use this value to determine the likelihood of selection
 	public double getWeight() { return weight; }
 	public void setWeight(double weight) { this.weight = weight; }
 

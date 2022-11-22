@@ -85,18 +85,19 @@ public class ParameterizedPositionFunction {
 
 	private double applyPositionalAlt(ParameterSet params, double position, double scale) {
 		double selection = regularity.power(2.0, 3, 1).apply(params);
-
-		while (position < 0.0) position = position + 1.0;
-		while (position > 1.0) position = position - 1.0;
+		position = mod(position, 1.0);
 
 		double regularity = scale * selection;
-//		System.out.println("Regularity = " + regularity);
+		// System.out.println("Regularity = " + regularity);
 		position = position / regularity;
-
-		while (position < 0.0) position = position + 1.0;
-		while (position > 1.0) position = position - 1.0;
+		position = mod(position, 1.0);
 
 		return position;
+	}
+
+	private double mod(double value, double denominator) {
+		int result = (int) Math.floor(value / denominator);
+		return value - result * denominator;
 	}
 
 	private static double applyPositional(double selection, double position, double scale) {

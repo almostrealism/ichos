@@ -28,6 +28,7 @@ import org.almostrealism.hardware.PassThroughProducer;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.heredity.SimpleChromosome;
 import org.almostrealism.heredity.SimpleGene;
+import org.almostrealism.io.SystemUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +40,8 @@ import java.util.stream.IntStream;
 
 public class PatternLayerManager implements CodeFeatures {
 	public static final int MAX_NOTES = 2048;
+
+	public static boolean enableWarnings = SystemUtils.isEnabled("AR_PATTERN_WARNINGS").orElse(true);
 
 	private int channel;
 	private double duration;
@@ -169,6 +172,7 @@ public class PatternLayerManager implements CodeFeatures {
 		settings.setMelodic(melodic);
 		settings.setFactorySelection(factorySelection);
 		settings.getLayers().addAll(layerParams);
+		System.out.println("PatternLayerManager[Channel " + channel + "] getSettings: " + layerParams.size() + " layers");
 		return settings;
 	}
 
@@ -231,12 +235,26 @@ public class PatternLayerManager implements CodeFeatures {
 	protected void layer(ParameterSet params) {
 		if (rootCount() <= 0) {
 			PatternLayerSeeds seeds = getSeeds(params);
-			seeds.generator(0, duration, seedBias, chordDepth).forEach(roots::add);
-			scale = seeds.getScale();
+			if (seeds != null) {
+				seeds.generator(0, duration, seedBias, chordDepth).forEach(roots::add);
+				scale = seeds.getScale();
+			}
+
+			if (rootCount() <= 0) {
+				roots.add(new PatternLayer());
+			}
 		} else {
 			roots.forEach(layer -> {
-				PatternLayer next = choose(scale, params).apply(layer.getAllElements(0, 2 * duration), scale, chordDepth, params);
-				next.trim(2 * duration);
+				PatternFactoryChoice choice = choose(scale, params);
+				PatternLayer next;
+
+				if (choice != null) {
+					next = choose(scale, params).apply(layer.getAllElements(0, 2 * duration), scale, chordDepth, params);
+					next.trim(2 * duration);
+				} else {
+					next = new PatternLayer();
+				}
+
 				layer.getTail().setChild(next);
 			});
 		}
@@ -274,6 +292,9 @@ public class PatternLayerManager implements CodeFeatures {
 
 	public void refresh() {
 		clear(false);
+		if (layerParams.size() != depth())
+			throw new IllegalStateException("Layer count mismatch (" + layerParams.size() + " != " + chromosome.length() + ")");
+
 		IntStream.range(0, chromosome.length()).forEach(i -> layer(chromosome.valueAt(i)));
 	}
 
@@ -284,6 +305,8 @@ public class PatternLayerManager implements CodeFeatures {
 				.filter(c -> chordDepth <= c.getMaxChordDepth())
 				.collect(Collectors.toList());
 
+		if (options.isEmpty()) return null;
+
 		double c = factorySelection.apply(params);
 		if (c < 0) c = c + 1.0;
 		return options.get((int) (options.size() * c));
@@ -292,7 +315,8 @@ public class PatternLayerManager implements CodeFeatures {
 	public void sum(DoubleToIntFunction offsetForPosition, int measures, DoubleFunction<Scale<?>> scaleForPosition) {
 		List<PatternElement> elements = getAllElements(0.0, duration);
 		if (elements.isEmpty()) {
-			System.out.println("PatternLayerManager: No pattern elements (channel " + channel + ")");
+			if (enableWarnings)
+				System.out.println("PatternLayerManager: No pattern elements (channel " + channel + ")");
 			return;
 		}
 
