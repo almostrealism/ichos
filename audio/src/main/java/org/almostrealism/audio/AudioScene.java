@@ -21,6 +21,7 @@ import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Operation;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.Ops;
+import org.almostrealism.audio.arrange.EfxManager;
 import org.almostrealism.audio.arrange.GlobalTimeManager;
 import org.almostrealism.audio.arrange.SceneSectionManager;
 import org.almostrealism.audio.data.WaveData;
@@ -105,6 +106,8 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	private PatternSystemManager patterns;
 	private PackedCollection<?> patternDestination;
 
+	private EfxManager efx;
+
 	private CombinedGenome genome;
 	private DefaultAudioGenome legacyGenome;
 	
@@ -127,7 +130,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 
 		this.time = new GlobalTimeManager(measure -> (int) (measure * getMeasureDuration() * getSampleRate()));
 
-		this.genome = new CombinedGenome(3);
+		this.genome = new CombinedGenome(4);
 		this.legacyGenome = new DefaultAudioGenome(sources, delayLayers, sampleRate, time.getClock().frame());
 
 		this.tuning = new DefaultKeyboardTuning();
@@ -135,17 +138,16 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 		this.progression = new ChordProgressionManager(genome.getGenome(1), WesternScales.minor(WesternChromatic.G1, 1));
 		this.progression.setSize(16);
 		this.progression.setDuration(8);
-		initSources();
-	}
 
-	protected void initSources() {
-		sources = new Waves();
-		IntStream.range(0, sourceCount).forEach(sources.getChoices().getChoices()::add);
+		this.sources = new Waves();
+		IntStream.range(0, sourceCount).forEach(this.sources.getChoices().getChoices()::add);
 
 		patterns = new PatternSystemManager(genome.getGenome(2));
 		patterns.init();
 
 		addDurationListener(duration -> patternDestination = null);
+
+		this.efx = new EfxManager(genome.getGenome(3), sources, this::getBeatDuration, getSampleRate());
 	}
 
 	public void setBPM(double bpm) {
@@ -225,6 +227,8 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public int getSourceCount() { return sourceCount; }
 	public int getDelayLayerCount() { return delayLayerCount; }
 
+	public double getBeatDuration() { return getTempo().l(1); }
+
 	public void setMeasureSize(int measureSize) { this.measureSize = measureSize; triggerDurationChange(); }
 	public int getMeasureSize() { return measureSize; }
 	public double getMeasureDuration() { return getTempo().l(getMeasureSize()); }
@@ -303,7 +307,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	}
 
 	public CellList getPatternCells(List<? extends Receptor<PackedCollection<?>>> measures, Receptor<PackedCollection<?>> output, OperationList setup) {
-		CellList cells = all(sourceCount, i -> getPatternChannel(i, setup));
+		CellList cells = all(sourceCount, i -> efx.apply(i, getPatternChannel(i, setup)));
 		return cells(cells, measures, output);
 	}
 
