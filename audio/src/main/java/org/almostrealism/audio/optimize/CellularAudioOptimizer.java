@@ -454,6 +454,8 @@ public class CellularAudioOptimizer extends AudioPopulationOptimizer<Cells> {
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 
+		scene.getEfxManager().setWetChannels(List.of(4));
+
 		// scene.saveSettings(new File("scene-settings.json"));
 		return scene;
 	}

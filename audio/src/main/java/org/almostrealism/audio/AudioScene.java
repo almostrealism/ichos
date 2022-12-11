@@ -214,6 +214,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 	public SceneSectionManager getSectionManager() { return sections; }
 	public ChordProgressionManager getChordProgression() { return progression; }
 	public PatternSystemManager getPatternManager() { return patterns; }
+	public EfxManager getEfxManager() { return efx; }
 
 	public void addTempoListener(Consumer<Frequency> listener) { this.tempoListeners.add(listener); }
 	public void removeTempoListener(Consumer<Frequency> listener) { this.tempoListeners.remove(listener); }

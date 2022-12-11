@@ -16,14 +16,19 @@
 
 package org.almostrealism.audio.arrange;
 
+import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
 import org.almostrealism.heredity.ConfigurableGenome;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.DoubleSupplier;
+import java.util.stream.IntStream;
 
-public class EfxManager {
+public class EfxManager implements CellFeatures {
 	private ConfigurableGenome genome;
 	private int channels;
+	private List<Integer> wetChannels;
 
 	private DoubleSupplier beatDuration;
 	private int sampleRate;
@@ -31,12 +36,21 @@ public class EfxManager {
 	public EfxManager(ConfigurableGenome genome, int channels, DoubleSupplier beatDuration, int sampleRate) {
 		this.genome = genome;
 		this.channels = channels;
+		this.wetChannels = new ArrayList<>();
+		IntStream.range(0, channels).forEach(this.wetChannels::add);
+
 		this.beatDuration = beatDuration;
 		this.sampleRate = sampleRate;
 	}
 
+	public List<Integer> getWetChannels() { return wetChannels; }
+	public void setWetChannels(List<Integer> wetChannels) { this.wetChannels = wetChannels; }
+
 	public CellList apply(int channel, CellList cells) {
-		// TODO Auto-generated method stub
-		return cells;
+		if (!wetChannels.contains(channel)) {
+			return cells;
+		}
+
+		return cells.d(i -> v(beatDuration.getAsDouble() * 2));
 	}
 }
