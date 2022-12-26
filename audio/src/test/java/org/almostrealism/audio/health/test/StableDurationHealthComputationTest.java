@@ -139,10 +139,10 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
 		health.setOutputFile("results/small-cells-pattern-test.wav");
 
-		Cells organ = cells(pattern(5, 3), health.getMeasures(), health.getOutput());
+		Cells cells = cells(pattern(5, 3), health.getMeasures(), health.getOutput());
 
-		organ.reset();
-		health.setTarget(organ);
+		cells.reset();
+		health.setTarget(cells);
 		health.computeHealth();
 	}
 

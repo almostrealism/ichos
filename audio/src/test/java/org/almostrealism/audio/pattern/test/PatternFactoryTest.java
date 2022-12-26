@@ -173,13 +173,14 @@ public class PatternFactoryTest implements CellFeatures {
 		System.out.println(PatternLayerManager.layerString(manager.getTailElements()));
 
 		for (int i = 0; i < 4; i++) {
-			manager.addLayer(new ParameterSet(0.6, 0.2, 0.7));
+			manager.addLayer(new ParameterSet(0.1, 0.2, 0.3));
 			System.out.println(PatternLayerManager.layerString(manager.getTailElements()));
 		}
 
+		manager.updateDestination(destination);
 		manager.sum(pos -> (int) (pos * bpm.l(16) * OutputLine.sampleRate), 1, pos -> Scale.of(WesternChromatic.C1));
 
 		WaveData out = new WaveData(destination, OutputLine.sampleRate);
-		out.save(new File("pattern-test.wav"));
+		out.save(new File("results/pattern-layer-test.wav"));
 	}
 }

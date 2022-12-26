@@ -688,4 +688,44 @@ public class WavFile {
 		return data -> new WaveCell(data, w.getCollection(), w.getSampleRate(), amplitude, Ops.ops().toScalar(offset),
 				Ops.ops().toScalar(repeat), Ops.ops().v(0.0), Ops.ops().v(w.getCollection().getMemLength()));
 	}
+
+	public static void write(WaveData data, File f) throws IOException {
+		if (data.getCollection().getMemLength() > 0) {
+			// System.out.println("Writing " + frames + " frames");
+		} else {
+			System.out.println("WaveOutput: No frames to write");
+			return;
+		}
+
+		long start = System.currentTimeMillis();
+
+		WavFile wav;
+
+		try {
+			wav = WavFile.newWavFile(f, 2, data.getCollection().getMemLength(), 24, data.getSampleRate());
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		double frames[] = data.getCollection().toArray(0, data.getCollection().getMemLength());
+
+		for (int i = 0; i < frames.length; i++) {
+			// double value = data.valueAt(i).getValue();
+			double value = frames[i];
+
+			try {
+				wav.writeFrames(new double[][]{{value}, {value}}, 1);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+		try {
+			wav.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+	}
 }

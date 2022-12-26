@@ -34,6 +34,9 @@ import org.almostrealism.collect.PackedCollectionHeap;
 import org.almostrealism.graph.AdjustableDelayCell;
 import org.almostrealism.graph.Cell;
 import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
+import org.almostrealism.hardware.Hardware;
+import org.almostrealism.hardware.OperationList;
+import org.almostrealism.hardware.mem.MemoryDataArgumentMap;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.heredity.TemporalFactor;
 import org.almostrealism.time.TemporalRunner;
@@ -97,6 +100,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 
 	protected AudioScene<?> pattern(int sources, int delayLayers) {
 		AudioScene<?> scene = new AudioScene<>(null, 120, sources, delayLayers, OutputLine.sampleRate);
+		scene.setTotalMeasures(16);
 		scene.getPatternManager().getChoices().addAll(PatternFactoryTest.createChoices());
 		scene.setTuning(new DefaultKeyboardTuning());
 
@@ -144,9 +148,26 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		r.run();
 	}
 
+	@Test
+	public void pattern() {
+		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
+
+		AudioScene pattern = pattern(2, 2);
+		pattern.assignGenome(genome(pattern, false));
+
+		OperationList setup = new OperationList();
+		setup.add(pattern.getLegacyGenome().setup());
+		setup.add(pattern.getTimeManager().setup());
+
+		CellList cells = pattern
+					.getPatternChannel(0, setup);
+		cells.addSetup(() -> setup);
+		cells.o(i -> new File("results/pattern-test-" + i + ".wav")).sec(20).get().run();
+	}
+
 	protected Genome<PackedCollection<?>> genome(AudioScene<?> scene, boolean filter) {
 		Genome<PackedCollection<?>> g = CellularAudioOptimizer.generator(scene).get().get();
-		if (g != null) return new AudioSceneGenome(null, g);
+		if (g != null) return g;
 
 		ArrayListChromosome<PackedCollection<?>> generators = new ArrayListChromosome();
 		generators.add(g(0.2, 0.5,

@@ -14,52 +14,41 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio.filter;
+package org.almostrealism.audio.filter.test;
 
 import io.almostrealism.relation.Producer;
+import io.almostrealism.relation.Provider;
 import io.almostrealism.uml.Lifecycle;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.data.AudioFilterData;
 import org.almostrealism.audio.data.PolymorphicAudioData;
+import org.almostrealism.audio.filter.AudioPassFilterComputation;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.graph.temporal.DefaultWaveCellData;
+import org.almostrealism.hardware.Hardware;
 import org.almostrealism.heredity.TemporalFactor;
 import org.almostrealism.CodeFeatures;
 
 import java.util.function.Supplier;
 
-public class AudioPassFilter implements TemporalFactor<PackedCollection<?>>, Lifecycle, CodeFeatures {
+public class TestAudioPassFilter implements TemporalFactor<PackedCollection<?>>, Lifecycle, CodeFeatures {
+	public static boolean deviceMemory = false;
+
 	private AudioFilterData data;
-	private Producer<PackedCollection<?>> frequency;
-	private Producer<Scalar> resonance;
+	private Scalar output;
 	private Producer<PackedCollection<?>> input;
 
 	private boolean high;
 
-	public AudioPassFilter(int sampleRate, Producer<PackedCollection<?>> frequency, Producer<Scalar> resonance, boolean high) {
-		this(sampleRate, new PolymorphicAudioData(), frequency, resonance, high);
+	public TestAudioPassFilter(int sampleRate) {
+		this(sampleRate, deviceMemory ?
+						Hardware.getLocalHardware().getClDataContext().deviceMemory(() -> new PolymorphicAudioData()) : new PolymorphicAudioData());
 	}
 
-	public AudioPassFilter(int sampleRate, AudioFilterData data, Producer<PackedCollection<?>> frequency, Producer<Scalar> resonance, boolean high) {
+	public TestAudioPassFilter(int sampleRate, AudioFilterData data) {
 		this.data = data;
-		this.frequency = _bound(frequency, 0.0, 20000);
-		this.resonance = resonance;
-		this.high = high;
+		this.output = new Scalar();
 		setSampleRate(sampleRate);
-	}
-
-	public Producer<PackedCollection<?>> getFrequency() {
-		return frequency;
-	}
-	public void setFrequency(Producer<PackedCollection<?>> frequency) {
-		this.frequency = frequency;
-	}
-
-	public Producer<Scalar> getResonance() {
-		return resonance;
-	}
-	public void setResonance(Producer<Scalar> resonance) {
-		this.resonance = resonance;
 	}
 
 	public int getSampleRate() {
@@ -69,10 +58,6 @@ public class AudioPassFilter implements TemporalFactor<PackedCollection<?>>, Lif
 		data.setSampleRate(sampleRate);
 	}
 
-	public boolean isHigh() {
-		return high;
-	}
-
 	@Override
 	public Producer<PackedCollection<?>> getResultant(Producer<PackedCollection<?>> value) {
 		if (input != null && input != value) {
@@ -80,12 +65,14 @@ public class AudioPassFilter implements TemporalFactor<PackedCollection<?>>, Lif
 		}
 
 		input = value;
+		// return () -> new Provider<>(output);
 		return data::getOutput;
 	}
 
 	@Override
 	public Supplier<Runnable> tick() {
-		return new AudioPassFilterComputation(data, frequency, resonance, input, high);
+//		return new TestAudioPassFilterComputation(data, input, () -> new Provider<>(output));
+		return new TestAudioPassFilterComputation(data, input, data::getOutput);
 	}
 
 	@Override

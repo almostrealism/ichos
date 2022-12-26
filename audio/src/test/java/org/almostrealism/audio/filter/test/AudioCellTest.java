@@ -16,30 +16,65 @@
 
 package org.almostrealism.audio.filter.test;
 
+import io.almostrealism.relation.Operation;
+import io.almostrealism.relation.Producer;
 import org.almostrealism.audio.CellFeatures;
+import org.almostrealism.audio.OutputLine;
+import org.almostrealism.audio.WaveOutput;
+import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.Cell;
+import org.almostrealism.graph.Receptor;
+import org.almostrealism.graph.ReceptorCell;
+import org.almostrealism.hardware.Hardware;
+import org.almostrealism.hardware.OperationList;
+import org.almostrealism.hardware.mem.MemoryDataArgumentMap;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 public class AudioCellTest implements CellFeatures {
 	@Test
+	public void filterFrame() {
+		WaveOutput out = new WaveOutput();
+
+		Supplier<Runnable> op =
+				w("Library/Snare Perc DD.wav")
+						.f(i -> hp(2000, 0.1))
+						// .f(i -> new TestAudioPassFilter(OutputLine.sampleRate))
+						.map(i -> new ReceptorCell<>(out))
+						.iter(10);
+		Runnable r = op.get();
+		System.out.println(Arrays.toString(out.getData().toArray(0, 12)));
+
+		r.run();
+		System.out.println(Arrays.toString(out.getData().toArray(0, 12)));
+
+		Assert.assertTrue(out.getData().toDouble(5) == 0.0);
+		Assert.assertFalse(out.getData().toDouble(7) == 0.0);
+	}
+
+	@Test
 	public void filter() throws IOException {
-		Supplier<Runnable> r =
+		Supplier<Runnable> op =
 				w("Library/Snare Perc DD.wav")
 						.f(i -> hp(2000, 0.1))
 						.om(i -> new File("results/filter-cell-test.wav"))
 						.sec(10);
-		r.get().run();
+		Runnable r = op.get();
+		r.run();
 	}
 
 	@Test
 	public void repeat() throws IOException {
-		Supplier<Runnable> r =
+		Supplier<Runnable> op =
 				w(c(1.0), "Library/Snare Perc DD.wav")
 						.om(i -> new File("results/repeat-cell-test.wav"))
 						.sec(10);
-		r.get().run();
+		Runnable r = op.get();
+		r.run();
 	}
 }
