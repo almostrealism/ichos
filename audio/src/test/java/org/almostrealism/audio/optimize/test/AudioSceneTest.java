@@ -37,6 +37,7 @@ import org.almostrealism.graph.temporal.CollectionTemporalCellAdapter;
 import org.almostrealism.hardware.Hardware;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.hardware.mem.MemoryDataArgumentMap;
+import org.almostrealism.hardware.mem.MemoryDataCopy;
 import org.almostrealism.heredity.Gene;
 import org.almostrealism.heredity.TemporalFactor;
 import org.almostrealism.time.TemporalRunner;
@@ -67,7 +68,7 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
-public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatures {
+public class AudioSceneTest implements CellFeatures {
 	public static final boolean enableDelay = true;
 	public static final boolean enableFilter = true;
 
@@ -91,14 +92,11 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 	public static final String sampleFile1 = "Library/Snare Perc DD.wav";
 	public static final String sampleFile2 = "Library/GT_HAT_31.wav";
 
-	protected AudioScene<?> notes() {
-//		Scale<WesternChromatic> scale = Scale.of(WesternChromatic.G4, WesternChromatic.A3);
-//		return new DefaultDesirablesProvider<>(120, scale);
-		// TODO  Create Waves for the scene that replicates the above functionality
-		return new AudioScene<>(null, 120, 2, 2, OutputLine.sampleRate);
+	public AudioScene<?> pattern(int sources, int delayLayers) {
+		return pattern(sources, delayLayers, false);
 	}
 
-	protected AudioScene<?> pattern(int sources, int delayLayers) {
+	protected AudioScene<?> pattern(int sources, int delayLayers, boolean sections) {
 		AudioScene<?> scene = new AudioScene<>(null, 120, sources, delayLayers, OutputLine.sampleRate);
 		scene.setTotalMeasures(16);
 		scene.getPatternManager().getChoices().addAll(PatternFactoryTest.createChoices());
@@ -108,61 +106,28 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
 		layer.addLayer(new ParameterSet());
+		
+		if (sections) {
+			scene.addSection(0, 16);
+		}
+
 		return scene;
-	}
-
-	protected AudioScene<?> samples(int sources, int delayLayers) {
-		try {
-			AudioScene<?> scene = new AudioScene<>(null, 120, sources, delayLayers, OutputLine.sampleRate);
-			scene.getWaves().getChildren().add(Waves.loadAudio(new File(sampleFile1)));
-			scene.getWaves().getChildren().add(Waves.loadAudio(new File(sampleFile2)));
-
-			RoutingChoices r = new RoutingChoices(0, 1);
-			scene.getWaves().setChoices(r);
-			scene.getWaves().getChildren().forEach(c -> c.setChoices(r));
-			return scene;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	protected AudioScene<?> sources() {
-		try {
-			AudioScene<?> scene = new AudioScene<>(null, 116, 2, 2, OutputLine.sampleRate);
-			scene.getWaves().getChildren().add(Waves.load(new File("/Users/michael/AlmostRealism/ringsdesktop/sources.json")));
-			return scene;
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	@Test
-	public void sampleWaves() {
-		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
-
-		CollectionTemporalCellAdapter cell = samples(1, 1).getWaves()
-				.getChoiceCell(0, v(0.0), v(0.0), v(0.0), v(0.0), null, null);
-
-		CellList cells = cells(1, i -> cell);
-		Runnable r = cells.o(i -> new File("results/sample-waves-test.wav")).sec(6.0).get();
-		r.run();
 	}
 
 	@Test
 	public void pattern() {
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 
-		AudioScene pattern = pattern(2, 2);
+		AudioScene pattern = pattern(2, 2, true);
 		pattern.assignGenome(genome(pattern, false));
 
 		OperationList setup = new OperationList();
 		setup.add(pattern.getLegacyGenome().setup());
 		setup.add(pattern.getTimeManager().setup());
 
-		CellList cells = pattern
-					.getPatternChannel(0, setup);
+		CellList cells = pattern.getPatternChannel(0, setup);
 		cells.addSetup(() -> setup);
-		cells.o(i -> new File("results/pattern-test-" + i + ".wav")).sec(20).get().run();
+		cells.o(i -> new File("results/pattern-test.wav")).sec(20).get().run();
 	}
 
 	protected Genome<PackedCollection<?>> genome(AudioScene<?> scene, boolean filter) {
@@ -271,7 +236,6 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 		conf.maxLowPass = 20000;
 
 		Genome g = CellularAudioOptimizer.generator(scene, conf).get().get();
-		System.out.println(g);
 
 		scene.assignGenome(new AudioSceneGenome(null, g));
 		System.out.println("0, 0, 2 = " + scene.getLegacyGenome().valueAt(DefaultAudioGenome.GENERATORS, 0).valueAt(2).getResultant(c(1.0)).get().evaluate());
@@ -288,16 +252,16 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/genetic-factory-test.wav")).get(0);
-		Cells organ = cells(sources(), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out, false);
+		Cells organ = cells(pattern(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out, false);
 		organ.sec(6).get().run();
 		((WaveOutput) out.getReceptor()).write().get().run();
 	}
 
 	public void comparison(boolean twice) {
-		AudioScene<?> scene = samples(2, 2);
+		AudioScene<?> scene = pattern(2, 2);
 
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("results/genetic-factory-test-a.wav")).get(0);
-		Cells organ = cells(samples(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out);
+		Cells organ = cells(pattern(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out);
 		organ.reset();
 
 		Genome<PackedCollection<?>> genome = ((AudioSceneGenome) genome(scene, enableFilter)).getLegacyGenome();
@@ -402,7 +366,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 	@Test
 	public void many() {
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("organ-factory-many-test.wav")).get(0);
-		Cells organ = cells(samples(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out);
+		Cells organ = cells(pattern(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), out);
 
 		Runnable run = new TemporalRunner(organ, 8 * OutputLine.sampleRate).get();
 
@@ -416,7 +380,7 @@ public class AudioSceneTest extends AdjustableDelayCellTest implements CellFeatu
 	@Test
 	public void random() {
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("factory-rand-test.wav")).get(0);
-		Cells organ = randomOrgan(samples(2, 2), null, out);  // TODO
+		Cells organ = randomOrgan(pattern(2, 2), null, out);  // TODO
 		organ.reset();
 
 		Runnable organRun = new TemporalRunner(organ, 8 * OutputLine.sampleRate).get();

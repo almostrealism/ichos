@@ -19,30 +19,48 @@ package org.almostrealism.audio.arrange;
 import io.almostrealism.cycle.Setup;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.CodeFeatures;
+import org.almostrealism.audio.CellFeatures;
+import org.almostrealism.audio.CellList;
+import org.almostrealism.audio.optimize.DefaultAudioGenome;
 import org.almostrealism.audio.optimize.LinearInterpolationChromosome;
 import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.collect.TraversalPolicy;
+import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.OperationList;
+import org.almostrealism.hardware.mem.MemoryDataCopy;
 import org.almostrealism.heredity.ConfigurableGenome;
 import org.almostrealism.heredity.SimpleChromosome;
 import org.almostrealism.heredity.SimpleGene;
+import org.almostrealism.heredity.TemporalFactor;
 
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-public class DefaultChannelSection implements ChannelSection, CodeFeatures {
+public class DefaultChannelSection implements ChannelSection, CellFeatures {
 	private int position, length;
 
-	private LinearInterpolationChromosome interpolation;
+	private LinearInterpolationChromosome volume;
+	private LinearInterpolationChromosome lowPassFilter;
 	private int geneIndex;
+
+	private int samples;
+	private int sampleRate;
 
 	public DefaultChannelSection() { }
 
-	protected DefaultChannelSection(int position, int length, LinearInterpolationChromosome interpolation, int geneIndex) {
+	protected DefaultChannelSection(int position, int length,
+									LinearInterpolationChromosome volume,
+									LinearInterpolationChromosome lowPassFilter,
+									int geneIndex,
+									int samples, int sampleRate) {
 		this.position = position;
 		this.length = length;
-		this.interpolation = interpolation;
+		this.volume = volume;
+		this.lowPassFilter = lowPassFilter;
 		this.geneIndex = geneIndex;
+		this.samples = samples / 2;
+		this.sampleRate = sampleRate;
 	}
 
 	@Override
@@ -53,19 +71,32 @@ public class DefaultChannelSection implements ChannelSection, CodeFeatures {
 
 	@Override
 	public Supplier<Runnable> process(Producer<PackedCollection<?>> destination, Producer<PackedCollection<?>> source) {
-		KernelizedEvaluable product = _multiply(v(0, 0), v(0, 1)).get();
+		PackedCollection<?> input = new PackedCollection<>(samples);
+		PackedCollection<PackedCollection<?>> output = new PackedCollection(shape(1, samples)).traverse(1);
 
-		return () -> () ->
+		CellList cells = cells(1, i -> new WaveCell(input.traverseEach(), sampleRate));
+//				.map(fc(i -> hp(lowPassFilter.valueAt(geneIndex, 0).getResultant(c(1.0)),
+//					v(DefaultAudioGenome.defaultResonance))))
+//				.addRequirements(lowPassFilter.getTemporals());
+
+		OperationList process = new OperationList();
+		process.add(new MemoryDataCopy("DefaultChannelSection Input", () -> source.get().evaluate(), () -> input, samples));
+		process.add(cells.export(output));
+		process.add(new MemoryDataCopy("DefaultChannelSection Output", () -> output, () -> destination.get().evaluate(), samples));
+		// TODO  Do I have to reset the cells at the end? so that lowPassFilter's Temporals are reset?
+
+		KernelizedEvaluable product = _multiply(v(0, 0), v(0, 1)).get();
+		process.add(() -> () ->
 			// TODO  Should be able to just use ::evaluate here...
-			product.kernelEvaluate(destination.get().evaluate().traverse(1),
-									source.get().evaluate().traverse(1),
-									interpolation.getKernelList(0).valueAt(geneIndex));
+			product.kernelEvaluate(destination.get().evaluate().traverseEach(),
+									source.get().evaluate().traverseEach(),
+									volume.getKernelList(0).valueAt(geneIndex)));
+		return process;
 	}
 
 	public static class Factory implements Setup {
-		private ConfigurableGenome genome;
-		private SimpleChromosome chromosome;
-		private LinearInterpolationChromosome interpolation;
+		private LinearInterpolationChromosome volume;
+		private LinearInterpolationChromosome lowPassFilter;
 		private int channel, channels;
 
 		private DoubleSupplier measureDuration;
@@ -73,34 +104,50 @@ public class DefaultChannelSection implements ChannelSection, CodeFeatures {
 		private int sampleRate;
 
 		public Factory(ConfigurableGenome genome, int channels, DoubleSupplier measureDuration, int length, int sampleRate) {
-			this.genome = genome;
 			this.channels = channels;
 			this.measureDuration = measureDuration;
 			this.length = length;
 			this.sampleRate = sampleRate;
 
-			this.chromosome = genome.addSimpleChromosome(LinearInterpolationChromosome.SIZE);
+			SimpleChromosome v = genome.addSimpleChromosome(LinearInterpolationChromosome.SIZE);
 
 			for (int i = 0; i < channels; i++) {
+				SimpleGene g = v.addGene();
+
 				// TODO  Testing interpolation from 0.2 to 0.95 - this should be removed
-				SimpleGene g = chromosome.addGene();
 				g.set(0, 0.2);
 				g.set(1, 0.95);
 			}
 
-			this.interpolation = new LinearInterpolationChromosome(chromosome, 0.0, 1.0, sampleRate);
+			this.volume = new LinearInterpolationChromosome(v, 0.0, 1.0, sampleRate);
+
+			// TODO  Make this part of the real genome when testing is done
+			SimpleChromosome lp = new ConfigurableGenome()
+					/*genome*/.addSimpleChromosome(LinearInterpolationChromosome.SIZE);
+
+			for (int i = 0; i < channels; i++) {
+				SimpleGene g = lp.addGene();
+
+				// TODO  Testing interpolation from 0.0 to 1.0 - this should be removed
+				g.set(0, 0.0);
+				g.set(1, 1.0);
+			}
+
+			this.lowPassFilter = new LinearInterpolationChromosome(lp, 0.0, 20000.0, sampleRate);
 		}
 
 		public DefaultChannelSection createSection(int position) {
 			if (channel >= channels) throw new IllegalArgumentException();
-			return new DefaultChannelSection(position, length, interpolation, channel++);
+			return new DefaultChannelSection(position, length, volume, lowPassFilter, channel++,
+					(int) (sampleRate * length * measureDuration.getAsDouble()), sampleRate);
 		}
 
 		@Override
 		public Supplier<Runnable> setup() {
 			OperationList setup = new OperationList();
-			setup.add(() -> () -> interpolation.setDuration(length * measureDuration.getAsDouble()));
-			setup.add(interpolation.expand());
+			setup.add(() -> () -> volume.setDuration(length * measureDuration.getAsDouble()));
+			setup.add(volume.expand());
+			setup.add(lowPassFilter.expand());
 			return setup;
 		}
 	}

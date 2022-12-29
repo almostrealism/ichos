@@ -50,7 +50,7 @@ public class AudioScenePopulationTest extends AdjustmentLayerOrganSystemFactoryT
 	@Test
 	public void genomesFromPopulation() {
 		ReceptorCell out = (ReceptorCell) o(1, i -> new File("layered-organ-pop-test.wav")).get(0);
-		AudioScenePopulation pop = population(notes(), null, out); // TODO
+		AudioScenePopulation pop = population(pattern(1, 1), null, out); // TODO
 
 		TemporalRunner organRun = new TemporalRunner(pop.enableGenome(0), OutputLine.sampleRate);
 		pop.disableGenome();
@@ -78,7 +78,7 @@ public class AudioScenePopulationTest extends AdjustmentLayerOrganSystemFactoryT
 		health.setMaxDuration(8);
 		health.setOutputFile(() -> "results/layered-organ-pop-health-test" + index.incrementAndGet() + ".wav");
 
-		AudioScenePopulation pop = population(notes(), null, health.getOutput()); // TODO
+		AudioScenePopulation pop = population(pattern(1, 1), null, health.getOutput()); // TODO
 
 		IntStream.range(0, 4).forEach(i -> {
 			health.setTarget(pop.enableGenome(i));

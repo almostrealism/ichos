@@ -152,14 +152,14 @@ public class WaveOutput implements Receptor<PackedCollection<?>>, Lifecycle, Cod
 				exportSource = new Provider(data);
 				exportKernel.kernelEvaluate(destination, new MemoryBank[] { data, timelineScalar.getValue() });
 				if (enableVerbose)
-					System.out.println("WaveOutput: Wrote " + defaultTimelineFrames + " frames in " + (System.currentTimeMillis() - start) + " msec");
+					System.out.println("WaveOutput: Wrote " + destination.getCount() + " frames in " + (System.currentTimeMillis() - start) + " msec");
 			};
 
 			return () -> () -> {
 				if (Hardware.getLocalHardware().getComputeContext().isKernelSupported()) {
 					export.run();
 				} else {
-					System.out.println("Kernels not supported by " + Hardware.getLocalHardware().getComputeContext() + " - enabling new context");
+					System.out.println("WaveOutput: Kernels not supported by " + Hardware.getLocalHardware().getComputeContext() + " - enabling new context");
 					cc(export, ComputeRequirement.CL);
 				}
 			};

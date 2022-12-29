@@ -67,13 +67,13 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 		// WaveOutput output3 = new WaveOutput(new File("results/health-test-firstcell-processed.wav"));
 		// WaveOutput output4 = new WaveOutput(new File("results/health-test-lastcell-processed.wav"));
 
-		CellList organ = (CellList) cells(notes(), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), null);
-		((CellAdapter) organ.get(0)).setMeter(output1);
-		((CellAdapter) organ.get(1)).setMeter(output2);
+		CellList cells = (CellList) cells(pattern(2, 2), Arrays.asList(a(p(new Scalar())), a(p(new Scalar()))), null);
+		((CellAdapter) cells.get(0)).setMeter(output1);
+		((CellAdapter) cells.get(1)).setMeter(output2);
 
-		organ.setup().get().run();
+		cells.setup().get().run();
 
-		Runnable tick = organ.tick().get();
+		Runnable tick = cells.tick().get();
 		((OperationAdapter) tick).compile();
 
 		IntStream.range(0, 5 * OutputLine.sampleRate).forEach(i -> {
@@ -90,15 +90,15 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 	}
 
 	@Test
-	public void cellsNotes() {
+	public void cellsPatternDataContext() {
 		AtomicInteger index = new AtomicInteger();
 
 		dc(() -> {
 			StableDurationHealthComputation health = new StableDurationHealthComputation();
 			health.setMaxDuration(8);
-			health.setOutputFile(() -> "results/cells-notes-test" + index.incrementAndGet() + ".wav");
+			health.setOutputFile(() -> "results/cells-pattern-dc-test" + index.incrementAndGet() + ".wav");
 
-			Cells organ = cells(notes(), health.getMeasures(), health.getOutput(), false);
+			Cells organ = cells(pattern(2, 2), health.getMeasures(), health.getOutput(), false);
 			organ.reset();
 			health.setTarget(organ);
 			health.computeHealth();
@@ -110,20 +110,23 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 	}
 
 	@Test
-	public void cellsSamples() {
+	public void cellsPatternSmall() {
 		SilenceDurationHealthComputation.enableSilenceCheck = false;
-		AudioScene.enableMainFilterUp = true;
+		AudioScene.enableMainFilterUp = false;
 		AudioScene.enableEfxFilters = false;
 
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 
-		Hardware.getLocalHardware().setMaximumOperationDepth(9);
+		// Hardware.getLocalHardware().setMaximumOperationDepth(9);
 		StableDurationHealthComputation.setStandardDuration(150);
 
 		StableDurationHealthComputation health = new StableDurationHealthComputation();
-		health.setOutputFile("results/small-cells-samples-test.wav");
+		health.setOutputFile("results/cells-pattern-small.wav");
 
-		Cells organ = cells(samples(2, 2), health.getMeasures(), health.getOutput());
+		AudioScene<?> pattern = pattern(2, 2, true);
+		pattern.assignGenome(genome(pattern, false));
+
+		Cells organ = cells(pattern, health.getMeasures(), health.getOutput());
 
 		organ.reset();
 		health.setTarget(organ);
@@ -131,7 +134,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 	}
 
 	@Test
-	public void cellsPattern() {
+	public void cellsPatternLarge() {
 		SilenceDurationHealthComputation.enableSilenceCheck = false;
 		WaveData.setCollectionHeap(() -> new PackedCollectionHeap(600 * OutputLine.sampleRate), PackedCollectionHeap::destroy);
 		StableDurationHealthComputation.setStandardDuration(150);
@@ -148,7 +151,7 @@ public class StableDurationHealthComputationTest extends AudioScenePopulationTes
 
 	@Test
 	public void samplesPopulationHealth() throws FileNotFoundException {
-		AudioScene<?> scene = samples(2, 2);
+		AudioScene<?> scene = pattern(2, 2);
 
 		AtomicInteger index = new AtomicInteger();
 

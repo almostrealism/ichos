@@ -154,6 +154,10 @@ public class CellList extends ArrayList<Cell<PackedCollection<?>>> implements Ce
 
 	public CellList sum() { return sum(this); }
 
+	public Supplier<Runnable> export(PackedCollection<PackedCollection<?>> destinations) {
+		return export(this, destinations);
+	}
+
 	public CellList mixdown(double seconds) { return mixdown(this, seconds); }
 
 	public CellList csv(IntFunction<File> f) {

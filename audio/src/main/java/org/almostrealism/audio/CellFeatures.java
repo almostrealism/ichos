@@ -513,12 +513,27 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 		return result;
 	}
 
+	default Supplier<Runnable> export(CellList cells, PackedCollection<PackedCollection<?>> wavs) {
+		if (wavs.getCount() != cells.size()) throw new IllegalArgumentException("Destination count must match cell count");
+
+		cells = map(cells, i -> new ReceptorCell<>(new WaveOutput()));
+
+		OperationList export = new OperationList("Export " + wavs.getAtomicMemLength() + " frames");
+		export.add(iter(cells, wavs.getAtomicMemLength(), false));
+
+		for (int i = 0; i < cells.size(); i++) {
+			export.add(((WaveOutput) ((ReceptorCell) cells.get(i)).getReceptor()).export(wavs.get(i).traverseEach()));
+		}
+
+		return export;
+	}
+
 	default CellList mixdown(CellList cells, double seconds) {
 		cells = map(cells, i -> new ReceptorCell<>(new WaveOutput()));
 
-		OperationList export = new OperationList("Mixdown export");
+		OperationList export = new OperationList("Mixdown Export");
 
-		PackedCollection<PackedCollection<?>> wavs = new PackedCollection(new TraversalPolicy(cells.size(), WaveOutput.defaultTimelineFrames), 1);
+		PackedCollection<PackedCollection<?>> wavs = new PackedCollection(shape(cells.size(), WaveOutput.defaultTimelineFrames)).traverse(1);
 		for (int i = 0; i < cells.size(); i++) {
 			export.add(((WaveOutput) ((ReceptorCell) cells.get(i)).getReceptor()).export(wavs.get(i)));
 		}
@@ -577,11 +592,11 @@ public interface CellFeatures extends HeredityFeatures, TemporalFeatures, CodeFe
 	}
 
 	default AudioPassFilter lp(double frequency, double resonance) {
-		return hp(OutputLine.sampleRate, frequency, resonance);
+		return lp(OutputLine.sampleRate, frequency, resonance);
 	}
 
 	default AudioPassFilter lp(int sampleRate, double frequency, double resonance) {
-		return hp(sampleRate, c(frequency), v(resonance));
+		return lp(sampleRate, c(frequency), v(resonance));
 	}
 
 	default AudioPassFilter lp(Producer<PackedCollection<?>> frequency, Producer<Scalar> resonance) {
