@@ -16,16 +16,19 @@ import java.io.IOException;
 public class DefaultChannelSectionTest implements CellFeatures {
 	@Test
 	public void section() throws IOException {
+		int samples = 2 * 8 * OutputLine.sampleRate;
+
 		DefaultChannelSection.Factory factory = new DefaultChannelSection.Factory(new ConfigurableGenome(),
 											1, () -> 2.0, 8, OutputLine.sampleRate);
 		DefaultChannelSection section = factory.createSection(0);
 
 		WaveData data = WaveData.load(new File("Library/Snare Perc DD.wav"));
-		int samples = data.getCollection().getMemLength();
+		PackedCollection<?> input = new PackedCollection<>(samples);
+		input.setMem(data.getCollection().toArray(0, data.getCollection().getMemLength()));
 
 		PackedCollection<?> result = new PackedCollection<>(samples);
 		Producer<PackedCollection<?>> destination = p(result);
-		Producer<PackedCollection<?>> source = p(data.getCollection());
+		Producer<PackedCollection<?>> source = p(input);
 
 		OperationList process = new OperationList();
 		process.add(factory.setup());

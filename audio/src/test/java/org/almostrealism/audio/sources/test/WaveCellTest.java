@@ -21,13 +21,16 @@ import io.almostrealism.relation.Evaluable;
 import org.almostrealism.algebra.Scalar;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
+import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.TimeCell;
 import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.hardware.AcceleratedComputationOperation;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.ScaleFactor;
+import org.almostrealism.time.TemporalList;
 import org.almostrealism.util.TestFeatures;
 import org.junit.Test;
 
@@ -125,5 +128,27 @@ public class WaveCellTest implements CellFeatures, TestFeatures {
 							.o(i -> new File("results/wav-cell-seq-test-" + i + ".wav"));
 
 		cells.sec(bpm(128).l(count)).get().run();
+	}
+
+	@Test
+	public void externalClock() {
+		double rate = 2 * Math.PI / 1000;
+
+		PackedCollection<?> data = new PackedCollection<>(OutputLine.sampleRate);
+		data.setMem(IntStream.range(0, OutputLine.sampleRate).mapToDouble(i -> Math.sin(i * rate)).toArray());
+
+		TimeCell clock = new TimeCell();
+		WaveCell cell = new WaveCell(data, OutputLine.sampleRate, clock.frame());
+
+		TemporalList temporals = new TemporalList();
+		temporals.add(clock);
+		temporals.add(cell);
+
+		PackedCollection<?> out = new PackedCollection<>(1);
+		cell.setReceptor(protein -> a(1, p(out), protein));
+
+		sec(temporals, 0.3).get().run();
+		System.out.println("Clock after 0.3s: " + clock.frame().get().evaluate().toDouble(0) + " (expected " + 0.3 * OutputLine.sampleRate + ")");
+		System.out.println("Result after 0.3s: " + out.toDouble(0) + " (expected " + Math.sin(0.3 * OutputLine.sampleRate * rate) + ")");
 	}
 }

@@ -42,6 +42,7 @@ public class LinearInterpolationChromosome extends WavCellChromosomeExpansion {
 	}
 
 	public void setDuration(double seconds) {
+		if (seconds == 0) throw new IllegalArgumentException("Duration must be greater than 0");
 		duration.setMem(0, seconds);
 	}
 }
