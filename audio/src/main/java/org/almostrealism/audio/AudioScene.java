@@ -332,7 +332,7 @@ public class AudioScene<T extends ShadableSurface> implements Setup, CellFeature
 				.forEach(patternSetup::add);
 
 		setup.add(patternSetup);
-		return w(c(getTotalDuration()), new WaveData(audio, getSampleRate()));
+		return w(c(getTotalDuration()), new WaveData(audio.traverseEach(), getSampleRate()));
 	}
 
 	public Supplier<Runnable> getPatternSetup() { return getPatternSetup(null); }

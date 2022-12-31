@@ -31,6 +31,7 @@ import org.almostrealism.hardware.KernelizedEvaluable;
 import org.almostrealism.hardware.OperationList;
 import org.almostrealism.hardware.mem.MemoryDataCopy;
 import org.almostrealism.heredity.ConfigurableGenome;
+import org.almostrealism.heredity.Factor;
 import org.almostrealism.heredity.SimpleChromosome;
 import org.almostrealism.heredity.SimpleGene;
 import org.almostrealism.heredity.TemporalFactor;
@@ -81,10 +82,12 @@ public class DefaultChannelSection implements ChannelSection, CellFeatures {
 
 		TemporalList temporals = lowPassFilter.getTemporals();
 
+		Factor<PackedCollection<?>> factor = lowPassFilter.valueAt(geneIndex, 0);
 		CellList cells = cells(1, i -> new WaveCell(input.traverseEach(), sampleRate))
-				.map(fc(i -> lp(lowPassFilter.valueAt(geneIndex, 0).getResultant(c(1.0)),
+				.map(fc(i -> lp(factor.getResultant(c(1.0)),
 					v(DefaultAudioGenome.defaultResonance))))
-				.addRequirements(clock, temporals);
+				.addRequirements(clock, temporals)
+				.addSetup((Setup) factor);
 
 		OperationList process = new OperationList();
 		process.add(new MemoryDataCopy("DefaultChannelSection Input", () -> source.get().evaluate(), () -> input, samples));

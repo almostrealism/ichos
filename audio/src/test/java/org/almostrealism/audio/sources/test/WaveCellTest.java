@@ -24,6 +24,7 @@ import org.almostrealism.audio.CellList;
 import org.almostrealism.audio.OutputLine;
 import org.almostrealism.audio.WavFile;
 import org.almostrealism.collect.PackedCollection;
+import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.graph.TimeCell;
 import org.almostrealism.graph.temporal.DefaultWaveCellData;
 import org.almostrealism.graph.temporal.WaveCell;
@@ -32,6 +33,7 @@ import org.almostrealism.hardware.OperationList;
 import org.almostrealism.heredity.ScaleFactor;
 import org.almostrealism.time.TemporalList;
 import org.almostrealism.util.TestFeatures;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
@@ -131,24 +133,78 @@ public class WaveCellTest implements CellFeatures, TestFeatures {
 	}
 
 	@Test
+	public void assignment() {
+		PackedCollection<?> out = new PackedCollection<>(1);
+		CellList cells = w(c(0), c(bpm(128).l(2)),
+				"Library/Snare Perc DD.wav")
+				.map(i -> new ReceptorCell<>(protein -> a(1, p(out), protein)));
+		OperationList ops = (OperationList) cells.sec(10);
+		Runnable r = ops.get();
+		r.run();
+		System.out.println("Result after 10s: " + out.toDouble(0) + " (expected !" + 0.0 + ")");
+		Assert.assertFalse(out.toDouble(0) == 0.0);
+	}
+
+	@Test
+	public void internalClock() {
+		double rate = 2 * Math.PI / 1000;
+
+		PackedCollection<?> data = new PackedCollection<>(OutputLine.sampleRate).traverseEach();
+		data.setMem(IntStream.range(0, OutputLine.sampleRate).mapToDouble(i -> Math.sin(i * rate)).toArray());
+
+		WaveCell cell = new WaveCell(data, OutputLine.sampleRate);
+		PackedCollection<?> out = new PackedCollection<>(1);
+		cell.setReceptor(protein -> a(1, p(out), protein));
+
+		TemporalList tick = new TemporalList();
+		tick.add(cell);
+
+		TemporalList temporals = new TemporalList();
+		temporals.add(() -> cell.push(c(0.0)));
+		temporals.add(tick);
+
+		OperationList op = new OperationList();
+		op.add(cell.setup());
+		op.add(sec(temporals, 0.3));
+
+		Runnable r = op.get();
+		r.run();
+
+		System.out.println("Result after 0.3s: " + out.toDouble(0) + " (expected " +
+				data.toDouble((int) (0.3 * OutputLine.sampleRate) - 1) + ")");
+		assertEquals(data.toDouble((int) (0.3 * OutputLine.sampleRate) - 1), out.toDouble(0));
+	}
+
+	@Test
 	public void externalClock() {
 		double rate = 2 * Math.PI / 1000;
 
-		PackedCollection<?> data = new PackedCollection<>(OutputLine.sampleRate);
+		PackedCollection<?> data = new PackedCollection<>(OutputLine.sampleRate).traverseEach();
 		data.setMem(IntStream.range(0, OutputLine.sampleRate).mapToDouble(i -> Math.sin(i * rate)).toArray());
 
 		TimeCell clock = new TimeCell();
 		WaveCell cell = new WaveCell(data, OutputLine.sampleRate, clock.frame());
 
+		TemporalList tick = new TemporalList();
+		tick.add(clock);
+		tick.add(cell);
+
 		TemporalList temporals = new TemporalList();
-		temporals.add(clock);
-		temporals.add(cell);
+		temporals.add(() -> cell.push(c(0.0)));
+		temporals.add(tick);
 
 		PackedCollection<?> out = new PackedCollection<>(1);
 		cell.setReceptor(protein -> a(1, p(out), protein));
 
-		sec(temporals, 0.3).get().run();
-		System.out.println("Clock after 0.3s: " + clock.frame().get().evaluate().toDouble(0) + " (expected " + 0.3 * OutputLine.sampleRate + ")");
-		System.out.println("Result after 0.3s: " + out.toDouble(0) + " (expected " + Math.sin(0.3 * OutputLine.sampleRate * rate) + ")");
+		OperationList op = new OperationList();
+		op.add(cell.setup());
+		op.add(sec(temporals, 0.3));
+		op.get().run();
+
+		System.out.println("Clock after 0.3s: " + clock.frame().get().evaluate().toDouble(0) +
+				" (expected " + 0.3 * OutputLine.sampleRate + ")");
+		System.out.println("Result after 0.3s: " + out.toDouble(0) + " (expected " +
+				data.toDouble((int) (0.3 * OutputLine.sampleRate) - 1) + ")");
+		assertEquals(data.toDouble((int) (0.3 * OutputLine.sampleRate) - 1), out.toDouble(0));
 	}
 }
