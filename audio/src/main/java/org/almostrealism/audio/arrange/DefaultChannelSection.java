@@ -84,10 +84,10 @@ public class DefaultChannelSection implements ChannelSection, CellFeatures {
 
 		Factor<PackedCollection<?>> factor = lowPassFilter.valueAt(geneIndex, 0);
 		CellList cells = cells(1, i -> new WaveCell(input.traverseEach(), sampleRate))
-				.map(fc(i -> lp(factor.getResultant(c(1.0)),
-					v(DefaultAudioGenome.defaultResonance))))
+				.addSetup((Setup) factor)
 				.addRequirements(clock, temporals)
-				.addSetup((Setup) factor);
+				.map(fc(i -> lp(factor.getResultant(c(1.0)),
+					v(DefaultAudioGenome.defaultResonance))));
 
 		OperationList process = new OperationList();
 		process.add(new MemoryDataCopy("DefaultChannelSection Input", () -> source.get().evaluate(), () -> input, samples));
@@ -150,7 +150,7 @@ public class DefaultChannelSection implements ChannelSection, CellFeatures {
 				g.set(1, 1.0);
 			}
 
-			this.lowPassFilter = new LinearInterpolationChromosome(lp, 2000.0, 20000.0, sampleRate);
+			this.lowPassFilter = new LinearInterpolationChromosome(lp, 0.0, 20000.0, sampleRate);
 			this.lowPassFilter.setGlobalTime(clock.frame());
 		}
 

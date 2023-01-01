@@ -70,16 +70,15 @@ public class LinearInterpolationChromosomeTest implements CellFeatures, TestFeat
 		setup.add(((Setup) factor).setup());
 
 		CellList cells = cells(1, i -> new WaveCell(input.traverseEach(), OutputLine.sampleRate))
+				.addSetup((Setup) factor)
+				.addRequirements(clock, temporals)
 				.map(fc(i -> lp(factor.getResultant(c(1.0)),
 						v(DefaultAudioGenome.defaultResonance))))
-//				.map(fc(i -> lp(c(2000), v(DefaultAudioGenome.defaultResonance))))
-				.addRequirements(clock, temporals)
-				// .addSetup((Setup) factor)
 				.o(i -> new File("results/lowpass-filter-interpolation.wav"));
 
 		OperationList op = new OperationList();
 		op.add(setup);
-		op.add(cells.sec(0.5, false));
+		op.add(cells.sec(0.5, true));
 		op.get().run();
 
 		Scalar count = clock.frame().get().evaluate();
