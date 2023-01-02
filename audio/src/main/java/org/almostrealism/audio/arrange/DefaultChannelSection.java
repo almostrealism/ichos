@@ -21,10 +21,12 @@ import io.almostrealism.relation.Producer;
 import org.almostrealism.CodeFeatures;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.CellList;
+import org.almostrealism.audio.WaveOutput;
 import org.almostrealism.audio.optimize.DefaultAudioGenome;
 import org.almostrealism.audio.optimize.LinearInterpolationChromosome;
 import org.almostrealism.collect.PackedCollection;
 import org.almostrealism.collect.TraversalPolicy;
+import org.almostrealism.graph.ReceptorCell;
 import org.almostrealism.graph.TimeCell;
 import org.almostrealism.graph.temporal.WaveCell;
 import org.almostrealism.hardware.KernelizedEvaluable;
@@ -41,6 +43,8 @@ import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
 public class DefaultChannelSection implements ChannelSection, CellFeatures {
+	public static boolean enableFilter = true;
+
 	private int position, length;
 
 	private TimeCell clock;
@@ -65,7 +69,7 @@ public class DefaultChannelSection implements ChannelSection, CellFeatures {
 		this.volume = volume;
 		this.lowPassFilter = lowPassFilter;
 		this.geneIndex = geneIndex;
-		this.samples = samples / 2;
+		this.samples = samples;
 		this.sampleRate = sampleRate;
 	}
 
@@ -83,17 +87,20 @@ public class DefaultChannelSection implements ChannelSection, CellFeatures {
 		TemporalList temporals = lowPassFilter.getTemporals();
 
 		Factor<PackedCollection<?>> factor = lowPassFilter.valueAt(geneIndex, 0);
-		CellList cells = cells(1, i -> new WaveCell(input.traverseEach(), sampleRate))
-				.addSetup((Setup) factor)
-				.addRequirements(clock, temporals)
-				.map(fc(i -> lp(factor.getResultant(c(1.0)),
-					v(DefaultAudioGenome.defaultResonance))));
+		CellList cells = cells(1, i -> new WaveCell(input.traverseEach(), sampleRate));
+
+		if (enableFilter) {
+			cells = cells
+					.addSetup((Setup) factor)
+					.addRequirements(clock, temporals)
+					.map(fc(i -> lp(factor.getResultant(c(1.0)),
+							v(DefaultAudioGenome.defaultResonance))));
+		}
 
 		OperationList process = new OperationList();
 		process.add(new MemoryDataCopy("DefaultChannelSection Input", () -> source.get().evaluate(), () -> input, samples));
 		process.add(cells.export(output));
 		process.add(new MemoryDataCopy("DefaultChannelSection Output", () -> output, () -> destination.get().evaluate(), samples));
-		// TODO  Do I have to reset the cells at the end? so that the clock and the lowPassFilter's Temporals are reset?
 
 		KernelizedEvaluable product = _multiply(v(0, 0), v(0, 1)).get();
 		process.add(() -> () ->
@@ -138,9 +145,7 @@ public class DefaultChannelSection implements ChannelSection, CellFeatures {
 			this.volume = new LinearInterpolationChromosome(v, 0.0, 1.0, sampleRate);
 			this.volume.setGlobalTime(clock.frame());
 
-			// TODO  Make this part of the real genome when testing is done
-			SimpleChromosome lp = new ConfigurableGenome()
-					/*genome*/.addSimpleChromosome(LinearInterpolationChromosome.SIZE);
+			SimpleChromosome lp = genome.addSimpleChromosome(LinearInterpolationChromosome.SIZE);
 
 			for (int i = 0; i < channels; i++) {
 				SimpleGene g = lp.addGene();
