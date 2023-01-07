@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 Michael Murray
+ * Copyright 2023 Michael Murray
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.almostrealism.audio.pattern;
+package org.almostrealism.audio.notes;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.almostrealism.code.CachedValue;
@@ -41,6 +41,7 @@ import org.almostrealism.time.computations.Interpolate;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 public class PatternNote {
 	private static ContextSpecific<KernelizedEvaluable<PackedCollection<?>>> interpolate;
@@ -54,8 +55,14 @@ public class PatternNote {
 						v -> new Product(v, HardwareFeatures.ops().expressionForDouble(1.0 / OutputLine.sampleRate))).get());
 	}
 
+	// TODO  Referring to a file like this should be done inside a Supplier
+	// TODO  provided as an argument to the constructor. There's no reason
+	// TODO  for the note to have some built in notion of audio files.
 	private String source;
+
 	private PackedCollection audio;
+	private Supplier<PackedCollection> audioSupplier;
+
 	private Boolean valid;
 	private KeyPosition<?> root;
 
@@ -75,6 +82,10 @@ public class PatternNote {
 		this(audio, WesternChromatic.C1);
 	}
 
+	public PatternNote(Supplier<PackedCollection> audioSupplier) {
+		this(audioSupplier, WesternChromatic.C1);
+	}
+
 	public PatternNote(String source, KeyPosition root) {
 		setSource(source);
 		setRoot(root);
@@ -83,6 +94,12 @@ public class PatternNote {
 
 	public PatternNote(PackedCollection audio, KeyPosition root) {
 		setAudio(audio);
+		setRoot(root);
+		notes = new HashMap<>();
+	}
+
+	public PatternNote(Supplier<PackedCollection> audioSupplier, KeyPosition root) {
+		this.audioSupplier = audioSupplier;
 		setRoot(root);
 		notes = new HashMap<>();
 	}
@@ -110,8 +127,7 @@ public class PatternNote {
 
 	@JsonIgnore
 	public double getDuration() {
-		if (audio == null) return 0;
-		return audio.getMemLength() / (double) OutputLine.sampleRate;
+		return getAudio().getMemLength() / (double) OutputLine.sampleRate;
 	}
 
 	public Producer<PackedCollection> getAudio(KeyPosition<?> target, int length) {
@@ -143,8 +159,16 @@ public class PatternNote {
 	@JsonIgnore
 	public PackedCollection getAudio() {
 		if (audio == null) {
-			if (provider == null) provider = new FileWaveDataProvider(source);
-			audio = provider.get().getCollection();
+			if (audioSupplier == null) {
+				if (provider == null) provider = new FileWaveDataProvider(source);
+
+				WaveData data = provider.get();
+				if (data.getSampleRate() == OutputLine.sampleRate) {
+					audio = provider.get().getCollection();
+				}
+			} else {
+				audio = audioSupplier.get();
+			}
 		}
 
 		return audio;
@@ -156,7 +180,7 @@ public class PatternNote {
 	}
 
 	public boolean isValid() {
-		if (audio != null) return true;
+		if (audio != null || audioSupplier != null) return true;
 		if (valid != null) return valid;
 		valid = Waves.isValid(new File(source), w -> w.getSampleRate() == OutputLine.sampleRate);
 		return valid;

@@ -19,16 +19,14 @@ package org.almostrealism.audio.pattern.test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.almostrealism.audio.CellFeatures;
 import org.almostrealism.audio.OutputLine;
-import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
 import org.almostrealism.audio.data.WaveData;
-import org.almostrealism.audio.pattern.ChordPositionFunction;
-import org.almostrealism.audio.pattern.ParameterizedPositionFunction;
+import org.almostrealism.audio.notes.FileNoteSource;
 import org.almostrealism.audio.pattern.PatternElementFactory;
 import org.almostrealism.audio.pattern.PatternFactoryChoice;
 import org.almostrealism.audio.pattern.PatternFactoryChoiceList;
 import org.almostrealism.audio.pattern.PatternLayerManager;
-import org.almostrealism.audio.pattern.PatternNote;
+import org.almostrealism.audio.notes.PatternNote;
 import org.almostrealism.audio.tone.DefaultKeyboardTuning;
 import org.almostrealism.audio.tone.Scale;
 import org.almostrealism.audio.tone.WesternChromatic;
@@ -44,15 +42,12 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class PatternFactoryTest implements CellFeatures {
 
@@ -60,20 +55,7 @@ public class PatternFactoryTest implements CellFeatures {
 	public void fixChoices() throws IOException {
 		List<PatternFactoryChoice> choices = readChoices();
 
-		choices.get(0).setSeedUnits(4);
-
-		choices.get(1).setSeed(true);
-		choices.get(1).setSeedUnits(2);
-		choices.get(1).setSeedScale(0.5);
-
-		choices.get(5).setSeedUnits(4);
-		choices.get(5).setSeedScale(0.5);
-
-		choices.get(6).setSeedUnits(8);
-		choices.get(6).setSeedScale(0.25);
-
-		System.out.println(choices);
-		// new ObjectMapper().writeValue(new File("pattern-factory.json"), choices);
+		new ObjectMapper().writeValue(new File("pattern-factory-new.json"), choices);
 	}
 
 	@Test

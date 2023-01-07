@@ -19,6 +19,9 @@ package org.almostrealism.audio.pattern;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.almostrealism.audio.data.ParameterFunction;
 import org.almostrealism.audio.data.ParameterSet;
+import org.almostrealism.audio.notes.ListNoteSource;
+import org.almostrealism.audio.notes.PatternNote;
+import org.almostrealism.audio.notes.PatternNoteSource;
 import org.almostrealism.audio.tone.KeyboardTuning;
 
 import java.util.ArrayList;
@@ -30,7 +33,7 @@ public class PatternElementFactory {
 	public static NoteDurationStrategy CHORD_STRATEGY = NoteDurationStrategy.FIXED;
 
 	private String name;
-	private List<PatternNote> notes;
+	private List<PatternNoteSource> sources;
 	private boolean melodic;
 
 	private ParameterizedPositionFunction noteSelection;
@@ -44,17 +47,29 @@ public class PatternElementFactory {
 	private ParameterizedPositionFunction repeatSelection;
 
 	public PatternElementFactory() {
-		this(new PatternNote[0]);
+		this(new PatternNoteSource[0]);
+	}
+
+	public PatternElementFactory(String name) {
+		this(name, new PatternNoteSource[0]);
 	}
 
 	public PatternElementFactory(PatternNote... notes) {
 		this(null, notes);
 	}
 
+	public PatternElementFactory(PatternNoteSource... sources) {
+		this(null, sources);
+	}
+
 	public PatternElementFactory(String name, PatternNote... notes) {
+		this(name, new ListNoteSource(notes));
+	}
+
+	public PatternElementFactory(String name, PatternNoteSource... sources) {
 		setName(name);
-		setNotes(new ArrayList<>());
-		getNotes().addAll(List.of(notes));
+		setSources(new ArrayList<>());
+		getSources().addAll(List.of(sources));
 		initSelectionFunctions();
 	}
 
@@ -67,27 +82,25 @@ public class PatternElementFactory {
 	}
 
 	public String getName() { return name; }
-
 	public void setName(String name) { this.name = name; }
 
-	public List<PatternNote> getNotes() {
-		return notes;
+	public List<PatternNote> getAllNotes() {
+		return sources.stream().map(PatternNoteSource::getNotes).flatMap(List::stream).collect(Collectors.toList());
 	}
 
-	public void setNotes(List<PatternNote> notes) {
-		this.notes = notes;
+	public List<PatternNoteSource> getSources() { return sources; }
+	public void setSources(List<PatternNoteSource> sources) {
+		this.sources = sources;
 	}
 
 	public ParameterizedPositionFunction getNoteSelection() {
 		return noteSelection;
 	}
-
 	public void setNoteSelection(ParameterizedPositionFunction noteSelection) {
 		this.noteSelection = noteSelection;
 	}
 
 	public ParameterFunction getNoteLengthSelection() { return noteLengthSelection; }
-
 	public void setNoteLengthSelection(ParameterFunction noteLengthSelection) { this.noteLengthSelection = noteLengthSelection; }
 
 	@Deprecated
@@ -118,12 +131,12 @@ public class PatternElementFactory {
 	public void setMelodic(boolean melodic) { this.melodic = melodic; }
 
 	public void setTuning(KeyboardTuning tuning) {
-		notes.forEach(n -> n.setTuning(tuning));
+		getSources().forEach(n -> n.setTuning(tuning));
 	}
 
 	@JsonIgnore
 	public List<PatternNote> getValidNotes() {
-		return notes.stream().filter(PatternNote::isValid).collect(Collectors.toList());
+		return getAllNotes().stream().filter(PatternNote::isValid).collect(Collectors.toList());
 	}
 
 	// TODO  This should take instruction for whether to apply note duration, relying just on isMelodic limits its use
@@ -134,7 +147,7 @@ public class PatternElementFactory {
 			position += scale;
 		}
 
-		if (notes.isEmpty()) return Optional.empty();
+		if (getAllNotes().isEmpty()) return Optional.empty();
 
 		double note = noteSelection.apply(params, position, scale) + bias;
 		while (note > 1) note -= 1;

@@ -172,7 +172,7 @@ public class PatternLayerManager implements CodeFeatures {
 		settings.setMelodic(melodic);
 		settings.setFactorySelection(factorySelection);
 		settings.getLayers().addAll(layerParams);
-		System.out.println("PatternLayerManager[Channel " + channel + "] getSettings: " + layerParams.size() + " layers");
+		// System.out.println("PatternLayerManager[Channel " + channel + "] getSettings: " + layerParams.size() + " layers");
 		return settings;
 	}
 

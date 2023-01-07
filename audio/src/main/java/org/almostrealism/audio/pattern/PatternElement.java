@@ -19,6 +19,7 @@ package org.almostrealism.audio.pattern;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.almostrealism.relation.Producer;
 import org.almostrealism.CodeFeatures;
+import org.almostrealism.audio.notes.PatternNote;
 import org.almostrealism.audio.tone.KeyPosition;
 import org.almostrealism.audio.tone.KeyboardTuning;
 import org.almostrealism.audio.tone.Scale;
